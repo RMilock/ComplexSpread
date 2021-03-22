@@ -15,6 +15,7 @@ import random
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+#comment for vsc
 # %matplotlib inline
 from itertools import product
 import os #to create a folder
