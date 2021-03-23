@@ -81,7 +81,7 @@ def sir(G, beta = 1e-3, mu = 0.05, k = 10, seed = False):
  
     return prevalence, recovered, cum_positives
 
-def itermean_sir(G, beta = 1e-3, mu = 0.05, k = 10, numb_iter = 100, numb_classes = 3):
+def itermean_sir(G, beta = 1e-3, mu = 0.05, k = 10, numb_iter = 200, numb_classes = 3):
     'def a function that iters numb_iter and make an avg of the trajectories'
     'k are the starting infected'
     import itertools
@@ -108,14 +108,15 @@ def itermean_sir(G, beta = 1e-3, mu = 0.05, k = 10, numb_iter = 100, numb_classe
 
     return trajectories, avg
 
-def plot_sir(G, beta = 1e-3, mu = 0.05, k = 10, numb_classes = 3, numb_iter = 100):
+def plot_sir(G, beta = 1e-3, mu = 0.05, k = 10, numb_classes = 3, numb_iter = 100, D = None):
   import itertools
   import matplotlib.pyplot as plt
   # MF_SIR: beta = 1e-3, MF_SIR: mu = 0.05
   N = G.number_of_nodes()
   'plot ratio of daily infected and daily cumulative recovered'
   trajectories, avg = itermean_sir(G, beta, mu, k, numb_classes=numb_classes, numb_iter=numb_iter)
-  
+  _, mf_avg = itermean_sir(G, beta = beta*D/N, mu, k = k, numb_classes=numb_classes, numb_iter=numb_iter)
+
   'plotting the many realisations'    
   colors = ["paleturquoise","wheat","lightgreen"]
   for i in range(numb_classes):
@@ -123,7 +124,7 @@ def plot_sir(G, beta = 1e-3, mu = 0.05, k = 10, numb_classes = 3, numb_iter = 10
         plt.plot(trajectories[i][j], color = colors[i])
   
   plt.plot(avg[0], label="Infected/N", color = "tab:blue") #prevalence
-  plt.plot(avg[1], label="Recovered/N", color = "tab:orange" ) #recovered
+  plt.plot(mf_avg[1], label="Recovered/N", color = "tab:orange" ) #recovered
   plt.plot(avg[2], label="CD_Inf /N", color = "tab:green") #cum_positives
 
 
@@ -176,7 +177,7 @@ def plot_G_degdist_adjmat_sir(G, p = 0, D = None, figsize = (12,12), beta = 1e-3
 
   #plot figimport networkx as nxures in different windows
   fig, axs = plt.subplots(2,2, figsize = figsize)
-  #nx.draw_circuplt.close()lar(G, ax=axs[0,0], with_labels=True, font_size=12, node_size=5, width=.3)
+  nx.draw_circular(G, ax=axs[0,0], with_labels=True, font_size=12, node_size=5, width=.3)
   
   'set xticks to be centered'
   sorted_degree = np.sort([G.degree(n) for n in G.nodes()])
