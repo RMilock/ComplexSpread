@@ -16,6 +16,7 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 #comment for vsc
+#commented on vsc from ssh-tunneling from colab
 # %matplotlib inline
 from itertools import product
 import os #to create a folder
