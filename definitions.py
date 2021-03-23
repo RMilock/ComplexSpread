@@ -5,7 +5,11 @@ import matplotlib.cm as cm
 import os #to create a folder
 
 
-def sir(G, beta = 1e-3, mu = 0.05, k = 10, seed = False):
+# if D = numb, beta = beta*D/N but too low
+def sir(G, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False, D = None):
+    'If D == None, the neighbors are not fixed;' 
+    'If D = number, MF_sir with fixed numb of neighbors'
+
     import random
     #here's the modifications of the "test_ver1"
     'Number of nodes in the graph'
@@ -26,7 +30,7 @@ def sir(G, beta = 1e-3, mu = 0.05, k = 10, seed = False):
     if seed == True: random.seed(0)
 
     'Selects the seed of the disease'
-    seeds = random.sample(range(N), k) 
+    seeds = random.sample(range(N), start_inf)  #without replacement, i.e. not duplicates
     for seed in seeds:
       current_state[seed] = 'I'
       future_state[seed] = 'I'
@@ -36,7 +40,7 @@ def sir(G, beta = 1e-3, mu = 0.05, k = 10, seed = False):
     'initilize prevalence and revocered list'
     prevalence = [len(inf_list)/N]
     recovered = [0]
-    cum_positives = [k/N]
+    cum_positives = [start_inf/N]
 
     'start and continue whenever there s 1 infected'
     while(len(inf_list)>0):        
@@ -45,7 +49,8 @@ def sir(G, beta = 1e-3, mu = 0.05, k = 10, seed = False):
         'Infection Phase: each infected tries to infect all of the neighbors'
         for i in inf_list:
             'Select the neighbors of the infected node'
-            tests = G.neighbors(i) #only != wrt to the SIS: contact are taken from G.neighbors            
+            if D == None: tests = G.neighbors(i) #only != wrt to the SIS: contact are taken from G.neighbors            
+            if D != None: tests = random.choices(range(N), k = int(D)) #spread very fast since multiple infected center
             for j in tests:
                 'If the contact is susceptible and not infected by another node in the future_state, try to infect it'
                 if current_state[j] == 'S' and future_state[j] == 'S':
@@ -81,19 +86,19 @@ def sir(G, beta = 1e-3, mu = 0.05, k = 10, seed = False):
  
     return prevalence, recovered, cum_positives
 
-def itermean_sir(G, beta = 1e-3, mu = 0.05, k = 10, numb_iter = 100, numb_classes = 3):
+def itermean_sir(G, D = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter = 200):
     'def a function that iters numb_iter and make an avg of the trajectories'
     'k are the starting infected'
     import itertools
     import numpy as np
     import matplotlib.pyplot as plt
+    numb_classes = 3
     trajectories = [[] for _ in range(numb_classes)]
     avg = [[] for _ in range(numb_classes)]
     counts = [[],[],[]]
     for i in range(numb_iter):
-        tmp_traj = sir(G, beta = beta, mu = mu, k = k)
-        #if i == 1: tmp_traj = [[2,2,1], [3,3,2], [4,4]]
-        for idx in range(numb_classes):#zip([0,1,2],[x,y,z],[p,r,c],[cnt_x, cnt_y, cnt_z]):
+        tmp_traj = sir(G, beta = beta, mu = mu, start_inf = start_inf, D = D)
+        for idx in range(numb_classes):
             trajectories[idx].append(tmp_traj[idx])
             #print("\nit:", i, "idx ", idx, "and traj_idx", trajectories[idx])
             it_sum = [sum(x) for x in itertools.zip_longest(*trajectories[idx], fillvalue=0)]
@@ -108,32 +113,37 @@ def itermean_sir(G, beta = 1e-3, mu = 0.05, k = 10, numb_iter = 100, numb_classe
 
     return trajectories, avg
 
-def plot_sir(G, beta = 1e-3, mu = 0.05, k = 10, numb_classes = 3, numb_iter = 100):
+def plot_sir(G, D = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter = 100):
+  'D = numb acts only in mf_avg'
   import itertools
   import matplotlib.pyplot as plt
   # MF_SIR: beta = 1e-3, MF_SIR: mu = 0.05
+  numb_classes = 3
   N = G.number_of_nodes()
+
   'plot ratio of daily infected and daily cumulative recovered'
-  trajectories, avg = itermean_sir(G, beta, mu, k, numb_classes=numb_classes, numb_iter=numb_iter)
-  
+  'Inf and Cum_Infected from Net_Sir; Recovered from MF_SIR'
+  trajectories, avg = itermean_sir(G, D = None, beta = beta, mu = mu, start_inf  = start_inf, numb_iter=numb_iter)
+  _, mf_avg = itermean_sir(G, mu = mu, beta = beta*D/N, D = D, start_inf = start_inf, numb_iter = numb_iter)
+
   'plotting the many realisations'    
   colors = ["paleturquoise","wheat","lightgreen"]
   for i in range(numb_classes):
     for j in range(numb_iter):
         plt.plot(trajectories[i][j], color = colors[i])
   
-  plt.plot(avg[0], label="Infected/N", color = "tab:blue") #prevalence
-  plt.plot(avg[1], label="Recovered/N", color = "tab:orange" ) #recovered
-  plt.plot(avg[2], label="CD_Inf /N", color = "tab:green") #cum_positives
+  plt.plot(avg[0], label="ps_Infected/N", color = "tab:blue") #prevalence
+  plt.plot(mf_avg[1], label="ps_MF_Recovered/N", color = "tab:orange" ) #recovered
+  plt.plot(avg[2], label="ps_CD_Inf /N", color = "tab:green") #cum_positives
 
 
   'plot horizontal line to highlight the initial infected'
-  plt.axhline(k/N, color = "r", ls="dashed", label = "Starting_Inf /N")
+  plt.axhline(start_inf/N, color = "r", ls="dashed", label = "Starting_Inf /N")
   locs, _ = plt.yticks()
   locs_yticks = np.array([])
   for i in range(len(locs)): 
-      if locs[i] <= k/N < locs[i+1]:  
-          locs_yticks  = np.concatenate((locs[1:i+1], [k/N], locs[i+1:-1])) #omit the 1st and last for better visualisation
+      if locs[i] <= start_inf/N < locs[i+1]:  
+          locs_yticks  = np.concatenate((locs[1:i+1], [start_inf/N], locs[i+1:-1])) #omit the 1st and last for better visualisation
   plt.yticks(locs_yticks, np.round(locs_yticks,3))
 
 
@@ -143,29 +153,7 @@ def plot_sir(G, beta = 1e-3, mu = 0.05, k = 10, numb_classes = 3, numb_iter = 10
   plt.yscale("linear")
   plt.legend(loc="best")
 
-'Net Infos'
-def infos_sorted_nodes(G, num_nodes = False):
-    import networkx as nx
-    'sort nodes by key = degree. printing order: node, adjacent nodes, degree'
-    nodes = G.nodes()
-    print("Sum_i k_i: ", np.sum([j for (i,j) in G.degree() ]), \
-          " <k>: ", np.sum([j for (i,j) in G.degree() ]) / len(nodes), 
-          " and <k>/N ", np.sum([j for (i,j) in G.degree() ]) / len(nodes)**2, end="\n\n" )
-    
-    'put adj_matrix into dic from better visualisation'
-    adj_matrix =  nx.adjacency_matrix(G).todense()
-    adj_dict = {i: np.nonzero(row)[1].tolist() for i,row in enumerate(adj_matrix)}
-
-    infos = zip([x for x in nodes], [adj_dict[i] for i in range(len(nodes))], [G.degree(x) for x in nodes])
-    inner_sorted_nodes = sorted( infos, key = lambda x: x[2])
-    
-    if num_nodes == True:  num_nodes = len(nodes)
-    if num_nodes == False: num_nodes = 0
-    for i in range(num_nodes):
-      if i == 0: print("Triplets of (nodes, edges, degree) sorted by degree: \n")
-      print( inner_sorted_nodes[i] )
-
-def plot_G_degdist_adjmat_sir(G, p = 0, D = None, figsize = (12,12), beta = 1e-3, mu = 0.05, k = 10, log = False):
+def plot_G_degdist_adjmat_sir(G, p = 0, D = None, figsize = (12,12), beta = 1e-3, mu = 0.05, start_inf = 10, log = False):
   import matplotlib.pyplot as plt
   import networkx as nx
   N = G.number_of_nodes()
@@ -176,7 +164,7 @@ def plot_G_degdist_adjmat_sir(G, p = 0, D = None, figsize = (12,12), beta = 1e-3
 
   #plot figimport networkx as nxures in different windows
   fig, axs = plt.subplots(2,2, figsize = figsize)
-  #nx.draw_circuplt.close()lar(G, ax=axs[0,0], with_labels=True, font_size=12, node_size=5, width=.3)
+  nx.draw_circular(G, ax=axs[0,0], with_labels=True, font_size=12, node_size=5, width=.3)
   
   'set xticks to be centered'
   sorted_degree = np.sort([G.degree(n) for n in G.nodes()])
@@ -206,8 +194,30 @@ def plot_G_degdist_adjmat_sir(G, p = 0, D = None, figsize = (12,12), beta = 1e-3
 
   'plot sir'
   if D == None: np.sum([j for (i,j) in G.degree() ]) / N
-  plot_sir(G, beta, mu, k)
+  plot_sir(G, beta = beta, mu = mu, start_inf = start_inf, D = D)
   fig.suptitle("SIR_N%s_D%s_p%s_beta%s_mu%s_R%s"% (N,rhu(D,3),p, rhu(beta,3), rhu(mu,3), rhu(beta/mu*D,3)))
+
+'Net Infos'
+def infos_sorted_nodes(G, num_nodes = False):
+    import networkx as nx
+    'sort nodes by key = degree. printing order: node, adjacent nodes, degree'
+    nodes = G.nodes()
+    print("Sum_i k_i: ", np.sum([j for (i,j) in G.degree() ]), \
+          " <k>: ", np.sum([j for (i,j) in G.degree() ]) / len(nodes), 
+          " and <k>/N ", np.sum([j for (i,j) in G.degree() ]) / len(nodes)**2, end="\n\n" )
+    
+    'put adj_matrix into dic from better visualisation'
+    adj_matrix =  nx.adjacency_matrix(G).todense()
+    adj_dict = {i: np.nonzero(row)[1].tolist() for i,row in enumerate(adj_matrix)}
+
+    infos = zip([x for x in nodes], [adj_dict[i] for i in range(len(nodes))], [G.degree(x) for x in nodes])
+    inner_sorted_nodes = sorted( infos, key = lambda x: x[2])
+    
+    if num_nodes == True:  num_nodes = len(nodes)
+    if num_nodes == False: num_nodes = 0
+    for i in range(num_nodes):
+      if i == 0: print("Triplets of (nodes, edges, degree) sorted by degree: \n")
+      print( inner_sorted_nodes[i] )
 
 def remove_loops_parallel_edges(G, remove_loops = True):
   import networkx as nx
@@ -241,18 +251,17 @@ def rhu(n, decimals=0): #round_half_up
   multiplier = 10 ** decimals
   return math.floor(n*multiplier + 0.5) / multiplier
 
-def ws_sir(N, k_ws = None, p = 0.1, infos = True, beta = 0.001, mu = 0.16):  
+def ws_sir(N, k_ws = None, p = 0.1, infos = False, beta = 0.001, mu = 0.16):  
   'in this def: cut_factor = % of links remaining from the full net'
   'round_half_up k_ws for a better approximation of nx.c_w_s_graph+sir'
-  
   import networkx as nx
   if k_ws == None: k_ws = N
   k_ws = int(rhu(k_ws))
   cut_factor = k_ws / N #float
   'With p = 1 and <k>/N ~ 0, degree distr is sim to a Poissonian'
   G = nx.connected_watts_strogatz_graph( n = N, k = k_ws, p = p, seed = 1 ) #k is the number of near linked nodes
-  #check_loops_parallel_edges(G)
-  #if infos == True: infos_sorted_nodes(G, num_nodes = False)
+  
+  if infos == True: check_loops_parallel_edges(G); infos_sorted_nodes(G, num_nodes = False)
   
   'set spreading parameters'
 
