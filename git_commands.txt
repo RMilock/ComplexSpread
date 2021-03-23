@@ -1,0 +1,12 @@
+*+-git add <file>;  git commit -m "upload from vsc"; git config --global user.email "riccardo.milocco@gmail.com"; git config user.name "RMilock"; git push origin master
+
+
+FAQ:
+-If I "push" in a branch that has missing file, I should pull first:
+#Case involved: I'm in locally in my-feature and I want to push to my changes into feature.
+$ git pull
+$ git checkout my-feature
+$ git merge origin/feature
+$ git push origin my-feature:feature
+
+
