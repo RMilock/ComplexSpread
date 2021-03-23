@@ -1,43 +1,31 @@
-#%%
-
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 import numpy as np
 import itertools
 import random
-from definitions import sir, itermean_sir
+from mfVSnetdefinitions import sir, itermean_sir, plot_sir,plot_G_degdist_adjmat_sir
 import networkx as nx
 
-numb_classes = 3; numb_iter = 30
+#numb_classes = 3; numb_iter = 30
+beta = 0.1; mu = 0.16; N = int(100); D = N; numb_iter = 500
+G = nx.connected_watts_strogatz_graph(N, D, p = 0, seed = 1) #k is the number of near linked nodes
 
-G = nx.connected_watts_strogatz_graph( n = 200, k = 200, p = 1, seed = 1) #k is the number of near linked nodes
-nx.draw_circular(G)
+plot_sir(G, D = D, beta = beta, mu = mu, numb_iter=numb_iter) #mf! expected
+
+#Net Traj
+traj, avg = itermean_sir(G, beta = beta, mu = mu, D = None, numb_iter=numb_iter)
+'plotting the many realisations'  
+
+plt.plot(avg[0], marker = "o", markersize = 3, label="Net_Infected/N", color = "darkblue") #prevalence
+plt.plot(avg[1], marker = "*", markersize = 5, linestyle = "None",  label= "Net_Recovered/N", color = "darkorange" ) #recovered
+plt.plot(avg[2], marker = "o", markersize = 3, linestyle = "None", label="Net_CD_Inf /N", color = "darkgreen") #cum_positives
+plt.legend()
+
+##MF traj
+traj, avg = itermean_sir(G, beta = beta, mu = mu, D = D, numb_iter=numb_iter)
+
+plt.plot(avg[0], marker = "*", markersize = 5, linestyle = "None", label="mf_Infected/N", color = "darkblue") #prevalence
+plt.plot(avg[1], marker = "o", markersize = 3, linestyle = "None", label="mf_Recovered/N", color = "darkorange" ) #recovered
+plt.plot(avg[2], marker = "*", markersize = 5, linestyle = "None", label="mf_Inf /N", color = "darkgreen") #cum_positives
+
+plt.legend()
 plt.show()
-plt.close()
-#print("\nlen_traj", np.shape(trajectories[0]), "traj", trajectories[0], "\navg", avg[0])
-prev, rec, cum = sir(G, seed=True)
-plt.plot(prev, "r", rec, "b--", cum, "mo--", ms = 2)
-plt.show()
-
-#%%
-plt.close()
-trajectories, avg = itermean_sir(G, numb_iter=numb_iter, k = 10)
-plt.show()
-# %%
-for i in range(numb_classes):
-    for j in range(numb_iter):
-        plt.plot(trajectories[i][j], color="wheat")
-for i in range(numb_classes): plt.plot(avg[i])
-# %%
-def rhu(n, decimals=0): #round_half_up
-  import math
-  multiplier = 10 ** decimals
-  return math.floor(n*multiplier + 0.5) / multiplier
-rhu(0.001,3)
-
-# %%
-x = np.linspace(0.2,1,9)
-print(x)
-# %%
-
-# %%
