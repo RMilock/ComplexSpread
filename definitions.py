@@ -196,14 +196,14 @@ def plot_G_degdist_adjmat_sir(G, p = 0, D = None,  numb_iter = 200, beta = 1e-3,
   'plot sir'
   if D == None: np.sum([j for (i,j) in G.degree() ]) / N
   plot_sir(G, beta = beta, mu = mu, start_inf = start_inf, D = D, numb_iter=numb_iter)
-  fig.suptitle("SIR_N%s_D%s_p%s_beta%s_mu%s_R%s"% (N,rhu(D,3),p, rhu(beta,3), rhu(mu,3), rhu(beta/mu*D,3)))
+  fig.suptitle("SIR_N%s_D%s_p%s_beta%s_mu%s_R%s"% (N,rhu(D,3),rhu(p,3), rhu(beta,3), rhu(mu,3), rhu(beta/mu*D,3)))
   plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
   plt.subplots_adjust(top=0.931,
   bottom=0.101,
   left=0.012,
   right=0.819,
   hspace=0.151,
-  wspace=0.103)
+  wspace=0.200)
   
 'Net Infos'
 def infos_sorted_nodes(G, num_nodes = False):
@@ -272,21 +272,21 @@ def ws_sir(N, k_ws = None, p = 0.1, infos = False, beta = 0.001, mu = 0.16):
   if infos == True: check_loops_parallel_edges(G); infos_sorted_nodes(G, num_nodes = False)
   
   'set spreading parameters'
-
+  cut_factor = 1
   beta_eff = beta/cut_factor; mu_eff = mu 
   #Thurner pmts: beta_eff = 0.1, mu = 0.16; k_ws = 3 vel 8
   #MF def: beta_eff, mu_eff = 0.001/cf, 0.05/cf or 0.16/cf ; cf = 1
-  print("beta_eff %s ; mu_eff: %s; beta_1.2: %s" % (beta_eff, mu_eff, beta) )
+  #print("beta_eff %s ; mu_eff: %s; beta_1.2: %s" % (beta_eff, mu_eff, beta) )
   
   'plot all -- old version: beta = beta_eff'
   plot_G_degdist_adjmat_sir(G, D = k_ws, figsize=(15,15), beta = beta, mu = mu_eff, log = False, p = p)    
   
   'TO SAVE PLOTS'
-  #try:
-  plt.savefig("/home/hal21/MEGAsync/Thesis/NetSciThesis/WS_plots/SIR_N%s_k%s_p%s_beta%s_mu%s" % (N,k_ws,p, rhu(beta_eff,3), rhu(mu_eff,3)) + ".png")
-  #except:
-  #  os.mkdir("/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/WS_plots")
-  #  plt.savefig("/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/WS_plots/SIR_N%s_k%s_p%s_beta%s_mu%s" % (N,k_ws,p, rhu(beta_eff,3), rhu(mu_eff,3)) + ".png")
+  try:
+    plt.savefig("/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/WS_plots/SIR_N%s_k%s_p%s_beta%s_mu%s" % (N,k_ws,rhu(p,3), rhu(beta_eff,3), rhu(mu_eff,3)) + ".png")
+  except:
+    os.mkdir("/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/WS_plots")
+    plt.savefig("/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/WS_plots/SIR_N%s_k%s_p%s_beta%s_mu%s" % (N,k_ws,rhu(p,3), rhu(beta_eff,3), rhu(mu_eff,3)) + ".png")
 
 
 
@@ -333,10 +333,10 @@ def config_pois_model(N, D, p = 0, seed = 123, visual = True):
 
     'TO SAVE PLOTS'
     try:
-      plt.savefig("/home/hal21/MEGAsync/Thesis/NetSciThesis/Config_Plots/SIR_N%s_k%s_p%s_beta%s_mu%s" % (N,D,p, rhu(beta_eff,3), rhu(mu_eff,3)) + ".png")
+      plt.savefig("/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Config_Plots/SIR_N%s_k%s_p%s_beta%s_mu%s" % (N,D,p, rhu(beta_eff,3), rhu(mu_eff,3)) + ".png")
     except:
-      os.mkdir("/home/hal21/MEGAsync/Thesis/NetSciThesis/Config_Plots")
-      plt.savefig("/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/WS_plots/SIR_N%s_k%s_p%s_beta%s_mu%s" % (N,D,p, rhu(beta_eff,3), rhu(mu_eff,3)) + ".png")
+      os.mkdir("/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Config_Plots")
+      plt.savefig("/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Config_Plots/SIR_N%s_k%s_p%s_beta%s_mu%s" % (N,D,p, rhu(beta_eff,3), rhu(mu_eff,3)) + ".png")
     
     return G
 
