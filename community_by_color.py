@@ -145,14 +145,12 @@ def _get_random_point_on_a_circle(origin, radius):
 
 
 def test(cliques = 8, clique_size = 7):
-
     # create test data
     g = nx.connected_caveman_graph(l = cliques, k = clique_size)
     partition = {ii : np.int(ii/clique_size) for ii in range(cliques * clique_size)}
 
     pos = partition_layout(g, partition, ratio=0.2)
     nx.draw(g, pos, node_color=list(partition.values()))
-    plt.show()
     return g
 
 def test2():
@@ -184,5 +182,4 @@ num_clique = int(N/D)
 G = test(cliques=num_clique, clique_size=D)
 
 plot_G_degdist_adjmat_sir(G, D = D, beta = beta, mu = mu, numb_iter=numb_iter) #mf! expected
-
 plt.show()

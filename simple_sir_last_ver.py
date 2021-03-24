@@ -44,7 +44,7 @@ it drives to a nearer pruning.
 """
 
 'rewire all the edges with a probability of p'
-N = int(1e3); p_max = 0.1
+N = int(100); p_max = 0.1
 
 'excecute the code'
 'max pow-2'
@@ -86,13 +86,11 @@ TODO: implement the idea of a pruning factor as in ws_sir
 
 D = 3; seed=123; p = 0; N = int(1e3)
 
-G = config_pois_model(N, D)
-
-infos_sorted_nodes(G, False)
-
 """## NN_rewiring: Pb with D = 8"""
 
 G = config_pois_model(N,D,visual = False)
+
+infos_sorted_nodes(G)
 
 verbose = False
 

@@ -133,9 +133,9 @@ def plot_sir(G, D = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter = 10
       if i == 1: plt.plot(mf_trajectories[i][j], color = colors[i])
       else:  plt.plot(trajectories[i][j], color = colors[i])
   
-  plt.plot(avg[0], label="ps_Infected/N", color = "tab:blue") #prevalence
-  plt.plot(mf_avg[1], label="ps_MF_Recovered/N", color = "tab:orange" ) #recovered
-  plt.plot(avg[2], label="ps_CD_Inf /N", color = "tab:green") #cum_positives
+  plt.plot(avg[0], label="Net::Infected/N", color = "tab:blue") #prevalence
+  plt.plot(mf_avg[1], label="MF::Recovered/N", color = "tab:orange" ) #recovered
+  plt.plot(avg[2], label="Net::CD_Inf /N", color = "tab:green") #cum_positives
 
 
   'plot horizontal line to highlight the initial infected'
@@ -163,7 +163,7 @@ def plot_G_degdist_adjmat_sir(G, p = 0, D = None,  numb_iter = 200, beta = 1e-3,
     multiplier = 10 ** decimals
     return math.floor(n*multiplier + 0.5) / multiplier
 
-  #plot figimport networkx as nxures in different windows
+  #plot figures in different windows
   fig, axs = plt.subplots(2,2, figsize = figsize)
   nx.draw_circular(G, ax=axs[0,0], with_labels=True, font_size=12, node_size=5, width=.3)
   
@@ -197,7 +197,7 @@ def plot_G_degdist_adjmat_sir(G, p = 0, D = None,  numb_iter = 200, beta = 1e-3,
   if D == None: np.sum([j for (i,j) in G.degree() ]) / N
   plot_sir(G, beta = beta, mu = mu, start_inf = start_inf, D = D, numb_iter=numb_iter)
   fig.suptitle("SIR_N%s_D%s_p%s_beta%s_mu%s_R%s"% (N,rhu(D,3),p, rhu(beta,3), rhu(mu,3), rhu(beta/mu*D,3)))
-  plt.legend(title='title', bbox_to_anchor=(1.05, 1), loc='upper left')
+  plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
   plt.subplots_adjust(top=0.931,
   bottom=0.101,
   left=0.012,
@@ -279,14 +279,14 @@ def ws_sir(N, k_ws = None, p = 0.1, infos = False, beta = 0.001, mu = 0.16):
   print("beta_eff %s ; mu_eff: %s; beta_1.2: %s" % (beta_eff, mu_eff, beta) )
   
   'plot all -- old version: beta = beta_eff'
-  plot_G_degdist_adjmat_sir(G, figsize=(15,15), beta = beta, mu = mu_eff, log = False, D = k_ws, p = p)    
+  plot_G_degdist_adjmat_sir(G, D = k_ws, figsize=(15,15), beta = beta, mu = mu_eff, log = False, p = p)    
   
   'TO SAVE PLOTS'
-  try:
-    plt.savefig("/home/hal21/MEGAsync/Thesis/NetSci Thesis/Project/WS_plots/SIR_N%s_k%s_p%s_beta%s_mu%s" % (N,k_ws,p, rhu(beta_eff,3), rhu(mu_eff,3)) + ".png")
-  except:
-    os.mkdir("/home/hal21/MEGAsync/Thesis/NetSci Thesis/Project/WS_plots")
-    plt.savefig("/home/hal21/MEGAsync/Thesis/NetSci Thesis/Project/WS_plots/SIR_N%s_k%s_p%s_beta%s_mu%s" % (N,k_ws,p, rhu(beta_eff,3), rhu(mu_eff,3)) + ".png")
+  #try:
+  plt.savefig("/home/hal21/MEGAsync/Thesis/NetSciThesis/WS_plots/SIR_N%s_k%s_p%s_beta%s_mu%s" % (N,k_ws,p, rhu(beta_eff,3), rhu(mu_eff,3)) + ".png")
+  #except:
+  #  os.mkdir("/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/WS_plots")
+  #  plt.savefig("/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/WS_plots/SIR_N%s_k%s_p%s_beta%s_mu%s" % (N,k_ws,p, rhu(beta_eff,3), rhu(mu_eff,3)) + ".png")
 
 
 
@@ -331,12 +331,13 @@ def config_pois_model(N, D, p = 0, seed = 123, visual = True):
     print("beta_eff %s ; mu_eff: %s" % (beta_eff, mu_eff))
     if visual == True: plot_G_degdist_adjmat_sir(G, figsize=(15,15), beta = beta_eff, mu = mu_eff, log = True) 
 
+    'TO SAVE PLOTS'
     try:
-        plt.savefig("Config_plots/Conf_SIR_N%s_D%s_p%s_beta%s_mu%s" % (N,D,p, rhu(beta_eff,3), rhu(mu_eff,3)) + ".pdf")
+      plt.savefig("/home/hal21/MEGAsync/Thesis/NetSciThesis/Config_Plots/SIR_N%s_k%s_p%s_beta%s_mu%s" % (N,D,p, rhu(beta_eff,3), rhu(mu_eff,3)) + ".png")
     except:
-        os.mkdir("Config_plots")
-        plt.savefig("Config_plots/Config_SIR_N%s_D%s_p%s_beta%s_mu%s" % (N,D,p, rhu(beta_eff,3), rhu(mu_eff,3)) + ".pdf")
-
+      os.mkdir("/home/hal21/MEGAsync/Thesis/NetSciThesis/Config_Plots")
+      plt.savefig("/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/WS_plots/SIR_N%s_k%s_p%s_beta%s_mu%s" % (N,D,p, rhu(beta_eff,3), rhu(mu_eff,3)) + ".png")
+    
     return G
 
 '''def:: "replace" existing edges, since built-in method only adds'''
