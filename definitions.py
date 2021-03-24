@@ -194,9 +194,9 @@ def plot_G_degdist_adjmat_sir(G, p = 0, D = None,  numb_iter = 200, beta = 1e-3,
   print("Adj_matrix is symmetric", np.allclose(adj_matrix, adj_matrix.T))
 
   'plot sir'
-  if D == None: np.sum([j for (i,j) in G.degree() ]) / N
+  if D == None: D = np.sum([j for (i,j) in G.degree() ]) / N
   plot_sir(G, beta = beta, mu = mu, start_inf = start_inf, D = D, numb_iter=numb_iter)
-  fig.suptitle("SIR_N%s_D%s_p%s_beta%s_mu%s_R%s"% (N,rhu(D,3),rhu(p,3), rhu(beta,3), rhu(mu,3), rhu(beta/mu*D,3)))
+  fig.suptitle("SIR_N%s_D%s_p%s_beta%s_mu%s_R%s"% (N,D,rhu(p,3), rhu(beta,3), rhu(mu,3), rhu(beta/mu*D,3)))
   plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
   plt.subplots_adjust(top=0.931,
   bottom=0.101,
@@ -328,7 +328,7 @@ def config_pois_model(N, D, p = 0, seed = 123, visual = True):
     #Thurner pmts: beta_eff = 0.1, mu = 0.16; k_ws = 3 vel 8
     #MF def: beta_eff, mu_eff = 0.001/cf, 0.05/cf or 0.16/cf ; cf = 1
     #Config_SIR def: D = 8, beta_eff, mu_eff = 0.1, 0.05
-    print("beta_eff %s ; mu_eff: %s" % (beta_eff, mu_eff))
+    #print("beta_eff %s ; mu_eff: %s" % (beta_eff, mu_eff))
     if visual == True: plot_G_degdist_adjmat_sir(G, figsize=(15,15), beta = beta_eff, mu = mu_eff, log = True) 
 
     'TO SAVE PLOTS'
