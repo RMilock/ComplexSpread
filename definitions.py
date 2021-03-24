@@ -124,13 +124,14 @@ def plot_sir(G, D = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter = 10
   'plot ratio of daily infected and daily cumulative recovered'
   'Inf and Cum_Infected from Net_Sir; Recovered from MF_SIR'
   trajectories, avg = itermean_sir(G, D = None, beta = beta, mu = mu, start_inf  = start_inf, numb_iter=numb_iter)
-  _, mf_avg = itermean_sir(G, mu = mu, beta = beta*D/N, D = D, start_inf = start_inf, numb_iter = numb_iter)
+  mf_trajectories, mf_avg = itermean_sir(G, mu = mu, beta = beta, D = D, start_inf = start_inf, numb_iter = numb_iter)
 
   'plotting the many realisations'    
   colors = ["paleturquoise","wheat","lightgreen"]
   for i in range(numb_classes):
     for j in range(numb_iter):
-        plt.plot(trajectories[i][j], color = colors[i])
+      if i == 1: plt.plot(mf_trajectories[i][j], color = colors[i])
+      else:  plt.plot(trajectories[i][j], color = colors[i])
   
   plt.plot(avg[0], label="ps_Infected/N", color = "tab:blue") #prevalence
   plt.plot(mf_avg[1], label="ps_MF_Recovered/N", color = "tab:orange" ) #recovered
@@ -153,7 +154,7 @@ def plot_sir(G, D = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter = 10
   plt.yscale("linear")
   plt.legend(loc="best")
 
-def plot_G_degdist_adjmat_sir(G, p = 0, D = None, figsize = (12,12), beta = 1e-3, mu = 0.05, start_inf = 10, log = False):
+def plot_G_degdist_adjmat_sir(G, p = 0, D = None,  numb_iter = 200, beta = 1e-3, mu = 0.05, start_inf = 10, log = False, figsize = (12,12),):
   import matplotlib.pyplot as plt
   import networkx as nx
   N = G.number_of_nodes()
@@ -194,9 +195,16 @@ def plot_G_degdist_adjmat_sir(G, p = 0, D = None, figsize = (12,12), beta = 1e-3
 
   'plot sir'
   if D == None: np.sum([j for (i,j) in G.degree() ]) / N
-  plot_sir(G, beta = beta, mu = mu, start_inf = start_inf, D = D)
+  plot_sir(G, beta = beta, mu = mu, start_inf = start_inf, D = D, numb_iter=numb_iter)
   fig.suptitle("SIR_N%s_D%s_p%s_beta%s_mu%s_R%s"% (N,rhu(D,3),p, rhu(beta,3), rhu(mu,3), rhu(beta/mu*D,3)))
-
+  plt.legend(title='title', bbox_to_anchor=(1.05, 1), loc='upper left')
+  plt.subplots_adjust(top=0.931,
+  bottom=0.101,
+  left=0.012,
+  right=0.819,
+  hspace=0.151,
+  wspace=0.103)
+  
 'Net Infos'
 def infos_sorted_nodes(G, num_nodes = False):
     import networkx as nx
