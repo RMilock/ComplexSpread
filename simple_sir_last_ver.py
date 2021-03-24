@@ -15,15 +15,14 @@ import random
 import math
 import numpy as np
 import matplotlib.pyplot as plt
-#comment for vsc
-#commented on vsc from ssh-tunneling from colab
 # %matplotlib inline
 from itertools import product
 import os #to create a folder
 #from definitions import sir, plot_sir, infos_sorted_nodes, plot_G_degdist_adjmat_sir, \
 #  remove_loops_parallel_edges, check_loops_parallel_edges
 
-from definitions import *
+from definitions import ws_sir, config_pois_model, infos_sorted_nodes, \
+  rhu, replace_edges_from, plot_G_degdist_adjmat_sir, check_loops_parallel_edges
 
 np.set_printoptions(precision=4, suppress=True)
 #make the axes white
@@ -51,15 +50,15 @@ N = int(100); p_max = 1
 #k_prog = [int(N/x) for x in \
 #          [2**i for i in range(0,pow_max(N, num_iter = "all"))]] #if pow_max +1 --> error of connectivity: k_ws = k_odd - 1
 'test != kind of '
-k_prog = np.arange(5,11)
+k_prog = np.arange(4,10,2)
 p_prog = np.linspace(0,p_max,int(p_max*10)+1)
 mu_prog = np.linspace(0.01,1,10)
-beta = np.linspace(0.01,1,10)
-k_prog = [3,8]; mu_prog = [0.16]
+beta_prog = np.linspace(0.01,1,10)
+k_prog = [3,3,3,3]; p_prog = [0,0,0,0]; mu_prog = [1/5, 2/5, 1/30, 2/30]; beta_prog = [1/5, 2/5, 1/30, 2/30]
 'try only with p = 0.1'
-for k_ws,mu,p in product(k_prog, mu_prog,p_prog):  
-  ws_sir(N, k_ws = k_ws, p = p, beta = 0.1, mu = mu) 
-
+for k_ws,mu,p,beta in zip(k_prog, p_prog, mu_prog, beta_prog):  
+  ws_sir(N, k_ws = k_ws, p = p, beta = beta, mu = mu) 
+  plt.show()
 
 #from google.colab import files
 #!rm -r /content/WS_plots/*.pdf
@@ -84,7 +83,7 @@ TODO: implement the idea of a pruning factor as in ws_sir
 #from google.colab import files
 #!rm -r /content/Config_plots/*.pdf
 
-D = 3; seed=123; p = 0; N = int(1e3)
+D = 3; seed=123; p = 0; N = int(1e3); beta_eff = 0.01; mu_eff = 0.2
 
 """## NN_rewiring: Pb with D = 8"""
 
