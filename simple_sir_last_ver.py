@@ -44,7 +44,7 @@ it drives to a nearer pruning.
 """
 
 'rewire all the edges with a probability of p'
-N = int(100); p_max = 0.1
+N = int(100); p_max = 1
 
 'excecute the code'
 'max pow-2'
@@ -53,12 +53,12 @@ N = int(100); p_max = 0.1
 'test != kind of '
 k_prog = np.arange(5,11)
 p_prog = np.linspace(0,p_max,int(p_max*10)+1)
-mu_prog = np.linspace(0.01,0.4,9)
+mu_prog = np.linspace(0.01,1,10)
+beta = np.linspace(0.01,1,10)
 k_prog = [3,8]; mu_prog = [0.16]
 'try only with p = 0.1'
-for k_ws,mu in product(k_prog, mu_prog):  
-  ws_sir(N, k_ws = k_ws, p = p_max, beta = 0.1, mu = mu)
-#plt.show()  
+for k_ws,mu,p in product(k_prog, mu_prog,p_prog):  
+  ws_sir(N, k_ws = k_ws, p = p, beta = 0.1, mu = mu) 
 
 
 #from google.colab import files
