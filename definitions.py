@@ -283,10 +283,10 @@ def ws_sir(N, k_ws = None, p = 0.1, infos = False, beta = 0.001, mu = 0.16):
   
   'TO SAVE PLOTS'
   try:
-    plt.savefig("/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/WS_plots/SIR_N%s_k%s_p%s_beta%s_mu%s" % (N,k_ws,rhu(p,3), rhu(beta_eff,3), rhu(mu_eff,3)) + ".png")
+    plt.savefig("/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/WS_plots/SIR_N%s_k%s_p%s_beta%s_mu%s_R%s" % (N,k_ws,rhu(p,3), rhu(beta_eff,3), rhu(mu_eff,3),rhu(beta/mu*k_ws,3) ) + ".png")
   except:
     os.mkdir("/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/WS_plots")
-    plt.savefig("/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/WS_plots/SIR_N%s_k%s_p%s_beta%s_mu%s" % (N,k_ws,rhu(p,3), rhu(beta_eff,3), rhu(mu_eff,3)) + ".png")
+    plt.savefig("/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/WS_plots/SIR_N%s_k%s_p%s_beta%s_mu%s_R%s" % (N,k_ws,rhu(p,3), rhu(beta_eff,3), rhu(mu_eff,3),rhu(beta/mu*k_ws,3)) + ".png")
 
 
 
@@ -333,10 +333,10 @@ def config_pois_model(N, D, p = 0, seed = 123, visual = True):
 
     'TO SAVE PLOTS'
     try:
-      plt.savefig("/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Config_Plots/SIR_N%s_k%s_p%s_beta%s_mu%s" % (N,D,p, rhu(beta_eff,3), rhu(mu_eff,3)) + ".png")
+      plt.savefig("/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Config_Plots/SIR_N%s_k%s_p%s_beta%s_mu%s_R%s" % (N,D,rhu(p,3), rhu(beta_eff,3), rhu(mu_eff,3),rhu(beta_eff/mu_eff*D,3) ) + ".png")
     except:
       os.mkdir("/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Config_Plots")
-      plt.savefig("/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Config_Plots/SIR_N%s_k%s_p%s_beta%s_mu%s" % (N,D,p, rhu(beta_eff,3), rhu(mu_eff,3)) + ".png")
+      plt.savefig("/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Config_Plots/SIR_N%s_k%s_p%s_beta%s_mu%s_R%s" % (N,D,rhu(p,3), rhu(beta_eff,3), rhu(mu_eff,3),rhu(beta_eff/mu_eff*D,3) ) + ".png")
     
     return G
 
