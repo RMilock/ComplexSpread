@@ -41,7 +41,7 @@ it drives to a nearer pruning.
 """
 
 'rewire all the edges with a probability of p'
-N = int(100); p_max = 1
+N = int(30); p_max = 1
 
 'excecute the code'
 'max pow-2'
@@ -53,10 +53,10 @@ k_prog = np.arange(4,10,2)
 p_prog = np.linspace(0,p_max,int(p_max*10)+1)
 mu_prog = np.linspace(0.01,1,10)
 beta_prog = np.linspace(0.01,1,10)
-k_prog = [3,8]; p_prog = [0]; mu_prog = [1/5]; beta_prog = [2/5]
+p_prog = [0]
 'try only with p = 0.1'
 for k_ws,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog):  
-  ws_sir(N, k_ws = k_ws, p = p, beta = beta, mu = mu) 
+  if beta*k_ws/mu < 16 and beta*k_ws/mu > 0.5: ws_sir(N, k_ws = k_ws, p = p, beta = beta, mu = mu) 
 
 
 #from google.colab import files
@@ -179,12 +179,12 @@ infos_sorted_nodes(G, num_nodes=False)
 
 plot_G_degdist_adjmat_sir(G, D = D, beta = beta_eff, mu = mu_eff, log = True)
 
-
+my_dir = "/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/"
 try:
-      plt.savefig("Config_plots/NNR_Conf_SIR_N%s_D%s_p%s_beta%s_mu%s" % (N,D,p, rhu(beta_eff,3), rhu(mu_eff,3)) + ".pdf")
+      plt.savefig(my_dir + "Config_plots/NNR_Conf_SIR_N%s_D%s_p%s_beta%s_mu%s" % (N,D,p, rhu(beta_eff,3), rhu(mu_eff,3)) + ".pdf")
 except:
-      os.mkdir("Config_plots")
-      plt.savefig("Config_plots/NNR_Config_SIR_N%s_D%s_p%s_beta%s_mu%s" % (N,D,p, rhu(beta_eff,3), rhu(mu_eff,3)) + ".pdf")
+      os.mkdir(my_dir + "Config_plots")
+      plt.savefig(my_dir + "Config_plots/NNR_Config_SIR_N%s_D%s_p%s_beta%s_mu%s" % (N,D,p, rhu(beta_eff,3), rhu(mu_eff,3)) + ".pdf")
 
 #from google.colab import files
 #!rm -r /content/WS_plots/*.pdf

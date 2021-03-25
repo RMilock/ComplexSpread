@@ -154,7 +154,8 @@ def plot_sir(G, D = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter = 10
   plt.yscale("linear")
   plt.legend(loc="best")
 
-def plot_G_degdist_adjmat_sir(G, p = 0, D = None,  numb_iter = 200, beta = 1e-3, mu = 0.05, start_inf = 10, log = False, figsize = (12,12),):
+def plot_G_degdist_adjmat_sir(G, p = 0, D = None,  numb_iter = 200, beta = 1e-3, mu = 0.05, \
+  start_inf = 10, log = False, figsize = (12,12), plot_all = True):
   import matplotlib.pyplot as plt
   import networkx as nx
   N = G.number_of_nodes()
@@ -163,44 +164,48 @@ def plot_G_degdist_adjmat_sir(G, p = 0, D = None,  numb_iter = 200, beta = 1e-3,
     multiplier = 10 ** decimals
     return math.floor(n*multiplier + 0.5) / multiplier
 
-  #plot figures in different windows
-  fig, axs = plt.subplots(2,2, figsize = figsize)
-  nx.draw_circular(G, ax=axs[0,0], with_labels=True, font_size=12, node_size=5, width=.3)
-  
-  'set xticks to be centered'
-  sorted_degree = np.sort([G.degree(n) for n in G.nodes()])
+  if plot_all == True:
+    #plot figures in different windows
+    fig, axs = plt.subplots(2,2, figsize = figsize)
+    nx.draw_circular(G, ax=axs[0,0], with_labels=True, font_size=12, node_size=5, width=.3)
+    
+    'set xticks to be centered'
+    sorted_degree = np.sort([G.degree(n) for n in G.nodes()])
 
-  'degree distribution + possonian distr'
-  from scipy.stats import poisson
-  bins = np.arange(sorted_degree[0]-1,sorted_degree[-1]+2)
-  mean = rhu( np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes() )
-  print("rounded degrees mean", mean)
-  y = poisson.pmf(bins, mean)
-  n, hist_bins, _ = axs[0,1].hist(sorted_degree, bins = bins, \
-                                        log = log, density=0, color="green", ec="black", lw=1, align="left", label = "degrees distr")
-  hist_mean = n[np.where(hist_bins == mean)]; pois_mean = poisson.pmf(mean, mean)
-  'useful but deletable print'
-  #print( "bins = bins", bins, "\nhist_bins", hist_bins, "\ny", y, "\nn", n, \
-  #      "\npois mean", pois_mean , "hist_mean", hist_mean,  \
-  #      "\nmean", mean, "\nhist_mean", hist_mean, "  poisson.pmf", poisson.pmf(int(mean),mean), )
-  axs[0,1].plot(bins, y * hist_mean / pois_mean, "bo--", lw = 2, label = "poissonian distr")
-  axs[0,1].set_xlim(bins[0],bins[-1]) 
-  axs[0,1].legend(loc = "best")
-  
+    'degree distribution + possonian distr'
+    from scipy.stats import poisson
+    bins = np.arange(sorted_degree[0]-1,sorted_degree[-1]+2)
+    mean = rhu( np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes() )
+    print("rounded degrees mean", mean)
+    y = poisson.pmf(bins, mean)
+    n, hist_bins, _ = axs[0,1].hist(sorted_degree, bins = bins, \
+                                          log = log, density=0, color="green", ec="black", lw=1, align="left", label = "degrees distr")
+    hist_mean = n[np.where(hist_bins == mean)]; pois_mean = poisson.pmf(mean, mean)
+    'useful but deletable print'
+    #print( "bins = bins", bins, "\nhist_bins", hist_bins, "\ny", y, "\nn", n, \
+    #      "\npois mean", pois_mean , "hist_mean", hist_mean,  \
+    #      "\nmean", mean, "\nhist_mean", hist_mean, "  poisson.pmf", poisson.pmf(int(mean),mean), )
+    axs[0,1].plot(bins, y * hist_mean / pois_mean, "bo--", lw = 2, label = "poissonian distr")
+    axs[0,1].set_xlim(bins[0],bins[-1]) 
+    axs[0,1].legend(loc = "best")
+    
 
-  'plot adjiacency matrix'
-  adj_matrix = nx.adjacency_matrix(G).todense()
-  axs[1,0].matshow(adj_matrix, cmap=cm.get_cmap("Greens"))
-  print("Adj_matrix is symmetric", np.allclose(adj_matrix, adj_matrix.T))
+    'plot adjiacency matrix'
+    adj_matrix = nx.adjacency_matrix(G).todense()
+    axs[1,0].matshow(adj_matrix, cmap=cm.get_cmap("Greens"))
+    #print("Adj_matrix is symmetric", np.allclose(adj_matrix, adj_matrix.T))
 
-  'plot sir'
+  if plot_all == False: fig = plt.figure(figsize = figsize)
+
+  'plot always sir'
   if D == None: D = np.sum([j for (i,j) in G.degree() ]) / N
+  print("WS_SIR::N: %s, D: %s, beta: %s, mu: %s" % (N,D,beta,mu))
   plot_sir(G, beta = beta, mu = mu, start_inf = start_inf, D = D, numb_iter=numb_iter)
-  fig.suptitle("SIR_N%s_D%s_p%s_beta%s_mu%s_R%s"% (N,D,rhu(p,3), rhu(beta,3), rhu(mu,3), rhu(beta/mu*D,3)))
+  plt.suptitle("SIR_N%s_D%s_p%s_beta%s_mu%s_R%s"% (N,D,rhu(p,3), rhu(beta,3), rhu(mu,3), rhu(beta/mu*D,3)))
   plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
   plt.subplots_adjust(top=0.931,
   bottom=0.101,
-  left=0.012,
+  left=0.03,
   right=0.819,
   hspace=0.151,
   wspace=0.200)
@@ -259,18 +264,13 @@ def rhu(n, decimals=0): #round_half_up
   multiplier = 10 ** decimals
   return math.floor(n*multiplier + 0.5) / multiplier
 
-def ws_sir(N, k_ws = None, p = 0.1, infos = False, beta = 0.001, mu = 0.16):  
+def ws_sir(N, k_ws = None, p = 0.1, infos = False, beta = 0.001, mu = 0.16, plot_all = False):  
   'in this def: cut_factor = % of links remaining from the full net'
   'round_half_up k_ws for a better approximation of nx.c_w_s_graph+sir'
   import networkx as nx
   if k_ws == None: k_ws = N
   k_ws = int(rhu(k_ws))
   cut_factor = k_ws / N #float
-  'With p = 1 and <k>/N ~ 0, degree distr is sim to a Poissonian'
-  G = nx.connected_watts_strogatz_graph( n = N, k = k_ws, p = p, seed = 1 ) #k is the number of near linked nodes
-  
-  if infos == True: check_loops_parallel_edges(G); infos_sorted_nodes(G, num_nodes = False)
-  
   'set spreading parameters'
   cut_factor = 1
   beta_eff = beta/cut_factor; mu_eff = mu 
@@ -278,16 +278,29 @@ def ws_sir(N, k_ws = None, p = 0.1, infos = False, beta = 0.001, mu = 0.16):
   #MF def: beta_eff, mu_eff = 0.001/cf, 0.05/cf or 0.16/cf ; cf = 1
   #print("beta_eff %s ; mu_eff: %s; beta_1.2: %s" % (beta_eff, mu_eff, beta) )
   
-  'plot all -- old version: beta = beta_eff'
-  plot_G_degdist_adjmat_sir(G, D = k_ws, figsize=(15,15), beta = beta, mu = mu_eff, log = False, p = p)    
-  
-  'TO SAVE PLOTS'
-  try:
-    plt.savefig("/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/WS_plots/SIR_N%s_k%s_p%s_beta%s_mu%s_R%s" % (N,k_ws,rhu(p,3), rhu(beta_eff,3), rhu(mu_eff,3),rhu(beta/mu*k_ws,3) ) + ".png")
-  except:
-    os.mkdir("/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/WS_plots")
-    plt.savefig("/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/WS_plots/SIR_N%s_k%s_p%s_beta%s_mu%s_R%s" % (N,k_ws,rhu(p,3), rhu(beta_eff,3), rhu(mu_eff,3),rhu(beta/mu*k_ws,3)) + ".png")
+  intervals = [0.5,1,3,5,7,11,16]
+  R0 = beta_eff * k_ws / mu_eff
+  print("R0", R0)
+  for i in range(len(intervals)):
+    if intervals[i] <= R0 < intervals[i+1]:
+      'With p = 1 and <k>/N ~ 0, degree distr is sim to a Poissonian'
+      G = nx.connected_watts_strogatz_graph( n = N, k = k_ws, p = p, seed = 1 ) #k is the number of near linked nodes
+      if infos == True: check_loops_parallel_edges(G); infos_sorted_nodes(G, num_nodes = False)
+      'plot all -- old version: beta = beta_eff'
+      plot_G_degdist_adjmat_sir(G, D = k_ws, figsize=(15,15), beta = beta_eff, mu = mu_eff, log = False, p = p, plot_all=plot_all)    
 
+      'TO SAVE PLOTS'
+      flag = True
+      print("R0:%s, interi %s, interi+1 %s" % (R0, intervals[i], intervals[i+1]))
+      my_dir = "/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/"
+      folder = "WS_plots/"
+      #ISSUE with this R0_%s-%s/" % (intervals[i], intervals[i+1])
+      try:
+        os.mkdir(my_dir +  folder)
+        plt.savefig(my_dir + folder + "SIR_N%s_k%s_p%s_beta%s_mu%s_R%s" % (N,k_ws,rhu(p,3), rhu(beta_eff,3), rhu(mu_eff,3),rhu(beta/mu*k_ws,3) ) + ".png")
+      except:
+        plt.savefig(my_dir + folder + "SIR_N%s_k%s_p%s_beta%s_mu%s_R%s" % (N,k_ws,rhu(p,3), rhu(beta_eff,3), rhu(mu_eff,3),rhu(beta/mu*k_ws,3) ) + ".png")
+    plt.close()
 
 
 'Draw N degrees from a Poissonian sequence with lambda = D and length L'
@@ -332,11 +345,12 @@ def config_pois_model(N, D, p = 0, seed = 123, visual = True):
     if visual == True: plot_G_degdist_adjmat_sir(G, figsize=(15,15), beta = beta_eff, mu = mu_eff, log = True) 
 
     'TO SAVE PLOTS'
+    my_dir = "/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/"
     try:
-      plt.savefig("/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Config_Plots/SIR_N%s_k%s_p%s_beta%s_mu%s_R%s" % (N,D,rhu(p,3), rhu(beta_eff,3), rhu(mu_eff,3),rhu(beta_eff/mu_eff*D,3) ) + ".png")
+      plt.savefig(my_dir + "Config_Plots/SIR_N%s_k%s_p%s_beta%s_mu%s_R%s" % (N,D,rhu(p,3), rhu(beta_eff,3), rhu(mu_eff,3),rhu(beta_eff/mu_eff*D,3) ) + ".png")
     except:
-      os.mkdir("/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Config_Plots")
-      plt.savefig("/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Config_Plots/SIR_N%s_k%s_p%s_beta%s_mu%s_R%s" % (N,D,rhu(p,3), rhu(beta_eff,3), rhu(mu_eff,3),rhu(beta_eff/mu_eff*D,3) ) + ".png")
+      os.mkdir(my_dir + "Config_Plots")
+      plt.savefig(my_dir + "Config_Plots/SIR_N%s_k%s_p%s_beta%s_mu%s_R%s" % (N,D,rhu(p,3), rhu(beta_eff,3), rhu(mu_eff,3),rhu(beta_eff/mu_eff*D,3) ) + ".png")
     
     return G
 
