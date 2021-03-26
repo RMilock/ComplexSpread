@@ -55,8 +55,14 @@ mu_prog = np.linspace(0.01,1,10)
 beta_prog = np.linspace(0.01,1,10)
 p_prog = [0]
 'try only with p = 0.1'
-for k_ws,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog):  
-  if beta*k_ws/mu < 16 and beta*k_ws/mu > 0.5: ws_sir(N, k_ws = k_ws, p = p, beta = beta, mu = mu) 
+total_iterations = len(k_prog)*len(p_prog)*len(mu_prog)*len(beta_prog)
+print("Total Iterations:", total_iterations)
+done_iterations = 0
+for k_ws,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog): 
+  done_iterations+=1
+  print("Iterations left: %s%" % ( total_iterations - done_iterations ) )
+  if beta*k_ws/mu < 16 and beta*k_ws/mu > 0.5:
+    ws_sir(N, k_ws = k_ws, p = p, beta = beta, mu = mu) 
 
 
 #from google.colab import files
