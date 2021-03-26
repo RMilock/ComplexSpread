@@ -278,9 +278,9 @@ def ws_sir(N, k_ws = None, p = 0.1, infos = False, beta = 0.001, mu = 0.16, plot
   #MF def: beta_eff, mu_eff = 0.001/cf, 0.05/cf or 0.16/cf ; cf = 1
   #print("beta_eff %s ; mu_eff: %s; beta_1.2: %s" % (beta_eff, mu_eff, beta) )
   
-  intervals = [0.5,1,3,5,7,11,16]
+  intervals = [0.5]+[x for x in np.arange(1,12)]
   R0 = beta_eff * k_ws / mu_eff
-  print("R0", R0)
+  print("R0", R0)    
   for i in range(len(intervals)):
     if intervals[i] <= R0 < intervals[i+1]:
       'With p = 1 and <k>/N ~ 0, degree distr is sim to a Poissonian'
@@ -290,13 +290,14 @@ def ws_sir(N, k_ws = None, p = 0.1, infos = False, beta = 0.001, mu = 0.16, plot
       plot_G_degdist_adjmat_sir(G, D = k_ws, figsize=(15,15), beta = beta_eff, mu = mu_eff, log = False, p = p, plot_all=plot_all)    
 
       'TO SAVE PLOTS'
-      flag = True
       print("R0:%s, interi %s, interi+1 %s" % (R0, intervals[i], intervals[i+1]))
       my_dir = "/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/"
-      folder = "WS_plots/"
+      my_dir+="WS_plots/"
+      folder = "R0_%s-%s/" % (intervals[i], intervals[i+1])
+      #if flag == True: os.mkdir(my_dir); flag = False
       #ISSUE with this R0_%s-%s/" % (intervals[i], intervals[i+1])
       try:
-        os.mkdir(my_dir +  folder)
+        os.makedirs(my_dir +  folder)
         plt.savefig(my_dir + folder + "SIR_N%s_k%s_p%s_beta%s_mu%s_R%s" % (N,k_ws,rhu(p,3), rhu(beta_eff,3), rhu(mu_eff,3),rhu(beta/mu*k_ws,3) ) + ".png")
       except:
         plt.savefig(my_dir + folder + "SIR_N%s_k%s_p%s_beta%s_mu%s_R%s" % (N,k_ws,rhu(p,3), rhu(beta_eff,3), rhu(mu_eff,3),rhu(beta/mu*k_ws,3) ) + ".png")
