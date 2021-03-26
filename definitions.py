@@ -151,11 +151,11 @@ def plot_sir(G, D = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter = 10
   'plot labels'
   plt.xlabel('Time', fontsize = 16)
   plt.ylabel('Indivs/N', fontsize = 16)
-  plt.yscale("linear")
+  #plt.yscale("linear")
   plt.legend(loc="best")
 
 def plot_G_degdist_adjmat_sir(G, p = 0, D = None,  numb_iter = 200, beta = 1e-3, mu = 0.05, \
-  start_inf = 10, log = False, figsize = (12,12), plot_all = True):
+  start_inf = 10, log_dd = False, figsize = (12,12), plot_all = True):
   import matplotlib.pyplot as plt
   import networkx as nx
   N = G.number_of_nodes()
@@ -166,7 +166,7 @@ def plot_G_degdist_adjmat_sir(G, p = 0, D = None,  numb_iter = 200, beta = 1e-3,
 
   if plot_all == True:
     #plot figures in different windows
-    fig, axs = plt.subplots(2,2, figsize = figsize)
+    _, axs = plt.subplots(2,2, figsize = figsize)
     nx.draw_circular(G, ax=axs[0,0], with_labels=True, font_size=12, node_size=5, width=.3)
     
     'set xticks to be centered'
@@ -179,7 +179,7 @@ def plot_G_degdist_adjmat_sir(G, p = 0, D = None,  numb_iter = 200, beta = 1e-3,
     print("rounded degrees mean", mean)
     y = poisson.pmf(bins, mean)
     n, hist_bins, _ = axs[0,1].hist(sorted_degree, bins = bins, \
-                                          log = log, density=0, color="green", ec="black", lw=1, align="left", label = "degrees distr")
+                                          log = log_dd, density=0, color="green", ec="black", lw=1, align="left", label = "degrees distr")
     hist_mean = n[np.where(hist_bins == mean)]; pois_mean = poisson.pmf(mean, mean)
     'useful but deletable print'
     #print( "bins = bins", bins, "\nhist_bins", hist_bins, "\ny", y, "\nn", n, \
@@ -195,7 +195,7 @@ def plot_G_degdist_adjmat_sir(G, p = 0, D = None,  numb_iter = 200, beta = 1e-3,
     axs[1,0].matshow(adj_matrix, cmap=cm.get_cmap("Greens"))
     #print("Adj_matrix is symmetric", np.allclose(adj_matrix, adj_matrix.T))
 
-  if plot_all == False: fig = plt.figure(figsize = figsize)
+  if plot_all == False: plt.figure(figsize = figsize)
 
   'plot always sir'
   if D == None: D = np.sum([j for (i,j) in G.degree() ]) / N
@@ -264,7 +264,7 @@ def rhu(n, decimals=0): #round_half_up
   multiplier = 10 ** decimals
   return math.floor(n*multiplier + 0.5) / multiplier
 
-def ws_sir(N, k_ws = None, p = 0.1, infos = False, beta = 0.001, mu = 0.16, plot_all = False):  
+def ws_sir(N, k_ws = None, p = 0.1, infos = False, beta = 0.001, mu = 0.16, plot_all = False):    
   'in this def: cut_factor = % of links remaining from the full net'
   'round_half_up k_ws for a better approximation of nx.c_w_s_graph+sir'
   import networkx as nx
@@ -281,13 +281,13 @@ def ws_sir(N, k_ws = None, p = 0.1, infos = False, beta = 0.001, mu = 0.16, plot
   intervals = [0.5]+[x for x in np.arange(1,12)]
   R0 = beta_eff * k_ws / mu_eff
   print("R0", R0)    
-  for i in range(len(intervals)):
+  for i in range(len(intervals)-1):
     if intervals[i] <= R0 < intervals[i+1]:
       'With p = 1 and <k>/N ~ 0, degree distr is sim to a Poissonian'
       G = nx.connected_watts_strogatz_graph( n = N, k = k_ws, p = p, seed = 1 ) #k is the number of near linked nodes
       if infos == True: check_loops_parallel_edges(G); infos_sorted_nodes(G, num_nodes = False)
       'plot all -- old version: beta = beta_eff'
-      plot_G_degdist_adjmat_sir(G, D = k_ws, figsize=(15,15), beta = beta_eff, mu = mu_eff, log = False, p = p, plot_all=plot_all)    
+      plot_G_degdist_adjmat_sir(G, D = k_ws, figsize=(15,15), beta = beta_eff, mu = mu_eff, log_dd = False, p = p, plot_all=plot_all)    
 
       'TO SAVE PLOTS'
       print("R0:%s, interi %s, interi+1 %s" % (R0, intervals[i], intervals[i+1]))
@@ -343,7 +343,7 @@ def config_pois_model(N, D, p = 0, seed = 123, visual = True):
     #MF def: beta_eff, mu_eff = 0.001/cf, 0.05/cf or 0.16/cf ; cf = 1
     #Config_SIR def: D = 8, beta_eff, mu_eff = 0.1, 0.05
     #print("beta_eff %s ; mu_eff: %s" % (beta_eff, mu_eff))
-    if visual == True: plot_G_degdist_adjmat_sir(G, figsize=(15,15), beta = beta_eff, mu = mu_eff, log = True) 
+    if visual == True: plot_G_degdist_adjmat_sir(G, figsize=(15,15), beta = beta_eff, mu = mu_eff, log_dd = True) 
 
     'TO SAVE PLOTS'
     my_dir = "/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/"
