@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm 
 import os #to create a folder
 
+#Thurner pmts: beta_eff = 0.1, mu = 0.16; k_ws = 3 vel 8
+#MF def: beta_eff, mu_eff = 0.001/cf, 0.05/cf or 0.16/cf ; cf = 1
 
 # if D = numb, beta = beta*D/N but too low
 def sir(G, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False, D = None):
@@ -182,13 +184,10 @@ def plot_G_degdist_adjmat_sir(G, p = 0, D = None,  numb_iter = 200, beta = 1e-3,
                                           log = log_dd, density=0, color="green", ec="black", lw=1, align="left", label = "degrees distr")
     hist_mean = n[np.where(hist_bins == mean)]; pois_mean = poisson.pmf(mean, mean)
     'useful but deletable print'
-    #print( "bins = bins", bins, "\nhist_bins", hist_bins, "\ny", y, "\nn", n, \
-    #      "\npois mean", pois_mean , "hist_mean", hist_mean,  \
-    #      "\nmean", mean, "\nhist_mean", hist_mean, "  poisson.pmf", poisson.pmf(int(mean),mean), )
     axs[0,1].plot(bins, y * hist_mean / pois_mean, "bo--", lw = 2, label = "poissonian distr")
     axs[0,1].set_xlim(bins[0],bins[-1]) 
     axs[0,1].legend(loc = "best")
-    
+      
 
     'plot adjiacency matrix'
     adj_matrix = nx.adjacency_matrix(G).todense()
@@ -198,14 +197,14 @@ def plot_G_degdist_adjmat_sir(G, p = 0, D = None,  numb_iter = 200, beta = 1e-3,
   if plot_all == False: plt.figure(figsize = figsize)
 
   'plot always sir'
-  if D == None: D = np.sum([j for (i,j) in G.degree() ]) / N
+  if D == None: D = np.sum([j for (i,j) in G.degree()]) / N
   print("WS_SIR::N: %s, D: %s, beta: %s, mu: %s" % (N,D,beta,mu))
-  plot_sir(G, beta = beta, mu = mu, start_inf = start_inf, D = D, numb_iter=numb_iter)
+  plot_sir(G, beta = beta, mu = mu, start_inf = start_inf, D = D, numb_iter = numb_iter)
   plt.suptitle("SIR_N%s_D%s_p%s_beta%s_mu%s_R%s"% (N,D,rhu(p,3), rhu(beta,3), rhu(mu,3), rhu(beta/mu*D,3)))
   plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
   plt.subplots_adjust(top=0.931,
   bottom=0.101,
-  left=0.03,
+  left=0.040,
   right=0.819,
   hspace=0.151,
   wspace=0.200)
@@ -229,7 +228,7 @@ def infos_sorted_nodes(G, num_nodes = False):
     if num_nodes == True:  num_nodes = len(nodes)
     if num_nodes == False: num_nodes = 0
     for i in range(num_nodes):
-      if i == 0: print("Triplets of (nodes, edges, degree) sorted by degree: \n")
+      if i == 0: print("Triplets of (nodes, linked_node(s), degree) sorted by degree:")
       print( inner_sorted_nodes[i] )
 
 def remove_loops_parallel_edges(G, remove_loops = True):
@@ -247,7 +246,7 @@ def remove_loops_parallel_edges(G, remove_loops = True):
 
 def check_loops_parallel_edges(G):
   ls = list(G.edges())
-  print("parallel edges", [i for i in ls for j in ls[ls.index(i)+1:] if i==j])
+  print("parallel edges", set([i for i in ls for j in ls[ls.index(i)+1:] if i==j]))
   print("loops", [(i,j) for (i,j) in set(G.edges()) if i == j])
 
 'number of iterations, i.e. or max power or fixed by user'
@@ -264,6 +263,31 @@ def rhu(n, decimals=0): #round_half_up
   multiplier = 10 ** decimals
   return math.floor(n*multiplier + 0.5) / multiplier
 
+def save_in(folder, beta_eff, k_ws, mu_eff, N, p, plot_all = True, infos = False):
+  intervals = [0.5]+[x for x in np.arange(1,12)]
+  R0 = beta_eff * k_ws / mu_eff
+  print("R0", R0)    
+  for i in range(len(intervals)-1):
+    if intervals[i] <= R0 < intervals[i+1]:
+      'With p = 1 and <k>/N ~ 0, degree distr is sim to a Poissonian'
+      G = nx.connected_watts_strogatz_graph( n = N, k = k_ws, p = p, seed = 1 ) #k is the number of near linked nodes
+      if infos == True: check_loops_parallel_edges(G); infos_sorted_nodes(G, num_nodes = False)
+      'plot all -- old version: beta = beta_eff'
+      plot_G_degdist_adjmat_sir(G, D = k_ws, figsize=(15,15), beta = beta_eff, mu = mu_eff, log_dd = False, p = p, plot_all=plot_all)    
+
+      'TO SAVE PLOTS'
+      print("R0:%s, interi %s, interi+1 %s" % (R0, intervals[i], intervals[i+1]))
+      my_dir = "/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/"
+      my_dir+=folder
+      folder = "R0_%s-%s/" % (intervals[i], intervals[i+1])
+      #if flag == True: os.mkdir(my_dir); flag = False
+      #ISSUE with this R0_%s-%s/" % (intervals[i], intervals[i+1])
+      try:
+        os.makedirs(my_dir +  folder)
+        plt.savefig(my_dir + folder + "SIR_N%s_k%s_p%s_beta%s_mu%s_R%s" % (N,k_ws,rhu(p,3), rhu(beta_eff,3), rhu(mu_eff,3),rhu(beta_eff/mu_eff*k_ws,3) ) + ".png")
+      except:
+        plt.savefig(my_dir + folder + "SIR_N%s_k%s_p%s_beta%s_mu%s_R%s" % (N,k_ws,rhu(p,3), rhu(beta_eff,3), rhu(mu_eff,3),rhu(beta_eff/mu_eff*k_ws,3) ) + ".png")
+      
 def ws_sir(N, k_ws = None, p = 0.1, infos = False, beta = 0.001, mu = 0.16, plot_all = False):    
   'in this def: cut_factor = % of links remaining from the full net'
   'round_half_up k_ws for a better approximation of nx.c_w_s_graph+sir'
@@ -274,8 +298,7 @@ def ws_sir(N, k_ws = None, p = 0.1, infos = False, beta = 0.001, mu = 0.16, plot
   'set spreading parameters'
   cut_factor = 1
   beta_eff = beta/cut_factor; mu_eff = mu 
-  #Thurner pmts: beta_eff = 0.1, mu = 0.16; k_ws = 3 vel 8
-  #MF def: beta_eff, mu_eff = 0.001/cf, 0.05/cf or 0.16/cf ; cf = 1
+  
   #print("beta_eff %s ; mu_eff: %s; beta_1.2: %s" % (beta_eff, mu_eff, beta) )
   
   intervals = [0.5]+[x for x in np.arange(1,12)]
@@ -301,7 +324,7 @@ def ws_sir(N, k_ws = None, p = 0.1, infos = False, beta = 0.001, mu = 0.16, plot
         plt.savefig(my_dir + folder + "SIR_N%s_k%s_p%s_beta%s_mu%s_R%s" % (N,k_ws,rhu(p,3), rhu(beta_eff,3), rhu(mu_eff,3),rhu(beta/mu*k_ws,3) ) + ".png")
       except:
         plt.savefig(my_dir + folder + "SIR_N%s_k%s_p%s_beta%s_mu%s_R%s" % (N,k_ws,rhu(p,3), rhu(beta_eff,3), rhu(mu_eff,3),rhu(beta/mu*k_ws,3) ) + ".png")
-    plt.close()
+      plt.close()
 
 
 'Draw N degrees from a Poissonian sequence with lambda = D and length L'
@@ -315,25 +338,25 @@ def pois_pos_degrees(D, N, L = int(2e3)):
 def config_pois_model(N, D, p = 0, seed = 123, visual = True):
     '''create a network with the node degrees drawn from a poissonian with even sum of degrees'''
     np.random.seed(seed)
-    degrees = pois_pos_degrees(D,N) #for def of poissonian distr degrees are integers
+    degrees = pois_pos_degrees(D,N) #poiss distr with deg != 0
 
-    print("Degree sum:", np.sum(degrees), "with seed:", seed, "numb of 0-degree nodes:", len([x for x in degrees if x == 0]) )
+    print("Degree sum:", np.sum(degrees), "with seed:", seed)
     while(np.sum(degrees)%2 != 0): #i.e. sum is odd --> change seed
         seed+=1
         np.random.seed(seed)
         degrees = pois_pos_degrees(D,N)
         print("Degree sum:", np.sum(degrees), "with seed:", seed, )
+    print("numb of 0-degree nodes:", len([x for x in degrees if x == 0]) )
 
     print("\nNetwork Created but w/o standard neighbors wiring!")
     '''create and remove loops since they apppears as neighbors of a node. Check it via print(list(G.neighbors(18))'''
     G = nx.configuration_model(degrees, seed = seed)
 
     'If D/N !<< 1, by removing loops and parallel edges, we lost degrees. Ex. with N = 50 = D, <k> = 28 != 49.8'
+    #print("Total Edges", G.edges())
     check_loops_parallel_edges(G)
     remove_loops_parallel_edges(G)
     #check_loops_parallel_edges(G)
-
-    infos_sorted_nodes(G)
 
     'plot G, degree distribution and the adiaciency matrix'
     cut_factor = 1
@@ -345,15 +368,118 @@ def config_pois_model(N, D, p = 0, seed = 123, visual = True):
     #print("beta_eff %s ; mu_eff: %s" % (beta_eff, mu_eff))
     if visual == True: plot_G_degdist_adjmat_sir(G, figsize=(15,15), beta = beta_eff, mu = mu_eff, log_dd = True) 
 
+
+    '''
     'TO SAVE PLOTS'
     my_dir = "/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/"
+    folder = "Bin_Conf_Model"
     try:
-      plt.savefig(my_dir + "Config_Plots/SIR_N%s_k%s_p%s_beta%s_mu%s_R%s" % (N,D,rhu(p,3), rhu(beta_eff,3), rhu(mu_eff,3),rhu(beta_eff/mu_eff*D,3) ) + ".png")
+      os.makedirs(my_dir +  folder)
+      plt.savefig(my_dir + folder + "SIR_N%s_k%s_p%s_beta%s_mu%s_R%s" % (N,k_ws,rhu(p,3), rhu(beta_eff,3), rhu(mu_eff,3),rhu(beta/mu*k_ws,3) ) + ".png")
     except:
-      os.mkdir(my_dir + "Config_Plots")
-      plt.savefig(my_dir + "Config_Plots/SIR_N%s_k%s_p%s_beta%s_mu%s_R%s" % (N,D,rhu(p,3), rhu(beta_eff,3), rhu(mu_eff,3),rhu(beta_eff/mu_eff*D,3) ) + ".png")
+      plt.savefig(my_dir + folder + "SIR_N%s_k%s_p%s_beta%s_mu%s_R%s" % (N,k_ws,rhu(p,3), rhu(beta_eff,3), rhu(mu_eff,3),rhu(beta/mu*k_ws,3) ) + ".png")
+    '''
     
     return G
+
+def nearest_neighbors_pois_net(G, D, beta_eff, mu_eff, p = 0):
+  verbose = False
+  def verboseprint(*args):
+    if verbose == True:
+      print(*args)
+    elif verbose == False:
+      None
+
+  'for random rewiring with p'
+  N = G.number_of_nodes()
+  l_nodes = [x for x in G.nodes()]
+
+  edges = set() #avoid to put same link twice (+ unordered)
+  nodes_degree = {}
+
+  'list of the nodes sorted by their degree'
+  for node in G.nodes():
+    nodes_degree[node] = G.degree(node)
+  sorted_nodes_degree = {k: v for k, v in sorted(nodes_degree.items(), key=lambda item: item[1])}
+  sorted_nodes = [node for node in sorted_nodes_degree.keys()]
+  verboseprint("There are the sorted_nodes", sorted_nodes) #, "\n", sorted_nodes_degree.values())
+
+  'cancel all the edges'
+  replace_edges_from(G)
+
+  '------ Start of Rewiring with NNR! ---------'
+  'Hint: create edges rewiring from ascending degree'
+  print("\nStart fo NN-Rewiring")
+  def get_var_name(my_name):
+    variables = dict(globals())
+    for name in variables:
+        if variables[name] is my_name:
+            #verboseprint("v[n]", variables[name], "my_n", my_name)
+            return name
+  def ls_nodes_remove(node): l_nodes.remove(node); sorted_nodes.remove(node)
+  def zero_deg_remove(node): 
+    if nodes_degree[node] == 0 and node in l_nodes and node in sorted_nodes: ls_nodes_remove(node); verboseprint("\n", get_var_name(node), "=", node, "is removed via if deg == 0")
+
+  verboseprint("\nStart of the wiring:")
+  while( len(l_nodes) > 1 ):
+    node = sorted_nodes[0]
+    verboseprint("---------------------------")
+    verboseprint("Wire node", node, " with degree", nodes_degree[node], \
+          "\nto be rew with:", l_nodes, "which are in total", len(l_nodes))
+    
+    
+    L = len(l_nodes)
+    'define aa_attached'
+    aa_attached = l_nodes[(l_nodes.index(node)+1)%L]; verboseprint("the anticlock-nearest is ", aa_attached)
+    
+    if node in l_nodes:
+      'if degreees[node] > 1, forced-oscillation-wiring'
+      for j in range(1,nodes_degree[node]//2+1): #neighbors attachment and no self-loops "1"
+        L = len(l_nodes)
+        if len(l_nodes) == 1: break
+        verboseprint("entered for j:",j)
+        idx = l_nodes.index(node)
+        verboseprint("idx_node:", idx, "errored idx", (idx-j)%L)
+        a_attached = l_nodes[(idx+j)%L] #anticlockwise-linked node
+        c_attached = l_nodes[(idx-j)%L]
+        aa_attached = l_nodes[(idx+nodes_degree[node]//2+1)%L]
+        verboseprint(node,a_attached); verboseprint(node,c_attached)
+        if node != a_attached: edges.add((node,a_attached)); nodes_degree[a_attached]-=1; \
+        verboseprint("deg[%s] = %s" % (a_attached, nodes_degree[a_attached]))
+        if node != c_attached: edges.add((node,c_attached)); nodes_degree[c_attached]-=1; \
+        verboseprint("deg[%s] = %s"%(c_attached,nodes_degree[c_attached]))
+
+        'remove node whenever its degree is = 0:'
+        zero_deg_remove(a_attached)
+        zero_deg_remove(c_attached)
+
+      if len(l_nodes) == 1: break       
+      'if nodes_degree[i] is odd  and the aa_attached, present in l_nodes, has a stub avaible, then, +1 anticlock-wise'
+      if nodes_degree[node] % 2 != 0 and nodes_degree[aa_attached] != 0: 
+        edges.add((node, aa_attached)); nodes_degree[aa_attached]-=1
+        verboseprint("edge with aa added: (", node, aa_attached, ") and deg_aa_att[%s] = %s"%(aa_attached,nodes_degree[aa_attached]))
+      
+      'aa_attached == 0 should not raise error since it should be always present in l_n and s_n'
+      if nodes_degree[aa_attached] == 0 and aa_attached in l_nodes and aa_attached in sorted_nodes: 
+        ls_nodes_remove(aa_attached)
+        verboseprint("\naa_attached node", aa_attached, "is removed via if deg == 0")
+      if node in l_nodes and node in sorted_nodes: ls_nodes_remove(node);  verboseprint(node, "is removed since it was the selected node")
+      if len(l_nodes)==1: verboseprint("I will stop here"); break
+
+  verboseprint("End of wiring")
+
+  replace_edges_from(G, edges)
+
+  check_loops_parallel_edges(G)
+  infos_sorted_nodes(G, num_nodes=False)
+
+  plot_G_degdist_adjmat_sir(G, D = D, beta = beta_eff, mu = mu_eff, log_dd = False, plot_all=True, start_inf = 10)
+  plt.show()
+
+  folder = "NNR_Conf_Model"
+  save_in(folder = folder, beta_eff = beta_eff, k_ws = D, mu_eff = mu_eff, N = N, p = p)
+  
+  return G
 
 '''def:: "replace" existing edges, since built-in method only adds'''
 def replace_edges_from(G,list_edges=[]):
