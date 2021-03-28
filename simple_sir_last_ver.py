@@ -83,18 +83,3 @@ for k_ws,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog):
 
 TODO: implement the idea of a pruning factor as in ws_sir
 """
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
