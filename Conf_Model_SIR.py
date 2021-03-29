@@ -9,19 +9,39 @@ from itertools import product
 import os #to create a folder
 from definitions import ws_sir, plot_sir, infos_sorted_nodes, plot_G_degdist_adjmat_sir, \
 remove_loops_parallel_edges, check_loops_parallel_edges, config_pois_model, replace_edges_from, \
-rhu
+rhu, nearest_neighbors_pois_net
 
 #from google.colab import files
 #!rm -r /content/Config_plots/*.pdf
 
-D = 8; seed=123; p = 0; N = int(300); beta_eff = 0.01; mu_eff = 0.2
+p_max = 0; N = int(30)
 
 """## NN_rewiring: Pb with D = 8"""
 
-G = config_pois_model(N,D,visual = False)
-infos_sorted_nodes(G, False)
+'test != kind of '
+k_prog = np.arange(4,10,2)
+p_prog = np.linspace(0,p_max,int(p_max*10)+1)
+mu_prog = np.linspace(0.01,1,10)
+beta_prog = np.linspace(0.01,1,10)
+p_prog = [0]
+'try only with p = 0.1'
+total_iterations = len(k_prog)*len(p_prog)*len(mu_prog)*len(beta_prog)
+print("Total Iterations:", total_iterations)
+done_iterations = 0
+for k_ws,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog): 
+  done_iterations+=1
+  print("Iterations left: %s" % ( total_iterations - done_iterations ) )
+  if beta*k_ws/mu < 16 and beta*k_ws/mu > 0.5:
+    G = config_pois_model(N,k_ws, beta_eff = beta, mu_eff = mu, visual = True)
+    #infos_sorted_nodes(G, True)
+    nearest_neighbors_pois_net(G, D = k_ws, beta_eff = beta, mu_eff = mu)
+    plt.show()
 
 
+
+
+
+plt.show()
 '''
 todo: 
 insert the NNR conf model + save_in + uniform the proression done in ws also with this
