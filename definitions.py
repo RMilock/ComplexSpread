@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm 
 import os #to create a folder
 
-#Thurner pmts: beta_eff = 0.1, mu = 0.16; k_ws = 3 vel 8
-#MF def: beta_eff, mu_eff = 0.001/cf, 0.05/cf or 0.16/cf ; cf = 1
+#Thurner pmts: beta = 0.1, mu = 0.16; D = 3 vel 8
+#MF def: beta, mu = 0.001/cf, 0.05/cf or 0.16/cf ; cf = 1
 
 # if D = numb, beta = beta*D/N but too low
 def sir(G, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False, D = None):
@@ -88,7 +88,7 @@ def sir(G, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False, D = None):
  
     return prevalence, recovered, cum_positives
 
-def itermean_sir(G, D = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter = 200):
+def itermean_sir(G,  numb_iter, D = None, beta = 1e-3, mu = 0.05, start_inf = 10,):
     'def a function that iters numb_iter and make an avg of the trajectories'
     'k are the starting infected'
     import itertools
@@ -115,7 +115,7 @@ def itermean_sir(G, D = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter 
 
     return trajectories, avg
 
-def plot_sir(G, ax, D = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter = 100):
+def plot_sir(G, ax, numb_iter, D = None, beta = 1e-3, mu = 0.05, start_inf = 10):
   'D = numb acts only in mf_avg'
   import itertools
   import matplotlib.pyplot as plt
@@ -168,7 +168,7 @@ def plot_sir(G, ax, D = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter 
   ax.legend(bbox_to_anchor=(1, 1), edgecolor="dimgrey", loc='upper left') #add: leg = 
 
 
-def plot_G_degdist_adjmat_sir(G, p = 0, D = None,  numb_iter = 200, beta = 1e-3, mu = 0.05, \
+def plot_G_degdist_adjmat_sir(G, numb_iter, p = 0, D = None, beta = 1e-3, mu = 0.05, \
   start_inf = 10, log_dd = False, figsize = (12,12), plot_all = True):
   import matplotlib.pyplot as plt
   import networkx as nx
@@ -212,9 +212,9 @@ def plot_G_degdist_adjmat_sir(G, p = 0, D = None,  numb_iter = 200, beta = 1e-3,
 
   'plot always sir'
   if D == None: D = np.sum([j for (i,j) in G.degree()]) / N
-  print("The model has N: %s, D: %s, right margin matplotlibbeta: %s, mu: %s" % (N,D,beta,mu))
+  print("The model has N: %s, D: %s, beta: %s, mu: %s" % (N,D,beta,mu))
   plot_sir(G, ax=ax, beta = beta, mu = mu, start_inf = start_inf, D = D, numb_iter = numb_iter)
-  plt.suptitle("SIR_N%s_D%s_p%s_beta%s_mu%s_R%s"% (N,D,rhu(p,3), rhu(beta,3), rhu(mu,3), rhu(beta/mu*D,3)))
+  plt.suptitle("SIR_R0_%s_N%s_D%s_p%s_beta%s_mu%s"% (rhu(beta/mu*D,3),N,D,rhu(p,3), rhu(beta,3), rhu(mu,3), ))
   plt.subplots_adjust(top=0.931,
   bottom=0.101,
   left=0.050,
@@ -276,44 +276,42 @@ def rhu(n, decimals=0): #round_half_up
   multiplier = 10 ** decimals
   return math.floor(n*multiplier + 0.5) / multiplier
 
-def plot_save_sir(G, folder, beta_eff, k_ws, mu_eff, p, start_inf = 10, plot_all = True, infos = False):
+def plot_save_sir(G, folder, beta, D, mu, p, start_inf = 10, numb_iter = 200, plot_all = True, infos = False):
   intervals = [x for x in np.arange(12)]
   N = G.number_of_nodes()
-  R0 = beta_eff * k_ws / mu_eff
+  R0 = beta * D / mu
   print("R0", R0)    
   for i in range(len(intervals)-1):
     if intervals[i] <= R0 < intervals[i+1]:
-      'plot all -- old version: beta = beta_eff'
-      plot_G_degdist_adjmat_sir(G, D = k_ws, figsize=(15,15), beta = beta_eff, mu = mu_eff, log_dd = False, p = p, plot_all=plot_all, start_inf = start_inf)    
+      'plot all -- old version: beta = beta'
+      plot_G_degdist_adjmat_sir(G, numb_iter = numb_iter, D = D, figsize=(15,15), beta = beta, mu = mu, log_dd = False, p = p, plot_all=plot_all, start_inf = start_inf)    
       'TO SAVE PLOTS'
       my_dir = "/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Trial_Plots/"
       my_dir+=folder+"/"
       folder = "R0_%s-%s/" % (intervals[i], intervals[i+1])
       try:
         os.makedirs(my_dir +  folder)
-        plt.savefig(my_dir + folder + "SIR_N%s_k%s_p%s_beta%s_mu%s_R%s" % (N,k_ws,rhu(p,3), rhu(beta_eff,3), rhu(mu_eff,3),rhu(beta_eff/mu_eff*k_ws,3) ) + ".png")
+        plt.savefig(my_dir + folder + "SIR_R0_%s_N%s_D%s_p%s_beta%s_mu%s"% ( rhu(beta/mu*D,3),N,D,rhu(p,3), rhu(beta,3), rhu(mu,3) ) + ".png")
       except:
-        plt.savefig(my_dir + folder + "SIR_N%s_k%s_p%s_beta%s_mu%s_R%s" % (N,k_ws,rhu(p,3), rhu(beta_eff,3), rhu(mu_eff,3),rhu(beta_eff/mu_eff*k_ws,3) ) + ".png")
+        plt.savefig(my_dir + folder + "SIR_R0_%s_N%s_D%s_p%s_beta%s_mu%s"% ( rhu(beta/mu*D,3),N,D,rhu(p,3), rhu(beta,3), rhu(mu,3) ) + ".png")
   plt.close()
 
 
-def ws_sir(N, folder, k_ws = None, p = 0.1, infos = False, beta = 0.001, mu = 0.16, plot_all = False, start_inf = 10):    
+def ws_sir(G, folder, pruning = False, D = None, p = 0.1, infos = False, beta = 0.001, mu = 0.16, plot_all = False, start_inf = 10):    
   'in this def: cut_factor = % of links remaining from the full net'
-  'round_half_up k_ws for a better approximation of nx.c_w_s_graph+sir'
+  'round_half_up D for a better approximation of nx.c_w_s_graph+sir'
   import networkx as nx
-  if k_ws == None: k_ws = N
-  k_ws = int(rhu(k_ws))
-  cut_factor = k_ws / N #float
-  'set spreading parameters'
-  cut_factor = 1
-  beta_eff = beta/cut_factor; mu_eff = mu
+  N = G.number_of_nodes()
+  if pruning == True:
+    if D == None: D = N
+    D = int(rhu(D))
+    cut_factor = D / N #float
+    'set spreading parameters'
+    cut_factor = 1
+    beta = beta/cut_factor; mu = mu
   
-  #print("beta_eff %s ; mu_eff: %s; beta_1.2: %s" % (beta_eff, mu_eff, beta) )
-  'With p = 1 and <k>/N ~ 0, degree distr is sim to a Poissonian'
-  G = nx.connected_watts_strogatz_graph( n = N, k = k_ws, p = p, seed = 1 ) #k is the number of near linked nodes
   if infos == True: check_loops_parallel_edges(G); infos_sorted_nodes(G, num_nodes = False)
-  
-  plot_save_sir(G = G, folder = folder, beta_eff = beta_eff, k_ws = k_ws, mu_eff = mu_eff, p = p, start_inf = start_inf, plot_all=plot_all)
+  plot_save_sir(G = G, folder = folder, beta = beta, D = D, mu = mu, p = p, start_inf = start_inf, plot_all=plot_all)
 
 
 'Draw N degrees from a Poissonian sequence with lambda = D and length L'
@@ -324,7 +322,7 @@ def pois_pos_degrees(D, N, L = int(2e3)):
     #print("len(s) in pos_degrees", len([x for x in pos_degrees if x == 0]))
     return pos_degrees
 
-def config_pois_model(N, D, beta_eff, mu_eff, p = 0, seed = 123, \
+def config_pois_model(N, D, beta, mu, p = 0, seed = 123, \
   plot_all = True):
     '''create a network with the node degrees drawn from a poissonian with even sum of degrees'''
     np.random.seed(seed)
@@ -349,13 +347,13 @@ def config_pois_model(N, D, beta_eff, mu_eff, p = 0, seed = 123, \
     #check_loops_parallel_edges(G)
 
     'plot G, degree distribution and the adiaciency matrix'
-    #Config_SIR def: D = 8, beta_eff, mu_eff = 0.1, 0.05
-    #print("beta_eff %s ; mu_eff: %s" % (beta_eff, mu_eff))
-    plot_save_sir(G, "Conf_Model", beta_eff = beta_eff, k_ws = D, mu_eff = mu_eff, p = 0, plot_all=plot_all)
+    #Config_SIR def: D = 8, beta, mu = 0.1, 0.05
+    #print("beta %s ; mu: %s" % (beta, mu))
+    plot_save_sir(G, "Conf_Model", beta = beta, D = D, mu = mu, p = 0, plot_all=plot_all)
     
     return G
 
-def nearest_neighbors_pois_net(G, D, beta_eff, mu_eff, start_inf = 10, p = 0, plot_all = True):
+def nearest_neighbors_pois_net(G, D, beta, mu, start_inf = 10, p = 0, plot_all = True):
   verbose = False
   def verboseprint(*args):
     if verbose == True:
@@ -444,7 +442,7 @@ def nearest_neighbors_pois_net(G, D, beta_eff, mu_eff, start_inf = 10, p = 0, pl
   check_loops_parallel_edges(G)
   infos_sorted_nodes(G, num_nodes=False)
 
-  plot_save_sir(G, plot_all=plot_all, folder = "NNR_Conf_Model", beta_eff = beta_eff, k_ws = D, mu_eff = mu_eff, p = p, start_inf = start_inf)
+  plot_save_sir(G, plot_all=plot_all, folder = "NNR_Conf_Model", beta = beta, D = D, mu = mu, p = p, start_inf = start_inf)
   
   return G
 
