@@ -11,7 +11,7 @@ from definitions import ws_sir, plot_sir, infos_sorted_nodes, plot_G_degdist_adj
 remove_loops_parallel_edges, check_loops_parallel_edges, config_pois_model, replace_edges_from, \
 rhu, nearest_neighbors_pois_net
 
-p_max = 0; N = int(30)
+p_max = 0; N = int(1e3)
 
 """## Configurational Model with poissonian degree:
 1) Question: 
@@ -32,20 +32,22 @@ TODO: implement the idea of a pruning factor as in ws_sir
 """## NN_rewiring: Pb with D = 8"""
 
 'test != kind of '
-k_prog = np.arange(4,10,2)
+k_prog = np.arange(2,10,2)
 p_prog = np.linspace(0,p_max,int(p_max*10)+1)
-mu_prog = np.linspace(0.01,1,10)
-beta_prog = np.linspace(0.01,1,10)
+mu_prog = np.linspace(0.001,1,15)
+beta_prog = np.linspace(0.001,1,15)
 p_prog = [0]
 'try only with p = 0.1'
-total_iterations = len(k_prog)*len(p_prog)*len(mu_prog)*len(beta_prog)
+total_iterations = 0
+for D,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog):  
+  if .5 < beta*D/mu < 16:
+    total_iterations+=1
 print("Total Iterations:", total_iterations)
 done_iterations = 0
-for k_ws,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog): 
-  done_iterations+=1
-  print("Iterations left: %s" % ( total_iterations - done_iterations ) )
-  if beta*k_ws/mu < 16 and beta*k_ws/mu > 0.5:
-    G = config_pois_model(N,k_ws, beta_eff = beta, mu_eff = mu, plot_all = False)
+for D,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog):  
+  if .5 < beta*D/mu < 16:
+    done_iterations+=1
+    print("Iterations left: %s" % ( total_iterations - done_iterations ) )
+    G = config_pois_model(N,D, beta = beta, mu = mu, plot_all = False)
     #infos_sorted_nodes(G, True)
-    nearest_neighbors_pois_net(G, D = k_ws, beta_eff = beta, mu_eff = mu, plot_all=False)
-    plt.show()
+    nearest_neighbors_pois_net(G, D = D, beta = beta, mu = mu, plot_all=False)
