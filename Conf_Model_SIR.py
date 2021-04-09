@@ -48,6 +48,6 @@ for D,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog):
   if .5 < beta*D/mu < 16:
     done_iterations+=1
     print("Iterations left: %s" % ( total_iterations - done_iterations ) )
-    G = config_pois_model(N,D, beta = beta, mu = mu, plot_all = False)
+    G = config_pois_model(N,D, beta = beta, mu = mu, adj_or_sir = False)
     #infos_sorted_nodes(G, True)
-    nearest_neighbors_pois_net(G, D = D, beta = beta, mu = mu, plot_all=False)
+    nearest_neighbors_pois_net(G, D = D, beta = beta, mu = mu, adj_or_sir=False)
