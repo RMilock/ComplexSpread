@@ -25,6 +25,9 @@ it drives to a nearer pruning.
 # think on: if changing instantly k_prog but R0 would be much shifted for this or
 # save R_0 @ first and then make steps forward
 
+def even_int(x):
+  if int(x) % 2 != 0: return int(x-1)
+  return int(x)
 
 'rewire all the edges with a probability of p'
 N = int(1e3)
@@ -34,22 +37,29 @@ for pruning in [True, False]: #if 1 needed: add ``break``
   if pruning == True:
     p = 0.1#np.linspace(0,p_max,int(p_max*10)+1)
     print("I'm pruning!")
-    betas = [1e-3]
-    k_prog = [int(N/x) for x in \
-              [2**i for i in range(0,pow_max(N, num_iter = "all"))]]*len(betas) #if pow_max +1 --> error of connectivity: D = k_odd - 1
-    beta_prog = [beta*N/k for beta in betas for k in k_prog[:len(set(k_prog))]]
-    mu_prog = np.linspace(0.016,1,25) #[0.467, 0.385, 0.631]
+    betas = [1e-3, 3e-3, ]
+    k_prog = [even_int(N/x) for x in \
+              [2**i for i in range(0,pow_max(N, num_iter = "all"))]] #if pow_max +1 --> error of connectivity: D = k_odd - 1
+    beta_prog = [ [ beta*N/k for k in k_prog[:len(set(k_prog))] ] for beta in betas ]
+    
+    'In WS model, if D = odd, D = D - 1. So, convert it now'
+    mu_prog = np.linspace(0.016,1,25) 
+    #interesting behaviour for beta = 1e-3 and [0.467, 0.385, 0.631]
     
     folder = "WS_Pruned" 
 
-    print("beta_prog", beta_prog, "\nmu_prog", mu_prog, "\nk_prog", k_prog)
+    print("k_prog %s, len: %s" % (k_prog, len(k_prog)),
+    "\nbeta_prog %s, len: %s" % (beta_prog, len(beta_prog)), 
+    "\nmu_prog %s, len: %s" % (mu_prog, len(mu_prog)), )
 
     total_iterations = 0
     for mu in mu_prog:
-        for beta, D in zip(beta_prog, k_prog):
+      for i in range(len(beta_prog)):
+        for beta, D in zip(beta_prog[i], k_prog):
           #print("R0: ", beta*D/mu)
-          if  0 < beta*D/mu < 7:
-            total_iterations += 1
+          if  0 < beta*D/mu < 10 and beta <= 1:
+            print("R0 < 10", beta*D/mu)
+          else: print("beta %s, beta*D/mu %s" % (beta, beta*D/mu)); break
     print("Total Iterations:", total_iterations)
     
     done_iterations = 0
@@ -59,7 +69,7 @@ for pruning in [True, False]: #if 1 needed: add ``break``
       'With p = 1 and <k>/N ~ 0, degree distr is sim to a Poissonian'
       G = nx.connected_watts_strogatz_graph( n = N, k = D, p = p, seed = 1 ) #k is the number of near linked nodes
       for mu in mu_prog: 
-          if 0 < beta*D/mu < 7:
+          if 0 < beta*D/mu < 7 and beta <= 1:
             done_iterations+=1
             print("Iterations left: %s" % ( total_iterations - done_iterations ) )
             print("beta", beta, "D", D, "R0", beta*D/mu, "mu", mu) 
