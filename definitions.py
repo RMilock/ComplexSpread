@@ -7,10 +7,10 @@ import os #to create a folder
 #Thurner pmts: beta = 0.1, mu = 0.16; D = 3 vel 8
 #MF def: beta, mu = 0.001/cf, 0.05/cf or 0.16/cf ; cf = 1
 
-# if D = numb, beta = beta*D/N but too low
+'plot and save sir'
 def sir(G, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False, D = None):
     'If D == None, the neighbors are not fixed;' 
-    'If D = number, MF_sir with fixed numb of neighbors'
+    'If D == number, MF_sir with fixed numb of neighbors'
 
     import random
     #here's the modifications of the "test_ver1"
@@ -116,11 +116,10 @@ def itermean_sir(G,  numb_iter, D = None, beta = 1e-3, mu = 0.05, start_inf = 10
     return trajectories, avg
 
 def plot_sir(G, ax, numb_iter, D = None, beta = 1e-3, mu = 0.05, start_inf = 10):
+
   'D = numb acts only in mf_avg'
   import itertools
-  import matplotlib.pyplot as plt
   # MF_SIR: beta = 1e-3, MF_SIR: mu = 0.05
-  numb_classes = 3
   N = G.number_of_nodes()
 
   'plot ratio of daily infected and daily cumulative recovered'
@@ -130,25 +129,30 @@ def plot_sir(G, ax, numb_iter, D = None, beta = 1e-3, mu = 0.05, start_inf = 10)
 
   'plotting the many realisations'    
   colors = ["paleturquoise","wheat","lightgreen"]
-  for i in range(numb_classes):
-    for j in range(numb_iter):
-      if i == 1: ax.plot(mf_trajectories[i][j], color = colors[i])
-      else:  ax.plot(trajectories[i][j], color = colors[i])
-  
-  ax.plot(avg[0], label="Net::Infected/N", color = "tab:blue") #prevalence
-  ax.plot(mf_avg[1], label="MF::Recovered/N", color = "tab:orange" ) #recovered
-  ax.plot(avg[2], label="Net::CD_Inf /N", color = "tab:green") #cum_positives
+  for j in range(numb_iter):
+    y_max = np.max(mf_trajectories[2][j])
+    ax.plot(mf_trajectories[2][j], color = colors[1])
+    ax.plot(trajectories[2][j], color = colors[2])
+    y_max = np.max((y_max, np.max(trajectories[2][j])) )
+    ax.plot(trajectories[0][j], color = colors[0])
+    y_max = np.max((y_max, np.max(trajectories[0][j])) )
+
+  ax.plot(avg[0], label="Net::Infected/N ", \
+    color = "tab:blue") #prevalence
+  ax.plot(mf_avg[2], label="MF::CD_Inf/N (%s%%)"% np.round(mf_avg[2][-1]*100,1), \
+    color = "tab:orange" ) #recovered
+  ax.plot(avg[2], label="Net::CD_Inf /N (%s%%)" % np.round(avg[2][-1]*100,1), \
+    color = "tab:green") #cum_positives
 
   'plot horizontal line to highlight the initial infected'
   ax.axhline(start_inf/N, color = "r", ls="dashed", \
-    label = "Start_Inf/N")
+    label = "Start_Inf/N (%s%%) "% np.round(start_inf/N*100,1))
 
   locs, _ = plt.yticks()
-  #locs_yticks = locs.copy()
-  #locs_yticks = np.append(locs[1:-1],[start_inf/N])
   ax.set_yticks(locs[1:-1])
   ax.set_yticklabels(np.round(locs[1:-1],2))
 
+  '''
   textstr = '\n'.join((
     "Start_Inf/N (%s%%)" % np.round(start_inf/N*100,1),
     "MF::Rec/N (%s%%)"% np.round(mf_avg[1][-1]*100,1),
@@ -158,32 +162,62 @@ def plot_sir(G, ax, numb_iter, D = None, beta = 1e-3, mu = 0.05, start_inf = 10)
   props = dict(boxstyle='round', facecolor='white', alpha=0.5)
 
   # place a text box in upper left in axes coords
-  ax.text(1.02, .9, textstr, transform=ax.transAxes, fontsize=10,
-          verticalalignment='top', bbox=props)
-  
-  'plot labels'
-  ax.set_xlabel('Time', fontsize = 16)
-  ax.set_ylabel('Indivs/N', fontsize = 16)
-  #ax.set_yscale("linear")
-  ax.legend(bbox_to_anchor=(1, 1), edgecolor="dimgrey", loc='upper left') #add: leg = 
+  ax.text(1.02, .8, textstr, transform=ax.transAxes,
+          verticalalignment='top', bbox=props) #fontsize = 10
+  '''
 
+
+  'plot labels'
+  ax.set_xlabel('Time[1day]', labelpad = 20 )
+  ax.set_ylabel('Indivs/N', labelpad = 20 ) #fontsize = 16
+  #ax.set_yscale("linear")
+
+  '''set legend upper right above all'
+  ymin, ymax = ax.get_ylim()
+  ax.set_ylim(ymin, 1.3*ymax)
+  ax.legend(loc="upper right")
+  '''
+  ax.legend(loc="best")
+  #ax.legend(bbox_to_anchor=(0.9, 1), edgecolor="dimgrey", loc='lower right') #add: leg = 
 
 def plot_G_degdist_adjmat_sir(G, numb_iter, p = 0, D = None, beta = 1e-3, mu = 0.05, \
-  start_inf = 10, log_dd = False, figsize = (12,12), plot_all = True):
+  start_inf = 10, log_dd = False, plot_all = True):
   import matplotlib.pyplot as plt
   import networkx as nx
+
+  'set fontsize for a better visualisation'
+  SMALL_SIZE = 30
+  MEDIUM_SIZE = 40
+  BIGGER_SIZE = 30
+
+  plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
+  plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
+  plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+  plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the xtick labels
+  plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the ytick labels
+  plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+  plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
+
   N = G.number_of_nodes()
   def rhu(n, decimals=0): #round_half_up
     import math
     multiplier = 10 ** decimals
     return math.floor(n*multiplier + 0.5) / multiplier
 
+
   if plot_all == True:
+
     #plot figures in different windows
-    _, axs = plt.subplots(2,2, figsize = figsize)
-    nx.draw_circular(G, ax=axs[0,0], with_labels=True, font_size=12, node_size=5, width=.3)
+    #_, axs = plt.subplots(1,3, figsize=(20,20), )
+    plt.figure(figsize = (20,20))
+
+    ax = plt.subplot(221)
+    xmin, xmax = ax.get_xlim()
+    ax.set_xlim(xmin,xmax)
+    nx.draw_circular(G, ax=ax, with_labels=False, font_size=12, node_size=10, width=.6)
     
-    'set xticks to be centered'
+
+    'set xticks of the degree distribution to be centered'
     sorted_degree = np.sort([G.degree(n) for n in G.nodes()])
 
     'degree distribution + possonian distr'
@@ -192,35 +226,81 @@ def plot_G_degdist_adjmat_sir(G, numb_iter, p = 0, D = None, beta = 1e-3, mu = 0
     mean = rhu( np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes() )
     print("rounded degrees mean", mean)
     y = poisson.pmf(bins, mean)
-    n, hist_bins, _ = axs[0,1].hist(sorted_degree, bins = bins, \
+    axs = plt.subplot(212)
+    n, hist_bins, _ = axs.hist(sorted_degree, bins = bins, \
                                           log = log_dd, density=0, color="green", ec="black", lw=1, align="left", label = "degrees distr")
     hist_mean = n[np.where(hist_bins == mean)]; pois_mean = poisson.pmf(mean, mean)
     'useful but deletable print'
-    axs[0,1].plot(bins, y * hist_mean / pois_mean, "bo--", lw = 2, label = "poissonian distr")
-    axs[0,1].set_xlim(bins[0],bins[-1]) 
-    axs[0,1].legend(loc = "best")
+    axs.plot(bins, y * hist_mean / pois_mean, "bo--", lw = 2, label = "poissonian distr")
+    axs.set_xlabel('Degree', )
+    axs.set_ylabel('Counts', )
+    axs.set_xlim(bins[0],bins[-1]) 
+    axs.legend(loc = "best")
       
 
     'plot adjiacency matrix'
+    axs = plt.subplot(222)
     adj_matrix = nx.adjacency_matrix(G).todense()
-    axs[1,0].matshow(adj_matrix, cmap=cm.get_cmap("Greens"))
+    axs.matshow(adj_matrix, cmap=cm.get_cmap("Greens"))
     #print("Adj_matrix is symmetric", np.allclose(adj_matrix, adj_matrix.T))
+    plt.subplots_adjust(top=0.898,
+    bottom=0.088,
+    left=0.08,
+    right=0.963,
+    hspace=0.067,
+    wspace=0.164)
+    #ax = axs[1,1]
 
-    ax = axs[1,1]
+  if plot_all == False: 
+    _, ax = plt.subplots()
+    'set fontsize for a better visualisation'
+    SMALL_SIZE = 30
+    MEDIUM_SIZE = 40
+    BIGGER_SIZE = 30
 
-  if plot_all == False: _, ax = plt.subplots(figsize = figsize)
+    plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
+    plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
+    plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+    plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the xtick labels
+    plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the ytick labels
+    plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+    plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
+    plt.rcParams["figure.figsize"] = (20,12)
 
-  'plot always sir'
-  if D == None: D = np.sum([j for (i,j) in G.degree()]) / N
-  print("The model has N: %s, D: %s, beta: %s, mu: %s" % (N,D,beta,mu))
-  plot_sir(G, ax=ax, beta = beta, mu = mu, start_inf = start_inf, D = D, numb_iter = numb_iter)
+    'plot always sir'
+    if D == None: D = np.sum([j for (i,j) in G.degree()]) / N
+    print("The model has N: %s, D: %s, beta: %s, mu: %s" % (N,D,beta,mu))
+    plot_sir(G, ax=ax, beta = beta, mu = mu, start_inf = start_inf, D = D, numb_iter = numb_iter)
+    plt.subplots_adjust(
+    top=0.920,
+    bottom=0.151,
+    left=0.086,
+    right=0.992,
+    hspace=0.2,
+    wspace=0.2)
+
   plt.suptitle("SIR_R0_%s_N%s_D%s_p%s_beta%s_mu%s"% (rhu(beta/mu*D,3),N,D,rhu(p,3), rhu(beta,3), rhu(mu,3), ))
-  plt.subplots_adjust(top=0.931,
-  bottom=0.101,
-  left=0.050,
-  right=0.819,
-  hspace=0.151,
-  wspace=0.200)
+  
+def plot_save_sir(G, folder, beta, D, mu, p, R0_max = 12,  start_inf = 10, numb_iter = 200, plot_all = True, infos = False):
+  intervals = [x for x in np.arange(R0_max)]
+  N = G.number_of_nodes()
+  R0 = beta * D / mu
+  print("R0", R0)    
+  for i in range(len(intervals)-1):
+    if intervals[i] <= R0 < intervals[i+1]:
+      'plot all -- old version: beta = beta'
+      plot_G_degdist_adjmat_sir(G, numb_iter = numb_iter, D = D, beta = beta, mu = mu, log_dd = False, p = p, plot_all=plot_all, start_inf = start_inf)    
+      #plt.show()
+      'TO SAVE PLOTS'
+      my_dir = "/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Trial_Plots/"
+      my_dir+=folder+"/"
+      r0_folder = "R0_%s-%s/" % (intervals[i], intervals[i+1])
+      try:
+        os.makedirs(my_dir +  r0_folder)
+        plt.savefig(my_dir + r0_folder + "SIR_" + folder + "_R0_%s_N%s_D%s_p%s_beta%s_mu%s"% ( rhu(beta/mu*D,3),N,D,rhu(p,3), rhu(beta,3), rhu(mu,3) ) + ".png")
+      except:
+        plt.savefig(my_dir + r0_folder + "SIR_" + folder + "_R0_%s_N%s_D%s_p%s_beta%s_mu%s"% ( rhu(beta/mu*D,3),N,D,rhu(p,3), rhu(beta,3), rhu(mu,3) ) + ".png")
+  plt.close()
 
 'Net Infos'
 def infos_sorted_nodes(G, num_nodes = False):
@@ -276,25 +356,7 @@ def rhu(n, decimals=0): #round_half_up
   multiplier = 10 ** decimals
   return math.floor(n*multiplier + 0.5) / multiplier
 
-def plot_save_sir(G, folder, beta, D, mu, p, start_inf = 10, numb_iter = 200, plot_all = True, infos = False):
-  intervals = [x for x in np.arange(12)]
-  N = G.number_of_nodes()
-  R0 = beta * D / mu
-  print("R0", R0)    
-  for i in range(len(intervals)-1):
-    if intervals[i] <= R0 < intervals[i+1]:
-      'plot all -- old version: beta = beta'
-      plot_G_degdist_adjmat_sir(G, numb_iter = numb_iter, D = D, figsize=(15,15), beta = beta, mu = mu, log_dd = False, p = p, plot_all=plot_all, start_inf = start_inf)    
-      'TO SAVE PLOTS'
-      my_dir = "/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Trial_Plots/"
-      my_dir+=folder+"/"
-      folder = "R0_%s-%s/" % (intervals[i], intervals[i+1])
-      try:
-        os.makedirs(my_dir +  folder)
-        plt.savefig(my_dir + folder + "SIR_R0_%s_N%s_D%s_p%s_beta%s_mu%s"% ( rhu(beta/mu*D,3),N,D,rhu(p,3), rhu(beta,3), rhu(mu,3) ) + ".png")
-      except:
-        plt.savefig(my_dir + folder + "SIR_R0_%s_N%s_D%s_p%s_beta%s_mu%s"% ( rhu(beta/mu*D,3),N,D,rhu(p,3), rhu(beta,3), rhu(mu,3) ) + ".png")
-  plt.close()
+
 
 
 def ws_sir(G, folder, pruning = False, D = None, p = 0.1, infos = False, beta = 0.001, mu = 0.16, plot_all = False, start_inf = 10):    
