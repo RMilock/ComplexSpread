@@ -162,7 +162,7 @@ def plot_sir(G, ax, numb_iter, D = None, beta = 1e-3, mu = 0.05, start_inf = 10)
   ax.legend(loc="best")
   #ax.legend(bbox_to_anchor=(0.9, 1), edgecolor="dimgrey", loc='lower right') #add: leg = 
 
-def plot_G_degdist_adjmat_sir(G, numb_iter, p = 0, D = None, beta = 1e-3, mu = 0.05, \
+def plot_G_degdist_adjmat_sir(G, numb_iter = 200, p = 0, D = None, beta = 1e-3, mu = 0.05, \
   start_inf = 10, log_dd = False, adj_or_sir = True):
   import matplotlib.pyplot as plt
   import networkx as nx
@@ -188,7 +188,6 @@ def plot_G_degdist_adjmat_sir(G, numb_iter, p = 0, D = None, beta = 1e-3, mu = 0
     import math
     multiplier = 10 ** decimals
     return math.floor(n*multiplier + 0.5) / multiplier
-
 
   if adj_or_sir == True:
     plt.figure(figsize = (20,20))
@@ -231,7 +230,9 @@ def plot_G_degdist_adjmat_sir(G, numb_iter, p = 0, D = None, beta = 1e-3, mu = 0
     right=0.963,
     hspace=0.067,
     wspace=0.164)
+    plt.suptitle("N:%s, D:%s, p:%s"% (N,D,rhu(p,3)))
 
+  
   if adj_or_sir == False: 
     _, ax = plt.subplots(figsize = (20,12))
 
@@ -246,10 +247,9 @@ def plot_G_degdist_adjmat_sir(G, numb_iter, p = 0, D = None, beta = 1e-3, mu = 0
     right=0.992,
     hspace=0.2,
     wspace=0.2)
-
-  plt.suptitle("R0_%s_N%s_D%s_p%s_beta%s_mu%s"% (rhu(beta/mu*D,3),N,D,rhu(p,3), rhu(beta,3), rhu(mu,3), ))
+    plt.suptitle("R0:%s, N:%s, D:%s, p:%s, beta:%s, mu:%s"% (rhu(beta/mu*D,3),N,D,rhu(p,3), rhu(beta,3), rhu(mu,3), ))
   
-def plot_save_sir(G, folder, beta, D, mu, p, R0_max = 12,  start_inf = 10, numb_iter = 200, adj_or_sir = False, infos = False):
+def plot_save_sir(G, folder, D, p = 0, beta = 0.001, mu = 0.16, R0_max = 12,  start_inf = 10, numb_iter = 200, adj_or_sir = False):
   intervals = [x for x in np.arange(R0_max)]
   N = G.number_of_nodes()
   R0 = beta * D / mu
@@ -281,8 +281,32 @@ def plot_save_sir(G, folder, beta, D, mu, p, R0_max = 12,  start_inf = 10, numb_
           + ".png")
   plt.close()
 
-
-
+'''
+def plot_save_net(G, folder, adj_or_sir = True):
+  N = G.number_of_nodes()
+  'plot all -- old version: beta = beta'
+  plot_G_degdist_adjmat_sir(G, numb_iter = numb_iter, D = D, beta = beta, mu = mu, log_dd = False, p = p, adj_or_sir=adj_or_sir, start_inf = start_inf)    
+  #plt.show()
+  'TO SAVE PLOTS'
+  my_dir = "/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Trial_Plots/"
+  if adj_or_sir == True: adj_or_sir = "AdjMat"
+  if adj_or_sir == False: adj_or_sir = "SIR"
+  my_dir+=folder+"/"+adj_or_sir+"/"
+  try:
+    os.makedirs(my_dir)
+    plt.savefig(my_dir + \
+      "_%s_R0_%s_N%s_D%s_p%s_beta%s_mu%s"% (
+        adj_or_sir, '{:.3f}'.format(rhu(beta/mu*D,3)),
+        N,D,rhu(p,3), rhu(beta,3), rhu(mu,3) ) 
+      + ".png")
+  except:
+    plt.savefig(my_dir + r0_folder + folder + \
+      "_%s_R0_%s_N%s_D%s_p%s_beta%s_mu%s"% (
+        adj_or_sir, '{:.3f}'.format(rhu(beta/mu*D,3)),
+        N,D,rhu(p,3), rhu(beta,3), rhu(mu,3) ) 
+      + ".png")
+  plt.close()
+'''
 
 'Net Infos'
 def infos_sorted_nodes(G, num_nodes = False):
@@ -350,9 +374,14 @@ def ws_sir(G, folder, pruning = False, D = None, p = 0.1, infos = False, beta = 
     'set spreading parameters'
     cut_factor = 1
     beta = beta/cut_factor; mu = mu
-  
+
   if infos == True: check_loops_parallel_edges(G); infos_sorted_nodes(G, num_nodes = False)
-  plot_save_sir(G = G, folder = folder, beta = beta, D = D, mu = mu, p = p, start_inf = start_inf, adj_or_sir=adj_or_sir)
+
+  if adj_or_sir == "both": 
+    for adj_or_sir in [True, False]:
+      plot_save_sir(G = G, folder = folder, beta = beta, D = D, mu = mu, p = p, start_inf = start_inf, adj_or_sir=adj_or_sir)
+
+  else: plot_save_sir(G = G, folder = folder, beta = beta, D = D, mu = mu, p = p, start_inf = start_inf, adj_or_sir=adj_or_sir)
 
 
 'Draw N degrees from a Poissonian sequence with lambda = D and length L'
