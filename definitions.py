@@ -8,6 +8,25 @@ import os #to create a folder
 #MF def: beta, mu = 0.001/cf, 0.05/cf or 0.16/cf ; cf = 1
 
 'plot and save sir'
+def plot_params():
+  import matplotlib.pyplot as plt
+
+  'set fontsize for a better visualisation'
+  SMALL_SIZE = 30
+  MEDIUM_SIZE = 40
+  BIGGER_SIZE = 30
+
+  plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
+  plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
+  plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+  plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the xtick labels
+  plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the ytick labels
+  plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+  plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
+  plt.rc('axes', labelpad = 20)
+  plt.rc('xtick.major', pad = 16)
+  #plt.rcParams['xtick.major.pad']='16'
+
 def sir(G, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False, D = None):
     'If D == None, the neighbors are not fixed;' 
     'If D == number, MF_sir with fixed numb of neighbors'
@@ -52,7 +71,9 @@ def sir(G, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False, D = None):
         for i in inf_list:
             'Select the neighbors of the infected node'
             if D == None: tests = G.neighbors(i) #only != wrt to the SIS: contact are taken from G.neighbors            
-            if D != None: tests = random.choices(range(N), k = int(D)) #spread very fast since multiple infected center
+            if D != None: 
+              ls = list(range(N)); ls.remove(i)
+              tests = random.choices(ls, k = int(D)) #spread very fast since multiple infected center
             for j in tests:
                 'If the contact is susceptible and not infected by another node in the future_state, try to infect it'
                 if current_state[j] == 'S' and future_state[j] == 'S':
@@ -88,7 +109,7 @@ def sir(G, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False, D = None):
  
     return prevalence, recovered, cum_positives
 
-def itermean_sir(G,  numb_iter, D = None, beta = 1e-3, mu = 0.05, start_inf = 10,):
+def itermean_sir(G, numb_iter = 200, D = None, beta = 1e-3, mu = 0.05, start_inf = 10,):
     'def a function that iters numb_iter and make an avg of the trajectories'
     'k are the starting infected'
     import itertools
@@ -115,7 +136,7 @@ def itermean_sir(G,  numb_iter, D = None, beta = 1e-3, mu = 0.05, start_inf = 10
 
     return trajectories, avg
 
-def plot_sir(G, ax, numb_iter, D = None, beta = 1e-3, mu = 0.05, start_inf = 10):
+def plot_sir(G, ax, D = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter = 200):
 
   'D = numb acts only in mf_avg'
   import itertools
@@ -162,110 +183,46 @@ def plot_sir(G, ax, numb_iter, D = None, beta = 1e-3, mu = 0.05, start_inf = 10)
   ax.legend(loc="best")
   #ax.legend(bbox_to_anchor=(0.9, 1), edgecolor="dimgrey", loc='lower right') #add: leg = 
 
-def plot_G_degdist_adjmat_sir(G, numb_iter = 200, p = 0, D = None, beta = 1e-3, mu = 0.05, \
-  start_inf = 10, log_dd = False, adj_or_sir = True):
-  import matplotlib.pyplot as plt
-  import networkx as nx
-
-  'set fontsize for a better visualisation'
-  SMALL_SIZE = 30
-  MEDIUM_SIZE = 40
-  BIGGER_SIZE = 30
-
-  plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
-  plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
-  plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
-  plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the xtick labels
-  plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the ytick labels
-  plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
-  plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
-  plt.rc('axes', labelpad = 20)
-  plt.rc('xtick.major', pad = 16)
-  #plt.rcParams['xtick.major.pad']='16'
-
-  N = G.number_of_nodes()
-  def rhu(n, decimals=0): #round_half_up
+def rhu(n, decimals=0): #round_half_up
     import math
     multiplier = 10 ** decimals
     return math.floor(n*multiplier + 0.5) / multiplier
-
-  if adj_or_sir == True:
-    plt.figure(figsize = (20,20))
-
-    ax = plt.subplot(221)
-    #xmin, xmax = ax.get_xlim()
-    #ax.set_xlim(xmin,xmax)
-    nx.draw_circular(G, ax=ax, with_labels=False, font_size=12, node_size=10, width=.6)
-    
-
-    'set xticks of the degree distribution to be centered'
-    sorted_degree = np.sort([G.degree(n) for n in G.nodes()])
-
-    'degree distribution + possonian distr'
-    from scipy.stats import poisson
-    bins = np.arange(sorted_degree[0]-1,sorted_degree[-1]+2)
-    mean = rhu( np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes() )
-    print("rounded degrees mean", mean)
-    y = poisson.pmf(bins, mean)
-    axs = plt.subplot(212)
-    n, hist_bins, _ = axs.hist(sorted_degree, bins = bins, \
-                                          log = log_dd, density=0, color="green", ec="black", lw=1, align="left", label = "degrees distr")
-    hist_mean = n[np.where(hist_bins == mean)]; pois_mean = poisson.pmf(mean, mean)
-    'useful but deletable print'
-    axs.plot(bins, y * hist_mean / pois_mean, "bo--", lw = 2, label = "poissonian distr")
-    axs.set_xlabel('Degree', )
-    axs.set_ylabel('Counts', )
-    axs.set_xlim(bins[0],bins[-1]) 
-    axs.legend(loc = "best")
-      
-
-    'plot adjiacency matrix'
-    axs = plt.subplot(222)
-    adj_matrix = nx.adjacency_matrix(G).todense()
-    axs.matshow(adj_matrix, cmap=cm.get_cmap("Greens"))
-    #print("Adj_matrix is symmetric", np.allclose(adj_matrix, adj_matrix.T))
-    plt.subplots_adjust(top=0.898,
-    bottom=0.088,
-    left=0.09,
-    right=0.963,
-    hspace=0.067,
-    wspace=0.164)
-    plt.suptitle("N:%s, D:%s, p:%s"% (N,D,rhu(p,3)))
-
   
-  if adj_or_sir == False: 
-    _, ax = plt.subplots(figsize = (20,12))
-
-    'plot always sir'
-    if D == None: D = np.sum([j for (i,j) in G.degree()]) / N
-    print("The model has N: %s, D: %s, beta: %s, mu: %s" % (N,D,beta,mu))
-    plot_sir(G, ax=ax, beta = beta, mu = mu, start_inf = start_inf, D = D, numb_iter = numb_iter)
-    plt.subplots_adjust(
-    top=0.920,
-    bottom=0.151,
-    left=0.086,
-    right=0.992,
-    hspace=0.2,
-    wspace=0.2)
-    plt.suptitle("R0:%s, N:%s, D:%s, p:%s, beta:%s, mu:%s"% (rhu(beta/mu*D,3),N,D,rhu(p,3), rhu(beta,3), rhu(mu,3), ))
+def plot_save_sir(G, folder, D, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 10, numb_iter = 200):
   
-def plot_save_sir(G, folder, D, p = 0, beta = 0.001, mu = 0.16, R0_max = 12,  start_inf = 10, numb_iter = 200, adj_or_sir = False):
+  plot_params()
+  
   intervals = [x for x in np.arange(R0_max)]
   N = G.number_of_nodes()
   R0 = beta * D / mu
   print("R0", R0)    
   for i in range(len(intervals)-1):
     if intervals[i] <= R0 < intervals[i+1]:
-      'plot all -- old version: beta = beta'
-      plot_G_degdist_adjmat_sir(G, numb_iter = numb_iter, D = D, beta = beta, mu = mu, log_dd = False, p = p, adj_or_sir=adj_or_sir, start_inf = start_inf)    
+
+      'plot all'
+      N = G.number_of_nodes()
+      _, ax = plt.subplots(figsize = (20,12))
+
+      'plot always sir'
+      if D == None: D = np.sum([j for (i,j) in G.degree()]) / N
+      print("The model has N: %s, D: %s, beta: %s, mu: %s" % (N,D,beta,mu))
+      plot_sir(G, ax=ax, beta = beta, mu = mu, start_inf = start_inf, D = D, numb_iter = numb_iter)
+      plt.subplots_adjust(
+      top=0.920,
+      bottom=0.151,
+      left=0.086,
+      right=0.992,
+      hspace=0.2,
+      wspace=0.2)
+      plt.suptitle("R0:%s, N:%s, D:%s, p:%s, beta:%s, mu:%s"% (rhu(beta/mu*D,3),N,D,rhu(p,3), rhu(beta,3), rhu(mu,3), ))
+      
+      
       #plt.show()
-      'TO SAVE PLOTS'
+      'save plots in different folders'
+      adj_or_sir = "SIR"
       my_dir = "/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Trial_Plots/"
-      my_dir+=folder+"/"
+      my_dir+=folder+"/"+adj_or_sir+"/"
       r0_folder = "R0_%s-%s/" % (intervals[i], intervals[i+1])
-      if adj_or_sir == True: adj_or_sir = "AdjMat"
-      if adj_or_sir == False: adj_or_sir = "SIR"
-      r0_folder += adj_or_sir+"/"
       try:
         os.makedirs(my_dir +  r0_folder)
         plt.savefig(my_dir + r0_folder + folder + \
@@ -281,32 +238,70 @@ def plot_save_sir(G, folder, D, p = 0, beta = 0.001, mu = 0.16, R0_max = 12,  st
           + ".png")
   plt.close()
 
-'''
-def plot_save_net(G, folder, adj_or_sir = True):
+def plot_save_net(G, folder, D, p, log_dd = False):
+  plot_params()
+
   N = G.number_of_nodes()
-  'plot all -- old version: beta = beta'
-  plot_G_degdist_adjmat_sir(G, numb_iter = numb_iter, D = D, beta = beta, mu = mu, log_dd = False, p = p, adj_or_sir=adj_or_sir, start_inf = start_inf)    
-  #plt.show()
+  'plot G, adj_mat, degree distribution'
+  plt.figure(figsize = (20,20))
+
+  ax = plt.subplot(221)
+  #xmin, xmax = ax.get_xlim()
+  #ax.set_xlim(xmin,xmax)
+  nx.draw_circular(G, ax=ax, with_labels=False, font_size=12, node_size=10, width=.6)
+  
+  'set xticks of the degree distribution to be centered'
+  sorted_degree = np.sort([G.degree(n) for n in G.nodes()])
+
+  'degree distribution + possonian distr'
+  from scipy.stats import poisson
+  bins = np.arange(sorted_degree[0]-1,sorted_degree[-1]+2)
+  mean = rhu( np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes() )
+  print("rounded degrees mean", mean)
+  y = poisson.pmf(bins, mean)
+  axs = plt.subplot(212)
+  n, hist_bins, _ = axs.hist(sorted_degree, bins = bins, \
+                                        log = log_dd, density=0, color="green", ec="black", lw=1, align="left", label = "degrees distr")
+  hist_mean = n[np.where(hist_bins == mean)]; pois_mean = poisson.pmf(mean, mean)
+  'useful but deletable print'
+  axs.plot(bins, y * hist_mean / pois_mean, "bo--", lw = 2, label = "poissonian distr")
+  axs.set_xlabel('Degree', )
+  axs.set_ylabel('Counts', )
+  axs.set_xlim(bins[0],bins[-1]) 
+  axs.legend(loc = "best")
+    
+  'plot adjiacency matrix'
+  axs = plt.subplot(222)
+  adj_matrix = nx.adjacency_matrix(G).todense()
+  axs.matshow(adj_matrix, cmap=cm.get_cmap("Greens"))
+  #print("Adj_matrix is symmetric", np.allclose(adj_matrix, adj_matrix.T))
+  plt.subplots_adjust(top=0.898,
+  bottom=0.088,
+  left=0.1,
+  right=0.963,
+  hspace=0.067,
+  wspace=0.164)
+  plt.suptitle("N:%s, D:%s, p:%s"% (N,D,rhu(p,3)))
+
+  
   'TO SAVE PLOTS'
   my_dir = "/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Trial_Plots/"
-  if adj_or_sir == True: adj_or_sir = "AdjMat"
-  if adj_or_sir == False: adj_or_sir = "SIR"
+  adj_or_sir = "AdjMat"
   my_dir+=folder+"/"+adj_or_sir+"/"
   try:
     os.makedirs(my_dir)
     plt.savefig(my_dir + \
-      "_%s_R0_%s_N%s_D%s_p%s_beta%s_mu%s"% (
-        adj_or_sir, '{:.3f}'.format(rhu(beta/mu*D,3)),
-        N,D,rhu(p,3), rhu(beta,3), rhu(mu,3) ) 
+      "%s_N%s_D%s_p%s"% (
+        adj_or_sir,
+        N,D,rhu(p,3)) 
       + ".png")
   except:
-    plt.savefig(my_dir + r0_folder + folder + \
-      "_%s_R0_%s_N%s_D%s_p%s_beta%s_mu%s"% (
-        adj_or_sir, '{:.3f}'.format(rhu(beta/mu*D,3)),
-        N,D,rhu(p,3), rhu(beta,3), rhu(mu,3) ) 
+    plt.savefig(my_dir + \
+      "%s_N%s_D%s_p%s"% (
+        adj_or_sir,
+        N,D,rhu(p,3)) 
       + ".png")
   plt.close()
-'''
 
 'Net Infos'
 def infos_sorted_nodes(G, num_nodes = False):
@@ -348,7 +343,9 @@ def check_loops_parallel_edges(G):
   print("parallel edges", set([i for i in ls for j in ls[ls.index(i)+1:] if i==j]))
   print("loops", [(i,j) for (i,j) in set(G.edges()) if i == j])
 
-'number of iterations, i.e. or max power or fixed by user'
+
+'Watts-Strogatz Model'
+'Number of iterations, i.e. or max power or fixed by user'
 def pow_max(N, num_iter = "all"):
   if num_iter == "all":
     'search the 2**pow_max'
@@ -357,12 +354,7 @@ def pow_max(N, num_iter = "all"):
     return i-1
   return int(num_iter)
 
-def rhu(n, decimals=0): #round_half_up
-  import math
-  multiplier = 10 ** decimals
-  return math.floor(n*multiplier + 0.5) / multiplier
-
-def ws_sir(G, folder, pruning = False, D = None, p = 0.1, infos = False, beta = 0.001, mu = 0.16, adj_or_sir = False, start_inf = 10):    
+def ws_sir(G, folder, saved_nets, pruning = False, D = None, p = 0.1, infos = False, beta = 0.001, mu = 0.16, start_inf = 10):    
   'in this def: cut_factor = % of links remaining from the full net'
   'round_half_up D for a better approximation of nx.c_w_s_graph+sir'
   import networkx as nx
@@ -377,13 +369,13 @@ def ws_sir(G, folder, pruning = False, D = None, p = 0.1, infos = False, beta = 
 
   if infos == True: check_loops_parallel_edges(G); infos_sorted_nodes(G, num_nodes = False)
 
-  if adj_or_sir == "both": 
-    for adj_or_sir in [True, False]:
-      plot_save_sir(G = G, folder = folder, beta = beta, D = D, mu = mu, p = p, start_inf = start_inf, adj_or_sir=adj_or_sir)
+  if "N%s_D%s_p%s"% (N,D,rhu(p,3)) not in saved_nets: 
+    plot_save_net(G = G, folder = folder, D = D, p = p)
+    saved_nets.append("N%s_D%s_p%s"% (N,D,rhu(p,3)))
+    print(saved_nets)
+  plot_save_sir(G = G, folder = folder, beta = beta, D = D, mu = mu, p = p, start_inf = start_inf)
 
-  else: plot_save_sir(G = G, folder = folder, beta = beta, D = D, mu = mu, p = p, start_inf = start_inf, adj_or_sir=adj_or_sir)
-
-
+'Configurational Model'
 'Draw N degrees from a Poissonian sequence with lambda = D and length L'
 def pois_pos_degrees(D, N, L = int(2e3)):
     degs = np.random.poisson(lam = D, size = L)
@@ -419,7 +411,7 @@ def config_pois_model(N, D, beta, mu, p = 0, seed = 123, \
     'plot G, degree distribution and the adiaciency matrix'
     #Config_SIR def: D = 8, beta, mu = 0.1, 0.05
     #print("beta %s ; mu: %s" % (beta, mu))
-    plot_save_sir(G, "Conf_Model", beta = beta, D = D, mu = mu, p = 0, adj_or_sir=adj_or_sir)
+    plot_save_sir(G, "Conf_Model", beta = beta, D = D, mu = mu, p = 0)
     
     return G
 
@@ -512,7 +504,7 @@ def nearest_neighbors_pois_net(G, D, beta, mu, start_inf = 10, p = 0, adj_or_sir
   check_loops_parallel_edges(G)
   infos_sorted_nodes(G, num_nodes=False)
 
-  plot_save_sir(G, adj_or_sir=adj_or_sir, folder = "NNR_Conf_Model", beta = beta, D = D, mu = mu, p = p, start_inf = start_inf)
+  plot_save_sir(G, folder = "NNR_Conf_Model", beta = beta, D = D, mu = mu, p = p, start_inf = start_inf)
   
   return G
 
