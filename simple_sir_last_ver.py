@@ -7,7 +7,7 @@ import networkx as nx
 # %matplotlib inline
 from itertools import product
 import os #to create a folder
-from definitions import ws_sir, plot_sir, infos_sorted_nodes, plot_G_degdist_adjmat_sir, \
+from definitions import ws_sir, infos_sorted_nodes, \
   remove_loops_parallel_edges, check_loops_parallel_edges, config_pois_model, replace_edges_from, \
     rhu, pow_max
 
@@ -54,7 +54,8 @@ for pruning in [True]: #if 1 needed: add ``break``
             total_iterations += 1
     print("Total Iterations:", total_iterations)
     
-    done_iterations = 0
+
+    done_iterations = 0; saved_nets = []
     for D, beta in zip(k_prog, beta_prog):
       
       #print("beta %s ; mu: %s; beta_1.2: %s" % (beta, mu, beta) )
@@ -65,8 +66,7 @@ for pruning in [True]: #if 1 needed: add ``break``
             done_iterations+=1
             print("Iterations left: %s" % ( total_iterations - done_iterations ) )
             print("beta", beta, "D", D, "R0", beta*D/mu, "mu", mu) 
-            for adj_or_sir in [True, False]:
-              ws_sir(G, pruning = pruning, folder = folder, D = D, p = p, beta = beta, mu = mu, adj_or_sir=adj_or_sir)
+            ws_sir(G, saved_nets=saved_nets, pruning = pruning, folder = folder, D = D, p = p, beta = beta, mu = mu)
 
   if pruning == False:
     'test != kind of '
@@ -83,10 +83,11 @@ for pruning in [True]: #if 1 needed: add ``break``
           total_iterations += 1
     print("Total Iterations:", total_iterations)
     done_iterations = 0
+    saved_nets = []
     for D, p in product(k_prog, p_prog):
       G = nx.connected_watts_strogatz_graph( n = N, k = D, p = p, seed = 1 ) #k is the number of near linked nodes
       for mu, beta in product(mu_prog, beta_prog): 
         if  0.3 < beta*D/mu < 16:   
           done_iterations+=1
           print("Iterations left: %s" % ( total_iterations - done_iterations ) )
-          ws_sir(G, folder = folder, pruning = pruning, D = D, p = p, beta = beta, mu = mu, adj_or_sir=False)
+          ws_sir(G, saved_nets = saved_nets, folder = folder, pruning = pruning, D = D, p = p, beta = beta, mu = mu)
