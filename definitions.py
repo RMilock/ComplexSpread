@@ -7,21 +7,27 @@ import os #to create a folder
 #Thurner pmts: beta = 0.1, mu = 0.16; D = 3 vel 8
 #MF def: beta, mu = 0.001/cf, 0.05/cf or 0.16/cf ; cf = 1
 
+
+def my_dir():
+  #return "/content/"
+  return "/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/Tests/"
+
+
 'plot and save sir'
 def plot_params():
   import matplotlib.pyplot as plt
 
   'set fontsize for a better visualisation'
-  SMALL_SIZE = 30
-  MEDIUM_SIZE = 40
-  BIGGER_SIZE = 30
+  SMALL_SIZE = 40
+  MEDIUM_SIZE = 25
+  BIGGER_SIZE = 40
 
   plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
-  plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
-  plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
-  plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the xtick labels
-  plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the ytick labels
-  plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+  plt.rc('axes', titlesize=BIGGER_SIZE)     # fontsize of the axes title
+  plt.rc('axes', labelsize=BIGGER_SIZE)    # fontsize of the x and y labels
+  plt.rc('xtick', labelsize=MEDIUM_SIZE)    # fontsize of the xtick labels
+  plt.rc('ytick', labelsize=MEDIUM_SIZE)    # fontsize of the ytick labels
+  plt.rc('legend', fontsize=MEDIUM_SIZE)    # legend fontsize
   plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
   plt.rc('axes', labelpad = 20)
   plt.rc('xtick.major', pad = 16)
@@ -150,14 +156,19 @@ def plot_sir(G, ax, D = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter 
 
   'plotting the many realisations'    
   colors = ["paleturquoise","wheat","lightgreen", "thistle"]
+  #y_max = 0
   for j in range(numb_iter):
-    #y_max = np.max(mf_trajectories[2][j])
     ax.plot(mf_trajectories[2][j], color = colors[1])
     ax.plot(trajectories[2][j], color = colors[2])
-    #y_max = np.max((y_max, np.max(trajectories[2][j])) )
     ax.plot(trajectories[0][j], color = colors[0])
     ax.plot(mf_trajectories[0][j], color = colors[3])
-    #y_max = np.max((y_max, np.max(trajectories[0][j])) )
+    
+    '''to set legend above the plot
+    conc_max = np.max( np.concatenate((
+        np.max(trajectories[2][j]), mf_trajectories[2][j],
+        np.max(trajectories[0][j]) ), axis = None ) )
+    y_max = np.maximum( y_max, conc_max )'''
+
 
   ax.plot(avg[0], label="Net::Infected/N ", \
     color = "tab:blue") #prevalence
@@ -176,12 +187,20 @@ def plot_sir(G, ax, D = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter 
   ax.set_yticks(locs[1:-1])
   ax.set_yticklabels(np.round(locs[1:-1],2))
 
+  '''set legend above the plot'
+  ax_ymin, ax_ymax = ax.get_ylim()
+  set_ax_ymax = 1.5*ax_ymax
+  ax.set_ylim(ax_ymin, set_ax_ymax)'''
+
   'plot labels'
   ax.set_xlabel('Time[1day]')
-  ax.set_ylabel('Indivs/N') #fontsize = 16
-  #ax.set_yscale("linear")
+  ax.set_ylabel('Indivs/N')
+  
+  'loc = best legend'
   ax.legend(loc="best")
-  #ax.legend(bbox_to_anchor=(0.9, 1), edgecolor="dimgrey", loc='lower right') #add: leg = 
+
+  'set legend above the plot'
+  #ax.legend(bbox_to_anchor=(1, 1), edgecolor="grey", loc='upper right') #add: leg = 
 
 def rhu(n, decimals=0): #round_half_up
     import math
@@ -189,13 +208,12 @@ def rhu(n, decimals=0): #round_half_up
     return math.floor(n*multiplier + 0.5) / multiplier
   
 def plot_save_sir(G, folder, D, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 10, numb_iter = 200):
-  
+
   plot_params()
-  
+
   intervals = [x for x in np.arange(R0_max)]
   N = G.number_of_nodes()
-  R0 = beta * D / mu
-  print("R0", R0)    
+  R0 = beta * D / mu    
   for i in range(len(intervals)-1):
     if intervals[i] <= R0 < intervals[i+1]:
 
@@ -205,7 +223,7 @@ def plot_save_sir(G, folder, D, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  st
 
       'plot always sir'
       if D == None: D = np.sum([j for (i,j) in G.degree()]) / N
-      print("The model has N: %s, D: %s, beta: %s, mu: %s" % (N,D,beta,mu))
+      print("The model has N: %s, D: %s, beta: %s, mu: %s, p: %s, R0: %s" % (N,D,rhu(beta,3),rhu(mu,3),rhu(p,1),rhu(R0,3)) )
       plot_sir(G, ax=ax, beta = beta, mu = mu, start_inf = start_inf, D = D, numb_iter = numb_iter)
       plt.subplots_adjust(
       top=0.920,
@@ -220,25 +238,28 @@ def plot_save_sir(G, folder, D, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  st
       #plt.show()
       'save plots in different folders'
       adj_or_sir = "SIR"
-      my_dir = "/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Trial_Plots/"
-      my_dir+=folder+"/"+adj_or_sir+"/"
-      r0_folder = "R0_%s-%s/" % (intervals[i], intervals[i+1])
+      from definitions import my_dir
+      my_dir = my_dir() #"/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/"
+      my_dir+=folder+"/p%s/"%rhu(p,1)+adj_or_sir+"/"
+      r0_folder = "R0_%s-%s/mu%s/" % (intervals[i], intervals[i+1], rhu(mu,3))
+      folder += "_p%s"%rhu(p,1)
       try:
-        os.makedirs(my_dir +  r0_folder)
+        os.makedirs(my_dir + r0_folder)
         plt.savefig(my_dir + r0_folder + folder + \
-          "_%s_R0_%s_N%s_D%s_p%s_beta%s_mu%s"% (
+          "_%s_R0_%s_N%s_D%s_beta%s_mu%s"% (
             adj_or_sir, '{:.3f}'.format(rhu(beta/mu*D,3)),
-            N,D,rhu(p,3), rhu(beta,3), rhu(mu,3) ) 
+            N,D, rhu(beta,3), rhu(mu,3) ) 
           + ".png")
       except:
         plt.savefig(my_dir + r0_folder + folder + \
-          "_%s_R0_%s_N%s_D%s_p%s_beta%s_mu%s"% (
+          "_%s_R0_%s_N%s_D%s_beta%s_mu%s"% (
             adj_or_sir, '{:.3f}'.format(rhu(beta/mu*D,3)),
-            N,D,rhu(p,3), rhu(beta,3), rhu(mu,3) ) 
+            N,D, rhu(beta,3), rhu(mu,3) ) 
           + ".png")
   plt.close()
+  print("\n--\n")
 
-def plot_save_net(G, folder, D, p, log_dd = False):
+def plot_save_net(G, folder, D, p, scaled_G, log_dd = False):
   plot_params()
 
   N = G.number_of_nodes()
@@ -246,9 +267,16 @@ def plot_save_net(G, folder, D, p, log_dd = False):
   plt.figure(figsize = (20,20))
 
   ax = plt.subplot(221)
-  #xmin, xmax = ax.get_xlim()
-  #ax.set_xlim(xmin,xmax)
-  nx.draw_circular(G, ax=ax, with_labels=False, font_size=12, node_size=10, width=.6)
+
+  'plot the real G not the scaled one and dont put description of the scaled_G via ax.text'
+  nx.draw_circular(scaled_G, ax=ax, with_labels=True, font_size=0, node_size=100, width=1)
+  '''
+  ax.text(0,1,transform=ax.transAxes,
+    s = "N: %s, D: %s, p: %s" % \
+      (scaled_G.number_of_nodes(), 
+      rhu(2*scaled_G.number_of_edges() / float(scaled_G.number_of_nodes()),3), 
+        rhu(p,1)) )
+  '''
   
   'set xticks of the degree distribution to be centered'
   sorted_degree = np.sort([G.degree(n) for n in G.nodes()])
@@ -281,13 +309,14 @@ def plot_save_net(G, folder, D, p, log_dd = False):
   right=0.963,
   hspace=0.067,
   wspace=0.164)
-  plt.suptitle("N:%s, D:%s, p:%s"% (N,D,rhu(p,3)))
+  plt.suptitle("N:%s, D:%s, p:%s"% (N,D,rhu(p,1)))
 
   
   'TO SAVE PLOTS'
-  my_dir = "/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Trial_Plots/"
+  from definitions import my_dir
+  my_dir = my_dir() #"/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/"
   adj_or_sir = "AdjMat"
-  my_dir+=folder+"/"+adj_or_sir+"/"
+  my_dir+=folder+"/p%s/"%rhu(p,1)+adj_or_sir+"/"
   try:
     os.makedirs(my_dir)
     plt.savefig(my_dir + \
@@ -367,10 +396,13 @@ def ws_sir(G, folder, saved_nets, pruning = False, D = None, p = 0.1, infos = Fa
     cut_factor = 1
     beta = beta/cut_factor; mu = mu
 
+  scaled_G = G
+  #if int(D/30) >= 2: scaled_G = nx.connected_watts_strogatz_graph(n = int(N/30), k = int(D/30), p = p, seed = 1) #k is the number of near linked nodes
+
   if infos == True: check_loops_parallel_edges(G); infos_sorted_nodes(G, num_nodes = False)
 
   if "N%s_D%s_p%s"% (N,D,rhu(p,3)) not in saved_nets: 
-    plot_save_net(G = G, folder = folder, D = D, p = p)
+    plot_save_net(G = G, scaled_G = scaled_G, folder = folder, D = D, p = p)
     saved_nets.append("N%s_D%s_p%s"% (N,D,rhu(p,3)))
     print(saved_nets)
   plot_save_sir(G = G, folder = folder, beta = beta, D = D, mu = mu, p = p, start_inf = start_inf)
@@ -384,8 +416,7 @@ def pois_pos_degrees(D, N, L = int(2e3)):
     #print("len(s) in pos_degrees", len([x for x in pos_degrees if x == 0]))
     return pos_degrees
 
-def config_pois_model(N, D, beta, mu, p = 0, seed = 123, \
-  adj_or_sir = True):
+def config_pois_model(N, D, seed = 123):
     '''create a network with the node degrees drawn from a poissonian with even sum of degrees'''
     np.random.seed(seed)
     degrees = pois_pos_degrees(D,N) #poiss distr with deg != 0
@@ -404,18 +435,12 @@ def config_pois_model(N, D, beta, mu, p = 0, seed = 123, \
 
     'If D/N !<< 1, by removing loops and parallel edges, we lost degrees. Ex. with N = 50 = D, <k> = 28 != 49.8'
     #print("Total Edges", G.edges())
-    check_loops_parallel_edges(G)
-    remove_loops_parallel_edges(G)
     #check_loops_parallel_edges(G)
-
-    'plot G, degree distribution and the adiaciency matrix'
-    #Config_SIR def: D = 8, beta, mu = 0.1, 0.05
-    #print("beta %s ; mu: %s" % (beta, mu))
-    plot_save_sir(G, "Conf_Model", beta = beta, D = D, mu = mu, p = 0)
-    
+    remove_loops_parallel_edges(G)
+    #check_loops_parallel_edges(G)    
     return G
 
-def nearest_neighbors_pois_net(G, D, beta, mu, start_inf = 10, p = 0, adj_or_sir = True):
+def NN_pois_net(G, D, p = 0):
   verbose = False
   def verboseprint(*args):
     if verbose == True:
@@ -504,8 +529,6 @@ def nearest_neighbors_pois_net(G, D, beta, mu, start_inf = 10, p = 0, adj_or_sir
   check_loops_parallel_edges(G)
   infos_sorted_nodes(G, num_nodes=False)
 
-  plot_save_sir(G, folder = "NNR_Conf_Model", beta = beta, D = D, mu = mu, p = p, start_inf = start_inf)
-  
   return G
 
 '''def:: "replace" existing edges, since built-in method only adds'''
