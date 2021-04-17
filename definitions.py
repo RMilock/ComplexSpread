@@ -12,7 +12,10 @@ def my_dir():
   #return "/content/"
   return "/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/Tests/"
 
-
+def save_log_file(folder, text):
+      print(folder)
+      with open(folder + "/log.txt", "w") as text_file: #write only 1 time
+          text_file.write(text)
 'plot and save sir'
 def plot_params():
   import matplotlib.pyplot as plt
@@ -129,7 +132,7 @@ def itermean_sir(G, numb_iter = 200, D = None, beta = 1e-3, mu = 0.05, start_inf
         tmp_traj = sir(G, beta = beta, mu = mu, start_inf = start_inf, D = D)
         for idx in range(numb_classes):
             trajectories[idx].append(tmp_traj[idx])
-            #print("\nit:", i, "idx ", idx, "and traj_idx", trajectories[idx])
+            #print("\niteration:", i, "idx ", idx, )#"and traj_idx", trajectories[idx])
             it_sum = [sum(x) for x in itertools.zip_longest(*trajectories[idx], fillvalue=0)]
             for j in range(len(trajectories[idx][i])):
                 #print("traj_i", trajectories[idx][i], "lenai", len(trajectories[idx][i]))
@@ -142,12 +145,12 @@ def itermean_sir(G, numb_iter = 200, D = None, beta = 1e-3, mu = 0.05, start_inf
 
     return trajectories, avg
 
-def plot_sir(G, ax, D = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter = 200):
+def plot_sir(G, ax, folder = None, D = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter = 200):
 
   'D = numb acts only in mf_avg'
   import itertools
   # MF_SIR: beta = 1e-3, MF_SIR: mu = 0.05
-  N = G.number_of_nodes()
+  N = G.number_of_nodes(); R0 = beta*D/mu
 
   'plot ratio of daily infected and daily cumulative recovered'
   'Inf and Cum_Infected from Net_Sir; Recovered from MF_SIR'
@@ -156,29 +159,28 @@ def plot_sir(G, ax, D = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter 
 
   'plotting the many realisations'    
   colors = ["paleturquoise","wheat","lightgreen", "thistle"]
-  #y_max = 0
+  
   for j in range(numb_iter):
     ax.plot(mf_trajectories[2][j], color = colors[1])
     ax.plot(trajectories[2][j], color = colors[2])
     ax.plot(trajectories[0][j], color = colors[0])
     ax.plot(mf_trajectories[0][j], color = colors[3])
     
-    '''to set legend above the plot
-    conc_max = np.max( np.concatenate((
-        np.max(trajectories[2][j]), mf_trajectories[2][j],
-        np.max(trajectories[0][j]) ), axis = None ) )
-    y_max = np.maximum( y_max, conc_max )'''
+    '''if R0 <= 2 and folder == "NNR_Conf_Model":
+      'to set legend above the plot'
+      y_max = np.max( np.concatenate((
+          np.max(trajectories[2][j]), mf_trajectories[2][j],
+          np.max(trajectories[0][j]) ), axis = None ) )'''
 
-
-  ax.plot(avg[0], label="Net::Infected/N ", \
-    color = "tab:blue") #prevalence
+  ax.plot(mf_avg[2], label="MF::CD_Inf/N (%s%%)"% np.round(mf_avg[2][-1]*100,1), \
+    color = "tab:orange" ) #mf::cd_inf
+  ax.plot(avg[2], label="Net::CD_Inf /N (%s%%)" % np.round(avg[2][-1]*100,1), \
+    color = "tab:green") #net::cd_inf    
   ax.plot(mf_avg[0], label="MF::Infected/N ", \
     color = "darkviolet") #prevalence
-  ax.plot(avg[2], label="Net::CD_Inf /N (%s%%)" % np.round(avg[2][-1]*100,1), \
-    color = "tab:green") #cum_positives
-  ax.plot(mf_avg[2], label="MF::CD_Inf/N (%s%%)"% np.round(mf_avg[2][-1]*100,1), \
-    color = "tab:orange" ) #recovered
-  
+  ax.plot(avg[0], label="Net::Infected/N ", \
+    color = "tab:blue") #prevalence
+
   'plot horizontal line to highlight the initial infected'
   ax.axhline(start_inf/N, color = "r", ls="dashed", \
     label = "Start_Inf/N (%s%%) "% np.round(start_inf/N*100,1))
@@ -187,78 +189,23 @@ def plot_sir(G, ax, D = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter 
   ax.set_yticks(locs[1:-1])
   ax.set_yticklabels(np.round(locs[1:-1],2))
 
-  '''set legend above the plot'
-  ax_ymin, ax_ymax = ax.get_ylim()
-  set_ax_ymax = 1.5*ax_ymax
-  ax.set_ylim(ax_ymin, set_ax_ymax)'''
-
   'plot labels'
   ax.set_xlabel('Time[1day]')
   ax.set_ylabel('Indivs/N')
   
-  'loc = best legend'
-  ax.legend(loc="best")
-
-  'set legend above the plot'
-  #ax.legend(bbox_to_anchor=(1, 1), edgecolor="grey", loc='upper right') #add: leg = 
+  'set legend above the plot if R_0 in [0,2] in the NNR_Config_Model'
+  if R0 <= 2 and folder == "NNR_Conf_Model":
+    ax_ymin, ax_ymax = ax.get_ylim()
+    set_ax_ymax = 1.5*ax_ymax
+    ax.set_ylim(ax_ymin, set_ax_ymax)
+    ax.legend(bbox_to_anchor=(1, 1), edgecolor="grey", loc='upper right') #add: leg = 
+  else: ax.legend(loc="best"); 'set legend in the "best" mat plot lib location'
 
 def rhu(n, decimals=0): #round_half_up
     import math
     multiplier = 10 ** decimals
     return math.floor(n*multiplier + 0.5) / multiplier
   
-def plot_save_sir(G, folder, D, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 10, numb_iter = 200):
-
-  plot_params()
-
-  intervals = [x for x in np.arange(R0_max)]
-  N = G.number_of_nodes()
-  R0 = beta * D / mu    
-  for i in range(len(intervals)-1):
-    if intervals[i] <= R0 < intervals[i+1]:
-
-      'plot all'
-      N = G.number_of_nodes()
-      _, ax = plt.subplots(figsize = (20,12))
-
-      'plot always sir'
-      if D == None: D = np.sum([j for (i,j) in G.degree()]) / N
-      print("The model has N: %s, D: %s, beta: %s, mu: %s, p: %s, R0: %s" % (N,D,rhu(beta,3),rhu(mu,3),rhu(p,1),rhu(R0,3)) )
-      plot_sir(G, ax=ax, beta = beta, mu = mu, start_inf = start_inf, D = D, numb_iter = numb_iter)
-      plt.subplots_adjust(
-      top=0.920,
-      bottom=0.151,
-      left=0.086,
-      right=0.992,
-      hspace=0.2,
-      wspace=0.2)
-      plt.suptitle("R0:%s, N:%s, D:%s, p:%s, beta:%s, mu:%s"% (rhu(beta/mu*D,3),N,D,rhu(p,3), rhu(beta,3), rhu(mu,3), ))
-      
-      
-      #plt.show()
-      'save plots in different folders'
-      adj_or_sir = "SIR"
-      from definitions import my_dir
-      my_dir = my_dir() #"/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/"
-      my_dir+=folder+"/p%s/"%rhu(p,1)+adj_or_sir+"/"
-      r0_folder = "R0_%s-%s/mu%s/" % (intervals[i], intervals[i+1], rhu(mu,3))
-      folder += "_p%s"%rhu(p,1)
-      try:
-        os.makedirs(my_dir + r0_folder)
-        plt.savefig(my_dir + r0_folder + folder + \
-          "_%s_R0_%s_N%s_D%s_beta%s_mu%s"% (
-            adj_or_sir, '{:.3f}'.format(rhu(beta/mu*D,3)),
-            N,D, rhu(beta,3), rhu(mu,3) ) 
-          + ".png")
-      except:
-        plt.savefig(my_dir + r0_folder + folder + \
-          "_%s_R0_%s_N%s_D%s_beta%s_mu%s"% (
-            adj_or_sir, '{:.3f}'.format(rhu(beta/mu*D,3)),
-            N,D, rhu(beta,3), rhu(mu,3) ) 
-          + ".png")
-  plt.close()
-  print("\n--\n")
-
 def plot_save_net(G, folder, D, p, scaled_G, log_dd = False):
   plot_params()
 
@@ -268,15 +215,20 @@ def plot_save_net(G, folder, D, p, scaled_G, log_dd = False):
 
   ax = plt.subplot(221)
 
+  if p == 0 and folder[:3] == "WS_":
+    scaled_G = nx.connected_watts_strogatz_graph( n = N, k = 500, p = p, seed = 1 ) 
+  elif p >= 0.1 and folder[:3] == "WS_":
+    scaled_G = nx.connected_watts_strogatz_graph( n = N, k = 2, p = p, seed = 1 )
+  
   'plot the real G not the scaled one and dont put description of the scaled_G via ax.text'
-  nx.draw_circular(scaled_G, ax=ax, with_labels=True, font_size=0, node_size=100, width=1)
-  '''
-  ax.text(0,1,transform=ax.transAxes,
-    s = "N: %s, D: %s, p: %s" % \
-      (scaled_G.number_of_nodes(), 
-      rhu(2*scaled_G.number_of_edges() / float(scaled_G.number_of_nodes()),3), 
-        rhu(p,1)) )
-  '''
+  nx.draw_circular(scaled_G, ax=ax, with_labels=False, font_size=20, node_size=100, width=1)
+
+  if folder[:3] == "WS_":
+    ax.text(0,1,transform=ax.transAxes,
+      s = "D:%s, p:%s" % \
+      ( 
+        rhu(2*scaled_G.number_of_edges() / float(scaled_G.number_of_nodes()),3), 
+        rhu(p,3)) )
   
   'set xticks of the degree distribution to be centered'
   sorted_degree = np.sort([G.degree(n) for n in G.nodes()])
@@ -309,14 +261,14 @@ def plot_save_net(G, folder, D, p, scaled_G, log_dd = False):
   right=0.963,
   hspace=0.067,
   wspace=0.164)
-  plt.suptitle("N:%s, D:%s, p:%s"% (N,D,rhu(p,1)))
+  plt.suptitle("N:%s, D:%s, p:%s"% (N,D,rhu(p,3)))
 
   
   'TO SAVE PLOTS'
   from definitions import my_dir
   my_dir = my_dir() #"/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/"
   adj_or_sir = "AdjMat"
-  my_dir+=folder+"/p%s/"%rhu(p,1)+adj_or_sir+"/"
+  my_dir+=folder+"/p%s/"%rhu(p,3)+adj_or_sir+"/"
   try:
     os.makedirs(my_dir)
     plt.savefig(my_dir + \
@@ -331,6 +283,64 @@ def plot_save_net(G, folder, D, p, scaled_G, log_dd = False):
         N,D,rhu(p,3)) 
       + ".png")
   plt.close()
+
+def plot_save_sir(G, folder, D, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 10, numb_iter = 200):
+
+  import datetime as dt
+  start_time = dt.datetime.now()
+
+  plot_params()
+
+  intervals = [x for x in np.arange(R0_max)]
+  N = G.number_of_nodes()
+  R0 = beta * D / mu    
+  for i in range(len(intervals)-1):
+    if intervals[i] <= R0 < intervals[i+1]:
+
+      'plot all'
+      N = G.number_of_nodes()
+      _, ax = plt.subplots(figsize = (20,12))
+
+      'plot always sir'
+      if D == None: D = np.sum([j for (i,j) in G.degree()]) / N
+      print("The model has N: %s, D: %s, beta: %s, mu: %s, p: %s, R0: %s" % (N,D,rhu(beta,3),rhu(mu,3),rhu(p,3),rhu(R0,3)) )
+      plot_sir(G, ax=ax, folder = folder, beta = beta, mu = mu, start_inf = start_inf, D = D, numb_iter = numb_iter)
+      plt.subplots_adjust(
+      top=0.920,
+      bottom=0.151,
+      left=0.086,
+      right=0.992,
+      hspace=0.2,
+      wspace=0.2)
+      plt.suptitle("R0:%s, N:%s, D:%s, p:%s, beta:%s, mu:%s"% (rhu(beta/mu*D,3),N,D,rhu(p,3), rhu(beta,3), rhu(mu,3), ))
+      
+      
+      #plt.show()
+      'save plots in different folders'
+      adj_or_sir = "SIR"
+      from definitions import my_dir
+      my_dir = my_dir() #"/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/"
+      my_dir+=folder+"/p%s/"%rhu(p,3)+adj_or_sir+"/" #"/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/"
+
+      'Intro R0-subfolder only for "Pruning" since epidemic force has to be equal'
+      'else: I want to "fix" an epidemic and see how it spreads'
+      if folder == "WS_Pruned": sub_folders = "R0_%s-%s/mu%s/" % (intervals[i], intervals[i+1], rhu(mu,3))
+      else: sub_folders = "/beta%s/mu%s/" % (rhu(beta,3), rhu(mu,3))
+        
+      if folder == "WS_Epids": sub_folders += "/D%s" % D 
+
+      plot_name = my_dir + sub_folders + folder + \
+          "_%s_R0_%s_N%s_D%s_p%s_beta%s_mu%s"% (
+            adj_or_sir, '{:.3f}'.format(rhu(beta/mu*D,3)),
+            N,D, rhu(p,3), rhu(beta,3), rhu(mu,3) )
+      try:
+        os.makedirs(my_dir + sub_folders)
+        plt.savefig( plot_name + ".png")
+      except:
+        plt.savefig( plot_name + ".png")
+      print("time 1_plot_save_sir:", dt.datetime.now()-start_time) 
+  plt.close()
+  print("---")
 
 'Net Infos'
 def infos_sorted_nodes(G, num_nodes = False):
@@ -383,7 +393,7 @@ def pow_max(N, num_iter = "all"):
     return i-1
   return int(num_iter)
 
-def ws_sir(G, folder, saved_nets, pruning = False, D = None, p = 0.1, infos = False, beta = 0.001, mu = 0.16, start_inf = 10):    
+def ws_sir(G, folder, p, saved_nets, pruning = False, D = None, infos = False, beta = 0.001, mu = 0.16, start_inf = 10):    
   'in this def: cut_factor = % of links remaining from the full net'
   'round_half_up D for a better approximation of nx.c_w_s_graph+sir'
   import networkx as nx
@@ -396,15 +406,12 @@ def ws_sir(G, folder, saved_nets, pruning = False, D = None, p = 0.1, infos = Fa
     cut_factor = 1
     beta = beta/cut_factor; mu = mu
 
-  scaled_G = G
-  #if int(D/30) >= 2: scaled_G = nx.connected_watts_strogatz_graph(n = int(N/30), k = int(D/30), p = p, seed = 1) #k is the number of near linked nodes
-
   if infos == True: check_loops_parallel_edges(G); infos_sorted_nodes(G, num_nodes = False)
 
   if "N%s_D%s_p%s"% (N,D,rhu(p,3)) not in saved_nets: 
-    plot_save_net(G = G, scaled_G = scaled_G, folder = folder, D = D, p = p)
-    saved_nets.append("N%s_D%s_p%s"% (N,D,rhu(p,3)))
-    print(saved_nets)
+    plot_save_net(G = G, scaled_G = G, folder = folder, D = D, p = p)
+    saved_nets.append("N%s_D%s_p%s" % (N,D,rhu(p,3)))
+    print(saved_nets, "\n---")
   plot_save_sir(G = G, folder = folder, beta = beta, D = D, mu = mu, p = p, start_inf = start_inf)
 
 'Configurational Model'
