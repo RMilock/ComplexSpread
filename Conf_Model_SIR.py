@@ -23,10 +23,10 @@ def scaled_conf_pois(G,D,cut_off=30):
   <br>Ex., $D = 50 = N, <k> ~ 28$. For $N= 1000 \text{ and } D = 3 \textrm{ or } 8, 
   <k> \textrm{is acceptable.}$
 '''
-p_max = 0; N = int(40)
+p_max = 0; N = int(1e3)
 
 'progression of net-parameters'
-k_prog = np.arange(2,10,2)
+k_prog = [32]#np.arange(2,10,2)
 p_prog = np.linspace(0,p_max,int(p_max*10)+1)
 mu_prog = np.linspace(0.01,1,15)
 beta_prog = np.linspace(0.01,1,15)
@@ -55,8 +55,8 @@ for D,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog):
     
     folder = "NNR_Conf_Model"
     text = "N %s;\n k_prog %s, len: %s;\np_prog %s, len: %s;\nbeta_prog %s, len: %s;\nmu_prog %s, len: %s;\nR0_min %s, R0_max %s\n---\n" \
-            % (N, k_prog, len(k_prog), beta_prog, len(beta_prog), \
-            mu_prog, len(mu_prog), p_prog, len(p_prog), R0_min, R0_max)
+            % (N, k_prog, len(k_prog), p_prog, len(p_prog), beta_prog, len(beta_prog), \
+            mu_prog, len(mu_prog),  R0_min, R0_max)
 
     if "N%s_D%s_p%s"% (N,D,rhu(p,3)) not in saved_nets: 
       plot_save_net(G = G, scaled_G = G, folder = folder, D = D, p = p)
@@ -64,4 +64,4 @@ for D,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog):
       print(saved_nets)
     plot_save_sir(G, folder = folder, beta = beta, D = D, mu = mu, p = p_max)
 
-    save_log_file(folder = my_dir() + folder, text = text)
+    save_log_file(folder = folder, text = text)
