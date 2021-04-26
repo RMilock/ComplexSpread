@@ -9,13 +9,22 @@ import os #to create a folder
 
 
 def my_dir():
+  #return "/content/drive/MyDrive/Colab_Notebooks/Thesis/Complex_Plots/"
   #return "/content/"
-  return "/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/Tests/"
+  return "/home/hal21/MEGAsync/Tour_Physics2.0/Thesis/NetSciThesis/Project/Plots/Test/"
 
 def save_log_file(folder, text):
-      print(folder)
-      with open(folder + "/log.txt", "w") as text_file: #write only 1 time
-          text_file.write(text)
+  import os
+  from definitions import my_dir
+  print(my_dir() + folder)
+  try: 
+    os.makedirs(my_dir() + folder)
+    with open(my_dir() + folder + "/" + folder + "_log.txt", "w") as text_file: #write only 1 time
+      text_file.write(text)
+  except:
+    with open(my_dir() + folder + "/" + folder + "_log.txt", "w") as text_file: #write only 1 time
+      text_file.write(text)
+
 'plot and save sir'
 def plot_params():
   import matplotlib.pyplot as plt
@@ -194,7 +203,7 @@ def plot_sir(G, ax, folder = None, D = None, beta = 1e-3, mu = 0.05, start_inf =
   ax.set_ylabel('Indivs/N')
   
   'set legend above the plot if R_0 in [0,2] in the NNR_Config_Model'
-  if R0 <= 2 and folder == "NNR_Conf_Model":
+  if R0 <= 3 and folder == "NNR_Conf_Model":
     ax_ymin, ax_ymax = ax.get_ylim()
     set_ax_ymax = 1.5*ax_ymax
     ax.set_ylim(ax_ymin, set_ax_ymax)
@@ -215,20 +224,27 @@ def plot_save_net(G, folder, D, p, scaled_G, log_dd = False):
 
   ax = plt.subplot(221)
 
+  '''
   if p == 0 and folder[:3] == "WS_":
     scaled_G = nx.connected_watts_strogatz_graph( n = N, k = 500, p = p, seed = 1 ) 
   elif p >= 0.1 and folder[:3] == "WS_":
     scaled_G = nx.connected_watts_strogatz_graph( n = N, k = 2, p = p, seed = 1 )
+  '''
   
   'plot the real G not the scaled one and dont put description of the scaled_G via ax.text'
-  nx.draw_circular(scaled_G, ax=ax, with_labels=False, font_size=20, node_size=100, width=1)
+  width = 0.8
+  scaled_G = G
+  if folder == "WS_Pruned": width = 0.001
+  nx.draw_circular(scaled_G, ax=ax, with_labels=False, font_size=20, node_size=100, width=width)
 
-  if folder[:3] == "WS_":
+  '''
+  if folder[:3] == "WS_Pruned":
     ax.text(0,1,transform=ax.transAxes,
       s = "D:%s, p:%s" % \
       ( 
         rhu(2*scaled_G.number_of_edges() / float(scaled_G.number_of_nodes()),3), 
         rhu(p,3)) )
+  '''
   
   'set xticks of the degree distribution to be centered'
   sorted_degree = np.sort([G.degree(n) for n in G.nodes()])
@@ -261,7 +277,7 @@ def plot_save_net(G, folder, D, p, scaled_G, log_dd = False):
   right=0.963,
   hspace=0.067,
   wspace=0.164)
-  plt.suptitle("N:%s, D:%s, p:%s"% (N,D,rhu(p,3)))
+  plt.suptitle(r"$N:%s, D:%s, p:%s$"% (N,D,rhu(p,3)))
 
   
   'TO SAVE PLOTS'
@@ -312,7 +328,7 @@ def plot_save_sir(G, folder, D, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  st
       right=0.992,
       hspace=0.2,
       wspace=0.2)
-      plt.suptitle("R0:%s, N:%s, D:%s, p:%s, beta:%s, mu:%s"% (rhu(beta/mu*D,3),N,D,rhu(p,3), rhu(beta,3), rhu(mu,3), ))
+      plt.suptitle(r"$R_0:%s, N:%s, D:%s, p:%s, \beta:%s, \mu:%s$"% (rhu(beta/mu*D,3),N,D,rhu(p,3), rhu(beta,3), rhu(mu,3), ))
       
       
       #plt.show()
@@ -324,10 +340,13 @@ def plot_save_sir(G, folder, D, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  st
 
       'Intro R0-subfolder only for "Pruning" since epidemic force has to be equal'
       'else: I want to "fix" an epidemic and see how it spreads'
-      if folder == "WS_Pruned": sub_folders = "R0_%s-%s/mu%s/" % (intervals[i], intervals[i+1], rhu(mu,3))
-      else: sub_folders = "/beta%s/mu%s/" % (rhu(beta,3), rhu(mu,3))
+      sub_folders = "R0_%s-%s/" % (intervals[i], intervals[i+1])
+      if folder != "WS_Epids": sub_folders += "mu%s/" % (rhu(mu,3))
+      #old ver: 
+      #if folder == "WS_Pruned"
+      #else: sub_folders = "/beta%s/mu%s/" % (rhu(beta,3), rhu(mu,3))
         
-      if folder == "WS_Epids": sub_folders += "/D%s" % D 
+      if folder == "WS_Epids": sub_folders += "D%s/" % D 
 
       plot_name = my_dir + sub_folders + folder + \
           "_%s_R0_%s_N%s_D%s_p%s_beta%s_mu%s"% (
@@ -412,7 +431,7 @@ def ws_sir(G, folder, p, saved_nets, pruning = False, D = None, infos = False, b
     plot_save_net(G = G, scaled_G = G, folder = folder, D = D, p = p)
     saved_nets.append("N%s_D%s_p%s" % (N,D,rhu(p,3)))
     print(saved_nets, "\n---")
-  plot_save_sir(G = G, folder = folder, beta = beta, D = D, mu = mu, p = p, start_inf = start_inf)
+  #plot_save_sir(G = G, folder = folder, beta = beta, D = D, mu = mu, p = p, start_inf = start_inf)
 
 'Configurational Model'
 'Draw N degrees from a Poissonian sequence with lambda = D and length L'
