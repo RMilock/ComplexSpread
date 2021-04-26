@@ -32,23 +32,20 @@ for pruning in [False]: #if 1 needed: add ``break``
     p_max = 0.2
     p_prog = np.linspace(0,p_max,int(p_max*10)+1)
     print("---I'm pruning!")
-    betas = [2e-3]
+    betas = [1e-3, 2e-3, 1e-4]
 
     'In WS model, if D = odd, D = D - 1. So, convert it now'
     k_prog = [even_int(N/x) for x in \
               [2**i for i in range(0,pow_max(N, num_iter = "all"))]]*len(betas) #if pow_max +1 --> error of connectivity: D = k_odd - 1
     beta_prog = [beta*N/k for beta in betas for k in k_prog[:len(set(k_prog))]]
-    mu_prog = np.linspace(0.016,1,25) #[0.467, 0.385, 0.631]
+    mu_prog = np.linspace(0.16,1,10) #[0.467, 0.385, 0.631]
     R0_min = 0; R0_max = 7
     
     folder = "WS_Pruned" 
     text = "N %s;\n k_prog %s, len: %s;\np_prog %s, len: %s;\nbeta_prog %s, len: %s;\nmu_prog %s, len: %s;\nR0_min %s, R0_max %s\n---\n" \
           % (N, k_prog, len(k_prog), p_prog, len(p_prog), beta_prog, len(beta_prog), \
           mu_prog, len(mu_prog), R0_min, R0_max)
-    print(text)
-
-    save_log_file(my_dir() + folder, text)
-    
+    print(text)    
 
     total_iterations = 0
     for mu, p in product(mu_prog, p_prog):
@@ -70,16 +67,18 @@ for pruning in [False]: #if 1 needed: add ``break``
             print("beta", rhu(beta,3), "D", D, "R0", rhu(beta*D/mu,3), \
                   "mu", rhu(mu,3), "p", p) 
             ws_sir(G, saved_nets=saved_nets, pruning = pruning, folder = folder, D = D, p = p, beta = beta, mu = mu)
+    
+    save_log_file(folder = folder, text = text)
 
   if pruning == False:
     'test != kind of '
     print("---I'm NOT pruning!")
-    p_min = 0; p_max = 0.1
-    p_prog = np.linspace(p_min,p_max,2)
-    mu_prog = np.linspace(0.7,1,7)
-    beta_prog = mu_prog
-    k_prog = [2]#np.arange(2,18,4)
-    R0_min = 0.3; R0_max = 8
+    'if p_prog has sequence save_it like ./R0_0-1/R0_0.087'
+    p_prog = np.concatenate((np.array([0.001]), np.linspace(0.012,0.1,10)))
+    mu_prog = np.linspace(0.1,1,7)
+    beta_prog = np.linspace(0.1,1,7)
+    k_prog = np.arange(2,18,4)
+    R0_min = 0.3; R0_max = 5
     
     folder = "WS_Epids"
     text = "N %s;\n k_prog %s, len: %s;\np_prog %s, len: %s;\nbeta_prog %s, len: %s;\nmu_prog %s, len: %s;\nR0_min %s, R0_max %s\n---\n" \
@@ -87,11 +86,11 @@ for pruning in [False]: #if 1 needed: add ``break``
           mu_prog, len(mu_prog), R0_min, R0_max)
     print(text)
 
-    save_log_file(my_dir() + folder, text)
-
+    save_log_file(folder = folder, text = text)
 
     total_iterations = 0
-    for beta, D, mu, p in product(beta_prog, k_prog, mu_prog, p_prog):
+    for D, p in product(k_prog, p_prog):
+      for beta, mu in product(beta_prog, mu_prog):
         if  R0_min < beta*D/mu < R0_max:
           total_iterations += 1
     print("Total Iterations:", total_iterations)
@@ -100,8 +99,10 @@ for pruning in [False]: #if 1 needed: add ``break``
     saved_nets = []
     for D, p in product(k_prog, p_prog):
       G = nx.connected_watts_strogatz_graph( n = N, k = D, p = p, seed = 1 ) #k is the number of near linked nodes
-      for mu, beta in product(mu_prog, beta_prog): 
+      for beta, mu in product(beta_prog, mu_prog): 
         if  R0_min < beta*D/mu < R0_max:   
           done_iterations+=1
           print("Iterations left: %s" % ( total_iterations - done_iterations ) )
           ws_sir(G, saved_nets = saved_nets, folder = folder, pruning = pruning, D = D, p = p, beta = beta, mu = mu)
+
+    
