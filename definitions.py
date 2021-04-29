@@ -13,18 +13,6 @@ def my_dir():
   #return "/content/"
   return "/home/hal21/MEGAsync/Tour_Physics2.0/Thesis/NetSciThesis/Project/Plots/Test/"
 
-def save_log_file(folder, text):
-  import os
-  from definitions import my_dir
-  print(my_dir() + folder)
-  try: 
-    os.makedirs(my_dir() + folder)
-    with open(my_dir() + folder + "/" + folder + "_log.txt", "w") as text_file: #write only 1 time
-      text_file.write(text)
-  except:
-    with open(my_dir() + folder + "/" + folder + "_log.txt", "w") as text_file: #write only 1 time
-      text_file.write(text)
-
 'plot and save sir'
 def plot_params():
   import matplotlib.pyplot as plt
@@ -92,6 +80,7 @@ def sir(G, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False, D = None):
             if D != None: 
               ls = list(range(N)); ls.remove(i)
               tests = random.choices(ls, k = int(D)) #spread very fast since multiple infected center
+            tests = [int(x) for x in tests] #convert 35.0 into int
             for j in tests:
                 'If the contact is susceptible and not infected by another node in the future_state, try to infect it'
                 if current_state[j] == 'S' and future_state[j] == 'S':
@@ -128,31 +117,52 @@ def sir(G, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False, D = None):
     return prevalence, recovered, cum_positives
 
 def itermean_sir(G, numb_iter = 200, D = None, beta = 1e-3, mu = 0.05, start_inf = 10,):
-    'def a function that iters numb_iter and make an avg of the trajectories'
-    'k are the starting infected'
-    import itertools
-    import numpy as np
-    import matplotlib.pyplot as plt
-    numb_classes = 3
-    trajectories = [[] for _ in range(numb_classes)]
-    avg = [[] for _ in range(numb_classes)]
-    counts = [[],[],[]]
-    for i in range(numb_iter):
-        tmp_traj = sir(G, beta = beta, mu = mu, start_inf = start_inf, D = D)
-        for idx in range(numb_classes):
-            trajectories[idx].append(tmp_traj[idx])
-            #print("\niteration:", i, "idx ", idx, )#"and traj_idx", trajectories[idx])
-            it_sum = [sum(x) for x in itertools.zip_longest(*trajectories[idx], fillvalue=0)]
-            for j in range(len(trajectories[idx][i])):
-                #print("traj_i", trajectories[idx][i], "lenai", len(trajectories[idx][i]))
-                try: counts[idx][j]+=1
-                except: counts[idx].append(1)
-            avg[idx] = list(np.divide(it_sum,counts[idx]))
-            #print("global sum", it_sum)
-            #print("counts", counts[idx])
-            #print("avg", avg[idx])
+  'def a function that iters numb_iter and make an avg of the trajectories'
+  from itertools import product
+  from itertools import zip_longest
+  import numpy as np
+  import copy
 
-    return trajectories, avg
+  numb_idx_cl = 3
+  trajectories = [[] for _ in range(numb_idx_cl)]
+  avg = [[] for _ in range(numb_idx_cl)]
+  counts = [[],[],[]]
+  max_len = 0
+
+  for i in range(numb_iter):
+    for idx_cl in range(numb_idx_cl):
+        tmp_traj = sir(G, beta = beta, mu = mu, start_inf = start_inf, D = D)
+        #print("tmp_traj", tmp_traj)
+        trajectories[idx_cl].append(tmp_traj[idx_cl])
+        tmp_max = len(max(tmp_traj, key = len))
+        if tmp_max > max_len: max_len = tmp_max
+  #print("\nOverall max_len", max_len)
+  #print("All traj", trajectories)
+  plot_trajectories = copy.deepcopy(trajectories)
+  #traj[classes to be considered, e.g. infected = 0][precise iteration we want, e.g. "-1"]
+  for i in range(numb_iter):
+      for idx_cl in range(numb_idx_cl):
+          last_el_list = [trajectories[idx_cl][i][-1] for _ in range(max_len-len(trajectories[idx_cl][i]))]
+          #print("\nlast el list", last_el_list)
+          trajectories[idx_cl][i] += last_el_list
+          #print("new_traj", trajectories[idx_cl])
+          #print("iteration(s):", i, "idx_cl ", idx_cl, )
+          #"\n--> trajectories[%s]: %s" % (idx_cl, trajectories[idx_cl]))
+          length = len(trajectories[idx_cl][i])
+          #print( "--> trajectories[%s][%s]: %s" % (idx_cl, i, trajectories[idx_cl][i]), 
+          #"len:", length)
+          it_sum = [sum(x) for x in zip_longest(*trajectories[idx_cl], fillvalue=0)]
+          #print("\nit.zip_longest" , list(itertools.zip_longest(*trajectories[idx_cl], fillvalue=0)))#"and traj_idx_cl", trajectories[idx_cl])
+          for j in range(length):
+              try: counts[idx_cl][j]+=1
+              except: counts[idx_cl].append(1)
+          avg[idx_cl] = list(np.divide(it_sum,counts[idx_cl]))
+          #print("global sum", it_sum)
+          #print("counts", counts[idx_cl])
+          #print("avg", avg)
+          if length != max_len: raise Exception("Error: %s not max_len" % length)
+
+  return plot_trajectories, avg
 
 def plot_sir(G, ax, folder = None, D = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter = 200):
 
@@ -183,7 +193,7 @@ def plot_sir(G, ax, folder = None, D = None, beta = 1e-3, mu = 0.05, start_inf =
 
   ax.plot(mf_avg[2], label="MF::CD_Inf/N (%s%%)"% np.round(mf_avg[2][-1]*100,1), \
     color = "tab:orange" ) #mf::cd_inf
-  ax.plot(avg[2], label="Net::CD_Inf /N (%s%%)" % np.round(avg[2][-1]*100,1), \
+  ax.plot(avg[2], label="Net::CD_Inf/N (%s%%)" % np.round(avg[2][-1]*100,1), \
     color = "tab:green") #net::cd_inf    
   ax.plot(mf_avg[0], label="MF::Infected/N ", \
     color = "darkviolet") #prevalence
@@ -203,7 +213,8 @@ def plot_sir(G, ax, folder = None, D = None, beta = 1e-3, mu = 0.05, start_inf =
   ax.set_ylabel('Indivs/N')
   
   'set legend above the plot if R_0 in [0,2] in the NNR_Config_Model'
-  if R0 <= 3 and folder == "NNR_Conf_Model":
+  folders = ["NNR_Conf_Model"] #"WS_Epids"]
+  if R0 <= 3 and folder in folders:
     ax_ymin, ax_ymax = ax.get_ylim()
     set_ax_ymax = 1.5*ax_ymax
     ax.set_ylim(ax_ymin, set_ax_ymax)
@@ -215,151 +226,199 @@ def rhu(n, decimals=0): #round_half_up
     multiplier = 10 ** decimals
     return math.floor(n*multiplier + 0.5) / multiplier
   
-def plot_save_net(G, folder, D, p, scaled_G, log_dd = False):
-  plot_params()
-
-  N = G.number_of_nodes()
-  'plot G, adj_mat, degree distribution'
-  plt.figure(figsize = (20,20))
-
-  ax = plt.subplot(221)
-
-  '''
-  if p == 0 and folder[:3] == "WS_":
-    scaled_G = nx.connected_watts_strogatz_graph( n = N, k = 500, p = p, seed = 1 ) 
-  elif p >= 0.1 and folder[:3] == "WS_":
-    scaled_G = nx.connected_watts_strogatz_graph( n = N, k = 2, p = p, seed = 1 )
-  '''
-  
-  'plot the real G not the scaled one and dont put description of the scaled_G via ax.text'
-  width = 0.8
-  scaled_G = G
-  if folder == "WS_Pruned": width = 0.001
-  nx.draw_circular(scaled_G, ax=ax, with_labels=False, font_size=20, node_size=100, width=width)
-
-  '''
-  if folder[:3] == "WS_Pruned":
-    ax.text(0,1,transform=ax.transAxes,
-      s = "D:%s, p:%s" % \
-      ( 
-        rhu(2*scaled_G.number_of_edges() / float(scaled_G.number_of_nodes()),3), 
-        rhu(p,3)) )
-  '''
-  
-  'set xticks of the degree distribution to be centered'
-  sorted_degree = np.sort([G.degree(n) for n in G.nodes()])
-
-  'degree distribution + possonian distr'
-  from scipy.stats import poisson
-  bins = np.arange(sorted_degree[0]-1,sorted_degree[-1]+2)
-  mean = rhu( np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes() )
-  print("rounded degrees mean", mean)
-  y = poisson.pmf(bins, mean)
-  axs = plt.subplot(212)
-  n, hist_bins, _ = axs.hist(sorted_degree, bins = bins, \
-                                        log = log_dd, density=0, color="green", ec="black", lw=1, align="left", label = "degrees distr")
-  hist_mean = n[np.where(hist_bins == mean)]; pois_mean = poisson.pmf(mean, mean)
-  'useful but deletable print'
-  axs.plot(bins, y * hist_mean / pois_mean, "bo--", lw = 2, label = "poissonian distr")
-  axs.set_xlabel('Degree', )
-  axs.set_ylabel('Counts', )
-  axs.set_xlim(bins[0],bins[-1]) 
-  axs.legend(loc = "best")
-    
-  'plot adjiacency matrix'
-  axs = plt.subplot(222)
-  adj_matrix = nx.adjacency_matrix(G).todense()
-  axs.matshow(adj_matrix, cmap=cm.get_cmap("Greens"))
-  #print("Adj_matrix is symmetric", np.allclose(adj_matrix, adj_matrix.T))
-  plt.subplots_adjust(top=0.898,
-  bottom=0.088,
-  left=0.1,
-  right=0.963,
-  hspace=0.067,
-  wspace=0.164)
-  plt.suptitle(r"$N:%s, D:%s, p:%s$"% (N,D,rhu(p,3)))
-
-  
-  'TO SAVE PLOTS'
+def plot_save_net(G, folder, D, p, done_iterations, log_dd = False, partition = None, pos = None):
+  import os.path
   from definitions import my_dir
-  my_dir = my_dir() #"/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/"
+  
+  mode = "a"
+  if done_iterations == 1: mode = "w"
+  my_dir = my_dir() #"/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/Tests/"
+  N = G.number_of_nodes()
   adj_or_sir = "AdjMat"
-  my_dir+=folder+"/p%s/"%rhu(p,3)+adj_or_sir+"/"
-  try:
-    os.makedirs(my_dir)
-    plt.savefig(my_dir + \
-      "%s_N%s_D%s_p%s"% (
+  log_upper_path = my_dir + folder + "/" #"../Plots/WS_Epids/"
+  my_dir+=folder+"/p%s/"%rhu(p,3)+adj_or_sir+"/" #"../Plots/WS_Epids/p0.001/AdjMat/"
+  file_name = "%s_N%s_D%s_p%s"% (
         adj_or_sir,
-        N,D,rhu(p,3)) 
-      + ".png")
-  except:
-    plt.savefig(my_dir + \
-      "%s_N%s_D%s_p%s"% (
-        adj_or_sir,
-        N,D,rhu(p,3)) 
-      + ".png")
-  plt.close()
+        N,D,rhu(p,3)) + \
+      ".png"
+  file_path = my_dir + file_name #../AdjMat/AdjMat_N1000_D500_p0.001.png
+  log_path = log_upper_path + folder + "_log_saved_nets.txt" #"../Plots/WS_Epids/AdjMat_log_saved_nets.txt"
+      
 
-def plot_save_sir(G, folder, D, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 10, numb_iter = 200):
+  if not os.path.exists(file_path):
+    plot_params()
 
+    'plot G, adj_mat, degree distribution'
+    plt.figure(figsize = (20,20))
+
+    ax = plt.subplot(221)
+
+    '''
+    if p == 0 and folder[:3] == "WS_":
+      scaled_G = nx.connected_watts_strogatz_graph( n = N, k = 500, p = p, seed = 1 ) 
+    elif p >= 0.1 and folder[:3] == "WS_":
+      scaled_G = nx.connected_watts_strogatz_graph( n = N, k = 2, p = p, seed = 1 )
+    '''
+    
+    'plot the real G not the scaled one and dont put description of the scaled_G via ax.text'
+    width = 0.8
+    if folder == "WS_Pruned": width = 0.001
+    if folder== "Ring_Rnd_Caveman_Model":
+      nx.draw(G, pos, node_color=list(partition.values()), node_size = 5, width = 0.5, with_labels = False)
+    else: nx.draw_circular(G, ax=ax, with_labels=False, font_size=20, node_size=100, width=width)
+
+    '''
+    if folder[:3] == "WS_Pruned":
+      ax.text(0,1,transform=ax.transAxes,
+        s = "D:%s, p:%s" % \
+        ( 
+          rhu(2*scaled_G.number_of_edges() / float(scaled_G.number_of_nodes()),3), 
+          rhu(p,3)) )
+    '''
+    
+    'set xticks of the degree distribution to be centered'
+    sorted_degree = np.sort([G.degree(n) for n in G.nodes()])
+
+    'degree distribution + possonian distr'
+    from scipy.stats import poisson
+    bins = np.arange(sorted_degree[0]-1,sorted_degree[-1]+2)
+    mean = rhu( np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes() )
+    print("rounded degrees mean", mean)
+    y = poisson.pmf(bins, mean)
+    axs = plt.subplot(212)
+    n, hist_bins, _ = axs.hist(sorted_degree, bins = bins, \
+                                          log = log_dd, density=0, color="green", ec="black", lw=1, align="left", label = "degrees distr")
+    hist_mean = n[np.where(hist_bins == mean)]; pois_mean = poisson.pmf(mean, mean)
+    'useful but deletable print'
+    axs.plot(bins, y * hist_mean / pois_mean, "bo--", lw = 2, label = "poissonian distr")
+    axs.set_xlabel('Degree', )
+    axs.set_ylabel('Counts', )
+    axs.set_xlim(bins[0],bins[-1]) 
+    axs.legend(loc = "best")
+      
+    'plot adjiacency matrix'
+    axs = plt.subplot(222)
+    adj_matrix = nx.adjacency_matrix(G).todense()
+    axs.matshow(adj_matrix, cmap=cm.get_cmap("Greens"))
+    #print("Adj_matrix is symmetric", np.allclose(adj_matrix, adj_matrix.T))
+    plt.subplots_adjust(top=0.898,
+    bottom=0.088,
+    left=0.1,
+    right=0.963,
+    hspace=0.067,
+    wspace=0.164)
+    plt.suptitle(r"$N:%s, D:%s, p:%s$"% (N,D,rhu(p,3)))
+
+    'TO SAVE PLOTS'
+    if not os.path.exists(my_dir): os.makedirs(my_dir)
+    plt.savefig(file_path)
+    plt.close()
+
+    print(log_path)
+    with open(log_path, mode) as text_file: #write only 1 time
+      text_file.write("N: " + file_name + "\n")
+  
+  else: 
+    if not os.path.exists(log_upper_path): os.makedirs(log_upper_path)
+    print(log_path)
+    with open(log_path, mode) as text_file: #write only 1 time
+      text_file.write("O: " + file_name + "\n")
+
+  'sorting lines to have New lines @ first'
+  sorted_lines = []
+  with open(log_path, 'r') as r:
+    for line in sorted(r):
+      sorted_lines.append(line)
+  
+  with open(log_path, 'w') as r:
+    for line in sorted_lines:
+      r.write(line)
+
+def plot_save_sir(G, folder, D, done_iterations, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 10, numb_iter = 200):
+  import os.path
+  from definitions import my_dir
+  
+  mode = "a"
+  if done_iterations == 1: mode = "w"
+  my_dir = my_dir() #"/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/Tests/"
+  N = G.number_of_nodes()
+  adj_or_sir = "SIR"
+  log_upper_path = my_dir + folder + "/" #../Plots/Tests/
+  my_dir+=folder+"/p%s/"%rhu(p,3)+adj_or_sir+"/" #"../Plots/Test/WS_Epids/p0.001/SIR/"
+  #file_path depends on a "r0_folder"
+  log_path = log_upper_path + "/" + folder + "_log_saved_SIRs.txt" #"../Plots/WS_Epids/SIR_log_saved_SIRs.txt"
+      
   import datetime as dt
   start_time = dt.datetime.now()
 
   plot_params()
-
   intervals = [x for x in np.arange(R0_max)]
   N = G.number_of_nodes()
   R0 = beta * D / mu    
+
   for i in range(len(intervals)-1):
     if intervals[i] <= R0 < intervals[i+1]:
 
-      'plot all'
-      N = G.number_of_nodes()
-      _, ax = plt.subplots(figsize = (20,12))
-
-      'plot always sir'
-      if D == None: D = np.sum([j for (i,j) in G.degree()]) / N
-      print("The model has N: %s, D: %s, beta: %s, mu: %s, p: %s, R0: %s" % (N,D,rhu(beta,3),rhu(mu,3),rhu(p,3),rhu(R0,3)) )
-      plot_sir(G, ax=ax, folder = folder, beta = beta, mu = mu, start_inf = start_inf, D = D, numb_iter = numb_iter)
-      plt.subplots_adjust(
-      top=0.920,
-      bottom=0.151,
-      left=0.086,
-      right=0.992,
-      hspace=0.2,
-      wspace=0.2)
-      plt.suptitle(r"$R_0:%s, N:%s, D:%s, p:%s, \beta:%s, \mu:%s$"% (rhu(beta/mu*D,3),N,D,rhu(p,3), rhu(beta,3), rhu(mu,3), ))
-      
-      
-      #plt.show()
-      'save plots in different folders'
-      adj_or_sir = "SIR"
-      from definitions import my_dir
-      my_dir = my_dir() #"/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/"
-      my_dir+=folder+"/p%s/"%rhu(p,3)+adj_or_sir+"/" #"/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/"
-
-      'Intro R0-subfolder only for "Pruning" since epidemic force has to be equal'
-      'else: I want to "fix" an epidemic and see how it spreads'
-      sub_folders = "R0_%s-%s/" % (intervals[i], intervals[i+1])
-      if folder != "WS_Epids": sub_folders += "mu%s/" % (rhu(mu,3))
-      #old ver: 
-      #if folder == "WS_Pruned"
-      #else: sub_folders = "/beta%s/mu%s/" % (rhu(beta,3), rhu(mu,3))
-        
-      if folder == "WS_Epids": sub_folders += "D%s/" % D 
-
-      plot_name = my_dir + sub_folders + folder + \
-          "_%s_R0_%s_N%s_D%s_p%s_beta%s_mu%s"% (
+      'Intro R0-subfolder since R0 det epids behaviour on a fixed net'
+      r0_folder = "R0_%s-%s/" % (intervals[i], intervals[i+1])
+      if folder != "W": r0_folder += "mu%s/" % (rhu(mu,3)) #"R0_1-2/mu0.16/"
+      #if folder == "WS_Epids": r0_folder += "D%s/" % D  #"R0_1-2/mu0.16/D6/"
+      if not os.path.exists(my_dir + r0_folder): os.makedirs(my_dir + r0_folder)
+      file_name = folder + "_%s_R0_%s_N%s_D%s_p%s_beta%s_mu%s"% (
             adj_or_sir, '{:.3f}'.format(rhu(beta/mu*D,3)),
-            N,D, rhu(p,3), rhu(beta,3), rhu(mu,3) )
-      try:
-        os.makedirs(my_dir + sub_folders)
-        plt.savefig( plot_name + ".png")
-      except:
-        plt.savefig( plot_name + ".png")
-      print("time 1_plot_save_sir:", dt.datetime.now()-start_time) 
-  plt.close()
-  print("---")
+            N,D, rhu(p,3), rhu(beta,3), rhu(mu,3) ) + ".png"
+      file_path = my_dir + r0_folder + file_name
+      
+
+      if not os.path.exists(file_path):
+        'plot all'
+        _, ax = plt.subplots(figsize = (20,12))
+
+        'plot always sir'
+        if D == None: D = np.sum([j for (i,j) in G.degree()]) / N
+        print("The model has N: %s, D: %s, beta: %s, mu: %s, p: %s, R0: %s" % (N,D,rhu(beta,3),rhu(mu,3),rhu(p,3),rhu(R0,3)) )
+        plot_sir(G, ax=ax, folder = folder, beta = beta, mu = mu, start_inf = start_inf, D = D, numb_iter = numb_iter)
+        plt.subplots_adjust(
+        top=0.920,
+        bottom=0.151,
+        left=0.086,
+        right=0.992,
+        hspace=0.2,
+        wspace=0.2)
+        plt.suptitle(r"$R_0:%s, N:%s, D:%s, p:%s, \beta:%s, \mu:%s$"% (rhu(beta/mu*D,3),N,D,rhu(p,3), rhu(beta,3), rhu(mu,3), ))
+        #plt.show()
+
+        plt.savefig( file_path )
+        print("time 1_plot_save_sir:", dt.datetime.now()-start_time) 
+        
+        print(log_path)
+        with open(log_path, mode) as text_file: #write only 1 time
+          text_file.write("N: " + file_name + "\n")
+        
+        plt.close()
+        print("---")
+
+      else: 
+        if not os.path.exists(log_upper_path): os.makedirs(log_upper_path)
+        with open(log_path, mode) as text_file: #write only 1 time
+          text_file.write("O: " + file_name + "\n")
+
+  sorted_lines = []
+  with open(log_path, 'r') as r:
+    for line in sorted(r):
+      sorted_lines.append(line)
+  
+  with open(log_path, 'w') as r:
+    for line in sorted_lines:
+      r.write(line)
+
+def save_log_params(folder, text):
+  import os
+  from definitions import my_dir
+  print(my_dir() + folder)
+  if not os.path.exists(my_dir() + folder): os.makedirs(my_dir() + folder)
+  with open(my_dir() +  folder + "/" + folder + "_log_params.txt", "w") as text_file: #write only 1 time
+      text_file.write(text)
 
 'Net Infos'
 def infos_sorted_nodes(G, num_nodes = False):
@@ -412,7 +471,7 @@ def pow_max(N, num_iter = "all"):
     return i-1
   return int(num_iter)
 
-def ws_sir(G, folder, p, saved_nets, pruning = False, D = None, infos = False, beta = 0.001, mu = 0.16, start_inf = 10):    
+def ws_sir(G, folder, p, saved_nets, done_iterations,pruning = False, D = None, infos = False, beta = 0.001, mu = 0.16, start_inf = 10):    
   'in this def: cut_factor = % of links remaining from the full net'
   'round_half_up D for a better approximation of nx.c_w_s_graph+sir'
   import networkx as nx
@@ -428,10 +487,10 @@ def ws_sir(G, folder, p, saved_nets, pruning = False, D = None, infos = False, b
   if infos == True: check_loops_parallel_edges(G); infos_sorted_nodes(G, num_nodes = False)
 
   if "N%s_D%s_p%s"% (N,D,rhu(p,3)) not in saved_nets: 
-    plot_save_net(G = G, scaled_G = G, folder = folder, D = D, p = p)
+    plot_save_net(G = G, folder = folder, D = D, p = p, done_iterations = done_iterations)
     saved_nets.append("N%s_D%s_p%s" % (N,D,rhu(p,3)))
     print(saved_nets, "\n---")
-  #plot_save_sir(G = G, folder = folder, beta = beta, D = D, mu = mu, p = p, start_inf = start_inf)
+  plot_save_sir(G = G, folder = folder, beta = beta, D = D, mu = mu, p = p, start_inf = start_inf, done_iterations = done_iterations )
 
 'Configurational Model'
 'Draw N degrees from a Poissonian sequence with lambda = D and length L'
@@ -559,7 +618,7 @@ def NN_pois_net(G, D, p = 0):
 
 '''def:: "replace" existing edges, since built-in method only adds'''
 def replace_edges_from(G,list_edges=[]):
-    ebunch = [x for x in G.edges()]
-    G.remove_edges_from(ebunch)
+    present_edges = [x for x in G.edges()]
+    G.remove_edges_from(present_edges)
     if list_edges!=[]: return G.add_edges_from(list_edges)
     return G
