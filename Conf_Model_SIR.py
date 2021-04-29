@@ -1,12 +1,6 @@
-import random
-import math
 import numpy as np
-import matplotlib.pyplot as plt
-import networkx as nx
-# %matplotlib inline
 from itertools import product
-import os #to create a folder
-from definitions import my_dir, save_log_file, rhu, plot_save_net, plot_save_sir, config_pois_model, NN_pois_net, pois_pos_degrees
+from definitions import save_log_params, rhu, plot_save_net, plot_save_sir, config_pois_model, NN_pois_net, pois_pos_degrees
 
 'save scaled version for better visualization'
 def scaled_conf_pois(G,D,cut_off=30):    
@@ -26,7 +20,7 @@ def scaled_conf_pois(G,D,cut_off=30):
 p_max = 0; N = int(1e3)
 
 'progression of net-parameters'
-k_prog = [32]#np.arange(2,10,2)
+k_prog = np.arange(2,10,2)
 p_prog = np.linspace(0,p_max,int(p_max*10)+1)
 mu_prog = np.linspace(0.01,1,15)
 beta_prog = np.linspace(0.01,1,15)
@@ -59,9 +53,9 @@ for D,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog):
             mu_prog, len(mu_prog),  R0_min, R0_max)
 
     if "N%s_D%s_p%s"% (N,D,rhu(p,3)) not in saved_nets: 
-      plot_save_net(G = G, scaled_G = G, folder = folder, D = D, p = p)
+      plot_save_net(G = G, scaled_G = G, folder = folder, D = D, p = p, done_iterations = done_iterations)
       saved_nets.append("N%s_D%s_p%s"% (N,D,rhu(p,3)))
       print(saved_nets)
-    plot_save_sir(G, folder = folder, beta = beta, D = D, mu = mu, p = p_max)
+    plot_save_sir(G, folder = folder, beta = beta, D = D, mu = mu, p = p_max, done_iterations = done_iterations)
 
-    save_log_file(folder = folder, text = text)
+    save_log_params(folder = folder, text = text)

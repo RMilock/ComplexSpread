@@ -9,7 +9,7 @@ from itertools import product
 import os #to create a folder
 from definitions import ws_sir, infos_sorted_nodes, \
   remove_loops_parallel_edges, check_loops_parallel_edges, config_pois_model, replace_edges_from, \
-    rhu, pow_max, save_log_file, my_dir
+    rhu, pow_max, save_log_params, my_dir
 
 '''
 CONNECTED_Watts-Strogatz Net!
@@ -21,7 +21,7 @@ it drives to a nearer pruning.
 '''
 
 'rewire all the edges with a probability of p'
-N = int(1e3)
+N = int(50)
 
 def even_int(x):
   if int(x) % 2 != 0: return int(x-1)
@@ -66,9 +66,9 @@ for pruning in [False]: #if 1 needed: add ``break``
             print("Iterations left: %s" % ( total_iterations - done_iterations ) )
             print("beta", rhu(beta,3), "D", D, "R0", rhu(beta*D/mu,3), \
                   "mu", rhu(mu,3), "p", p) 
-            ws_sir(G, saved_nets=saved_nets, pruning = pruning, folder = folder, D = D, p = p, beta = beta, mu = mu)
+            ws_sir(G, saved_nets=saved_nets, pruning = pruning, folder = folder, D = D, p = p, beta = beta, mu = mu, done_iterations = done_iterations)
     
-    save_log_file(folder = folder, text = text)
+    save_log_params(folder = folder, text = text)
 
   if pruning == False:
     'test != kind of '
@@ -81,21 +81,32 @@ for pruning in [False]: #if 1 needed: add ``break``
     R0_min = 0.3; R0_max = 5
     
     folder = "WS_Epids"
+    
     text = "N %s;\n k_prog %s, len: %s;\np_prog %s, len: %s;\nbeta_prog %s, len: %s;\nmu_prog %s, len: %s;\nR0_min %s, R0_max %s\n---\n" \
           % (N, k_prog, len(k_prog), p_prog, len(p_prog), beta_prog, len(beta_prog), \
           mu_prog, len(mu_prog), R0_min, R0_max)
     print(text)
 
-    save_log_file(folder = folder, text = text)
+    save_log_params(folder = folder, text = text)
 
     total_iterations = 0
     for D, p in product(k_prog, p_prog):
       for beta, mu in product(beta_prog, mu_prog):
         if  R0_min < beta*D/mu < R0_max:
           total_iterations += 1
-    print("Total Iterations:", total_iterations)
-    done_iterations = 0
     
+    '''
+    if os.path.exists("/home/hal21/MEGAsync/Tour_Physics2.0/Thesis/NetSciThesis/Project/Plots/Test/WS_Epids/WS_Epids_log_saved_nets.txt"):
+      with open( "/home/hal21/MEGAsync/Tour_Physics2.0/Thesis/NetSciThesis/Project/Plots/Test/WS_Epids/WS_Epids_log_saved_nets.txt", "r" ) as r:
+        nonempty_lines = [line.strip("\n") for line in r if line != "\n" if line[0] == N]
+        line_count = len(nonempty_lines)
+    else: line_count = 0
+    print("New AdjMat", line_count)
+    '''
+    
+    print("Total SIR Iterations:", total_iterations)
+    
+    done_iterations = 0
     saved_nets = []
     for D, p in product(k_prog, p_prog):
       G = nx.connected_watts_strogatz_graph( n = N, k = D, p = p, seed = 1 ) #k is the number of near linked nodes
@@ -103,6 +114,5 @@ for pruning in [False]: #if 1 needed: add ``break``
         if  R0_min < beta*D/mu < R0_max:   
           done_iterations+=1
           print("Iterations left: %s" % ( total_iterations - done_iterations ) )
-          ws_sir(G, saved_nets = saved_nets, folder = folder, pruning = pruning, D = D, p = p, beta = beta, mu = mu)
-
+          ws_sir(G, saved_nets = saved_nets, folder = folder, pruning = pruning, D = D, p = p, beta = beta, mu = mu, done_iterations = done_iterations)
     
