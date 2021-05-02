@@ -13,7 +13,7 @@ def my_dir():
   #return "/content/"
   return "/home/hal21/MEGAsync/Tour_Physics2.0/Thesis/NetSciThesis/Project/Plots/Test/"
 
-'plot and save sir'
+'===Plot and Save SIR + Net'
 def plot_params():
   import matplotlib.pyplot as plt
 
@@ -123,6 +123,13 @@ def itermean_sir(G, numb_iter = 200, D = None, beta = 1e-3, mu = 0.05, start_inf
   import numpy as np
   import copy
 
+  verbose = False
+  def printv(*args):
+    if verbose == True:
+      print(*args)
+    elif verbose == False:
+      None
+
   numb_idx_cl = 3
   trajectories = [[] for _ in range(numb_idx_cl)]
   avg = [[] for _ in range(numb_idx_cl)]
@@ -130,36 +137,40 @@ def itermean_sir(G, numb_iter = 200, D = None, beta = 1e-3, mu = 0.05, start_inf
   max_len = 0
 
   for i in range(numb_iter):
+    #tmp_traj = sir(G, beta = beta, mu = mu, start_inf = start_inf, D = D)
+
+    i+=1; tmp_traj = [1]*i,[2,3]*i,[4,5,6]*i
     for idx_cl in range(numb_idx_cl):
-        tmp_traj = sir(G, beta = beta, mu = mu, start_inf = start_inf, D = D)
-        #print("tmp_traj", tmp_traj)
+        if idx_cl == 0: printv("\ntmp_traj", tmp_traj)
         trajectories[idx_cl].append(tmp_traj[idx_cl])
         tmp_max = len(max(tmp_traj, key = len))
         if tmp_max > max_len: max_len = tmp_max
-  #print("\nOverall max_len", max_len)
-  #print("All traj", trajectories)
+        printv("tmp_max: %s, len tmp_traj: %s, tmp_traj[%s]: %s, len tmp_traj %s" % 
+          (len(max(tmp_traj, key = len)), len(tmp_traj), idx_cl, tmp_traj[idx_cl], len(tmp_traj[idx_cl]) ))
+  printv("\nOverall max_len", max_len)
+  printv("All traj", trajectories)
   plot_trajectories = copy.deepcopy(trajectories)
+  
   #traj[classes to be considered, e.g. infected = 0][precise iteration we want, e.g. "-1"]
   for i in range(numb_iter):
       for idx_cl in range(numb_idx_cl):
           last_el_list = [trajectories[idx_cl][i][-1] for _ in range(max_len-len(trajectories[idx_cl][i]))]
-          #print("\nlast el list", last_el_list)
           trajectories[idx_cl][i] += last_el_list
-          #print("new_traj", trajectories[idx_cl])
-          #print("iteration(s):", i, "idx_cl ", idx_cl, )
-          #"\n--> trajectories[%s]: %s" % (idx_cl, trajectories[idx_cl]))
           length = len(trajectories[idx_cl][i])
-          #print( "--> trajectories[%s][%s]: %s" % (idx_cl, i, trajectories[idx_cl][i]), 
-          #"len:", length)
           it_sum = [sum(x) for x in zip_longest(*trajectories[idx_cl], fillvalue=0)]
-          #print("\nit.zip_longest" , list(itertools.zip_longest(*trajectories[idx_cl], fillvalue=0)))#"and traj_idx_cl", trajectories[idx_cl])
           for j in range(length):
               try: counts[idx_cl][j]+=1
               except: counts[idx_cl].append(1)
           avg[idx_cl] = list(np.divide(it_sum,counts[idx_cl]))
-          #print("global sum", it_sum)
-          #print("counts", counts[idx_cl])
-          #print("avg", avg)
+          printv("\niteration(s):", i, "idx_cl ", idx_cl)
+          printv("last el extension", last_el_list)
+          printv("(new) trajectories[%s]: %s" % (idx_cl, trajectories[idx_cl]))
+          printv( "--> trajectories[%s][%s]: %s" % (idx_cl, i, trajectories[idx_cl][i]), 
+          "len:", length)
+          printv("zip_longest same index" , list(zip_longest(*trajectories[idx_cl], fillvalue=0)))#"and traj_idx_cl", trajectories[idx_cl])
+          printv("global sum indeces", it_sum)
+          printv("counts of made its", counts[idx_cl])
+          printv("avg", avg)
           if length != max_len: raise Exception("Error: %s not max_len" % length)
 
   return plot_trajectories, avg
@@ -226,14 +237,19 @@ def rhu(n, decimals=0): #round_half_up
     multiplier = 10 ** decimals
     return math.floor(n*multiplier + 0.5) / multiplier
   
-def plot_save_net(G, folder, D, p, done_iterations, log_dd = False, partition = None, pos = None):
+def plot_save_net(G, folder, p = 0, done_iterations = 1, D = None, log_dd = False, partition = None, pos = None):
   import os.path
   from definitions import my_dir
+  from functools import reduce
   
   mode = "a"
   if done_iterations == 1: mode = "w"
   my_dir = my_dir() #"/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/Tests/"
   N = G.number_of_nodes()
+  if D == None: 
+    D = rhu( np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes(), 1)
+    print("Real D", D)
+    D = rhu(D)
   adj_or_sir = "AdjMat"
   log_upper_path = my_dir + folder + "/" #"../Plots/WS_Epids/"
   my_dir+=folder+"/p%s/"%rhu(p,3)+adj_or_sir+"/" #"../Plots/WS_Epids/p0.001/AdjMat/"
@@ -262,8 +278,12 @@ def plot_save_net(G, folder, D, p, done_iterations, log_dd = False, partition = 
     
     'plot the real G not the scaled one and dont put description of the scaled_G via ax.text'
     width = 0.8
-    if folder == "WS_Pruned": width = 0.001
-    if folder== "Ring_Rnd_Caveman_Model":
+    long_range_edges = list(filter( lambda x: x > int(N/4), [np.min((np.abs(i-j),np.abs(j-i))) for i,j in G.edges()] )) #list( filter(lambda x: x > 0, )
+    print("long_range_edges", long_range_edges, len(long_range_edges))
+    folders = ["WS_Pruned"]
+    if folder in folders: width = 0.001
+    if folder == "Barabasi": width = 1-N/len(long_range_edges)
+    if folder== "Caveman_Model":
       nx.draw(G, pos, node_color=list(partition.values()), node_size = 5, width = 0.5, with_labels = False)
     else: nx.draw_circular(G, ax=ax, with_labels=False, font_size=20, node_size=100, width=width)
 
@@ -282,7 +302,7 @@ def plot_save_net(G, folder, D, p, done_iterations, log_dd = False, partition = 
     'degree distribution + possonian distr'
     from scipy.stats import poisson
     bins = np.arange(sorted_degree[0]-1,sorted_degree[-1]+2)
-    mean = rhu( np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes() )
+    mean = rhu(D)
     print("rounded degrees mean", mean)
     y = poisson.pmf(bins, mean)
     axs = plt.subplot(212)
@@ -461,7 +481,7 @@ def check_loops_parallel_edges(G):
   print("loops", [(i,j) for (i,j) in set(G.edges()) if i == j])
 
 
-'Watts-Strogatz Model'
+'===Watts-Strogatz Model'
 'Number of iterations, i.e. or max power or fixed by user'
 def pow_max(N, num_iter = "all"):
   if num_iter == "all":
@@ -492,38 +512,38 @@ def ws_sir(G, folder, p, saved_nets, done_iterations,pruning = False, D = None, 
     print(saved_nets, "\n---")
   plot_save_sir(G = G, folder = folder, beta = beta, D = D, mu = mu, p = p, start_inf = start_inf, done_iterations = done_iterations )
 
-'Configurational Model'
-'Draw N degrees from a Poissonian sequence with lambda = D and length L'
+'===Configurational Model'
 def pois_pos_degrees(D, N, L = int(2e3)):
-    degs = np.random.poisson(lam = D, size = L)
-    #print("len(s) in deg", len([x for x in degs if x == 0])) 
-    pos_degrees = np.random.choice([x for x in degs if x != 0], N)
-    #print("len(s) in pos_degrees", len([x for x in pos_degrees if x == 0]))
-    return pos_degrees
+  'Draw N degrees from a Poissonian sequence with lambda = D and length L'
+  degs = np.random.poisson(lam = D, size = L)
+  #print("len(s) in deg", len([x for x in degs if x == 0])) 
+  pos_degrees = np.random.choice([x for x in degs if x != 0], N)
+  #print("len(s) in pos_degrees", len([x for x in pos_degrees if x == 0]))
+  return pos_degrees
 
 def config_pois_model(N, D, seed = 123):
-    '''create a network with the node degrees drawn from a poissonian with even sum of degrees'''
-    np.random.seed(seed)
-    degrees = pois_pos_degrees(D,N) #poiss distr with deg != 0
+  '''create a network with the node degrees drawn from a poissonian with even sum of degrees'''
+  np.random.seed(seed)
+  degrees = pois_pos_degrees(D,N) #poiss distr with deg != 0
 
-    print("Degree sum:", np.sum(degrees), "with seed:", seed)
-    while(np.sum(degrees)%2 != 0): #i.e. sum is odd --> change seed
-        seed+=1
-        np.random.seed(seed)
-        degrees = pois_pos_degrees(D,N)
-        print("Degree sum:", np.sum(degrees), "with seed:", seed, )
-    print("numb of 0-degree nodes:", len([x for x in degrees if x == 0]) )
+  print("Degree sum:", np.sum(degrees), "with seed:", seed)
+  while(np.sum(degrees)%2 != 0): #i.e. sum is odd --> change seed
+      seed+=1
+      np.random.seed(seed)
+      degrees = pois_pos_degrees(D,N)
+      print("Degree sum:", np.sum(degrees), "with seed:", seed, )
+  print("numb of 0-degree nodes:", len([x for x in degrees if x == 0]) )
 
-    print("\nNetwork Created but w/o standard neighbors wiring!")
-    '''create and remove loops since they apppears as neighbors of a node. Check it via print(list(G.neighbors(18))'''
-    G = nx.configuration_model(degrees, seed = seed)
+  print("\nNetwork Created but w/o standard neighbors wiring!")
+  '''create and remove loops since they apppears as neighbors of a node. Check it via print(list(G.neighbors(18))'''
+  G = nx.configuration_model(degrees, seed = seed)
 
-    'If D/N !<< 1, by removing loops and parallel edges, we lost degrees. Ex. with N = 50 = D, <k> = 28 != 49.8'
-    #print("Total Edges", G.edges())
-    #check_loops_parallel_edges(G)
-    remove_loops_parallel_edges(G)
-    #check_loops_parallel_edges(G)    
-    return G
+  'If D/N !<< 1, by removing loops and parallel edges, we lost degrees. Ex. with N = 50 = D, <k> = 28 != 49.8'
+  #print("Total Edges", G.edges())
+  #check_loops_parallel_edges(G)
+  remove_loops_parallel_edges(G)
+  #check_loops_parallel_edges(G)    
+  return G
 
 def NN_pois_net(G, D, p = 0):
   verbose = False
@@ -616,9 +636,183 @@ def NN_pois_net(G, D, p = 0):
 
   return G
 
-'''def:: "replace" existing edges, since built-in method only adds'''
 def replace_edges_from(G,list_edges=[]):
-    present_edges = [x for x in G.edges()]
-    G.remove_edges_from(present_edges)
-    if list_edges!=[]: return G.add_edges_from(list_edges)
-    return G
+  '''def:: "replace" existing edges, since built-in method only adds'''
+  present_edges = [x for x in G.edges()]
+  G.remove_edges_from(present_edges)
+  if list_edges!=[]: return G.add_edges_from(list_edges)
+  return G
+
+'===Caveman Defs'
+def caveman_defs():
+  import numpy as np
+  import matplotlib.pyplot as plt
+  import networkx as nx
+  NODE_LAYOUT = nx.circular_layout
+  COMMUNITY_LAYOUT = nx.circular_layout
+  def partition_layout(g, partition, ratio=0.3):
+      """
+      Compute the layout for a modular graph.
+
+      Arguments:
+      ----------
+      g -- networkx.Graph or networkx.DiGraph instance
+          network to plot
+
+      partition -- dict mapping node -> community or None
+          Network partition, i.e. a mapping from node ID to a group ID.
+
+      ratio: 0 < float < 1.
+          Controls how tightly the nodes are clustered around their partition centroid.
+          If 0, all nodes of a partition are at the centroid position.
+          if 1, nodes are positioned independently of their partition centroid.
+
+      Returns:
+      --------
+      pos -- dict mapping int node -> (float x, float y)
+          node positions
+
+      """
+
+      pos_communities = _position_communities(g, partition)
+
+      pos_nodes = _position_nodes(g, partition)
+      pos_nodes = {k : ratio * v for k, v in pos_nodes.items()}
+
+      # combine positions
+      pos = dict()
+      for node in g.nodes():
+          pos[node] = pos_communities[node] + pos_nodes[node]
+
+      return pos
+
+  def _position_communities(g, partition, **kwargs):
+
+      # create a weighted graph, in which each node corresponds to a community,
+      # and each edge weight to the number of edges between communities
+      between_community_edges = _find_between_community_edges(g, partition)
+
+      communities = set(partition.values())
+      hypergraph = nx.DiGraph()
+      hypergraph.add_nodes_from(communities)
+      for (ci, cj), edges in between_community_edges.items():
+          hypergraph.add_edge(ci, cj, weight=len(edges))
+
+      # find layout for communities
+      pos_communities = COMMUNITY_LAYOUT(hypergraph, **kwargs)
+
+      # set node positions to position of community
+      pos = dict()
+      for node, community in partition.items():
+          pos[node] = pos_communities[community]
+
+      return pos
+
+  def _find_between_community_edges(g, partition):
+
+      edges = dict()
+
+      for (ni, nj) in g.edges():
+          ci = partition[ni]
+          cj = partition[nj]
+
+          if ci != cj:
+              try:
+                  edges[(ci, cj)] += [(ni, nj)]
+              except KeyError:
+                  edges[(ci, cj)] = [(ni, nj)]
+
+      return edges
+
+  def _position_nodes(g, partition, **kwargs):
+      """
+      Positions nodes within communities.
+      """
+      communities = dict()
+      for node, community in partition.items():
+          if community in communities:
+              communities[community] += [node]
+          else:
+              communities[community] = [node]
+
+      pos = dict()
+      for community, nodes in communities.items():
+          subgraph = g.subgraph(nodes)
+          pos_subgraph = NODE_LAYOUT(subgraph, **kwargs)
+          pos.update(pos_subgraph)
+
+      return pos
+
+  def _layout(networkx_graph):
+      edge_list = [edge for edge in networkx_graph.edges]
+      node_list = [node for node in networkx_graph.nodes]
+
+      pos = nx.circular_layout(edge_list)
+
+      # NB: some nodes might not be connected and hence will not be in the edge list.
+      # Assuming a [0, 0, 1, 1] canvas, we assign random positions on the periphery
+      # of the existing node positions.
+      # We define the periphery as the region outside the circle that covers all
+      # existing node positions.
+      xy = list(pos.values())
+      centroid = np.mean(xy, axis=0)
+      delta = xy - centroid[np.newaxis, :]
+      distance = np.sqrt(np.sum(delta**2, axis=1))
+      radius = np.max(distance)
+
+      connected_nodes = set(_flatten(edge_list))
+      for node in node_list:
+          if not (node in connected_nodes):
+              pos[node] = _get_random_point_on_a_circle(centroid, radius)
+
+      return pos
+
+  def _flatten(nested_list):
+      return [item for sublist in nested_list for item in sublist]
+
+  def _get_random_point_on_a_circle(origin, radius):
+      x0, y0 = origin
+      random_angle = 2 * np.pi * np.random.random_sample()
+      x = x0 + radius * np.cos(random_angle)
+      y = y0 + radius * np.sin(random_angle)
+      return np.array([x, y])
+
+  def comm_caveman_relink(cliques = 8, clique_size = 7, p = 0,  relink_rnd = 0, numb_rel_inring = 0):
+      import numpy as np
+      import numpy.random as npr
+      'caveman_graph'
+      G = nx.caveman_graph(l = cliques, k = clique_size)
+
+      'relink nodes to neighbor "cave"'
+      total_nodes = clique_size*cliques
+      #if numb_rel_inring != 0: 
+      for clique in range(cliques):
+          nodes_inclique = np.arange(clique_size*(clique), clique_size*(1+clique))
+          tests = nodes_inclique
+          if numb_rel_inring != 0:
+              #tests = npr.choice(nodes_inclique, size = numb_rel_inring) #reshuffle
+              attached_nodes = npr.choice( np.arange(clique_size*(1+clique), 
+                                          clique_size*(2+clique)), 
+                                          size = len(tests) )
+              attached_nodes = attached_nodes % np.max((total_nodes,1))
+              for test, att_node in zip(tests, attached_nodes):
+                  #print("NN - clique add:", (test,att_node))
+                  G.add_edge(test,att_node)
+          if p != 0:
+              #tests = npr.choice(nodes_inclique, size = relink_rnd) #reshuffle
+              attached_nodes = npr.choice([x for x in G.nodes() if x not in nodes_inclique], 
+                                          size = len(tests))
+              for test, att_node in zip(tests, attached_nodes):
+                  #print("relink", (test,att_node))
+                  if npr.uniform() < p: G.add_edge(test,att_node)
+
+      #check_loops_parallel_edges(G)
+      remove_loops_parallel_edges(G)
+      #check_loops_parallel_edges(G)
+
+      print("size/cliq: %s, cliq/size: %s" % (clique_size/cliques, cliques/clique_size) )
+
+      
+      return G
+  
+  return partition_layout, comm_caveman_relink
