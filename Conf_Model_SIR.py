@@ -20,12 +20,12 @@ def scaled_conf_pois(G,D,cut_off=30):
 p_max = 0; N = int(1e3)
 
 'progression of net-parameters'
-k_prog = np.arange(2,10,2)
+k_prog = np.arange(2,34,2)
 p_prog = np.linspace(0,p_max,int(p_max*10)+1)
 mu_prog = np.linspace(0.01,1,15)
 beta_prog = np.linspace(0.01,1,15)
 p_prog = [0]
-R0_min = 0.5; R0_max = 16
+R0_min = 0.5; R0_max = 6
 
 
 'try only with p = 0.1'
@@ -40,22 +40,23 @@ saved_nets = []
 for D,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog):  
   if R0_min < beta*D/mu < R0_max:
     done_iterations+=1
-    print("Iterations left: %s" % ( total_iterations - done_iterations ) )
+    print("\nIterations left: %s" % ( total_iterations - done_iterations ) )
 
-    folder = "Config_Model"
-    G = config_pois_model(N, D)
-    'plot G, degree distribution and the adiaciency matrix and save them'
-    G = NN_pois_net(G, D = D)
-    
-    folder = "NNR_Conf_Model"
     text = "N %s;\n k_prog %s, len: %s;\np_prog %s, len: %s;\nbeta_prog %s, len: %s;\nmu_prog %s, len: %s;\nR0_min %s, R0_max %s\n---\n" \
             % (N, k_prog, len(k_prog), p_prog, len(p_prog), beta_prog, len(beta_prog), \
             mu_prog, len(mu_prog),  R0_min, R0_max)
-
+    
+    folder = "Config_Model"
+    G = config_pois_model(N, D)
+    folder = "NNR_Conf_Model"
+    G = NN_pois_net(G, D = D)
+    
+    'plot G, degree distribution and the adiaciency matrix and save them'
+    save_log_params(folder = folder, text = text)
     if "N%s_D%s_p%s"% (N,D,rhu(p,3)) not in saved_nets: 
-      plot_save_net(G = G, scaled_G = G, folder = folder, D = D, p = p, done_iterations = done_iterations)
+      plot_save_net(G = G, folder = folder, D = D, p = p, done_iterations = done_iterations)
       saved_nets.append("N%s_D%s_p%s"% (N,D,rhu(p,3)))
-      print(saved_nets)
+      #print(saved_nets)
     plot_save_sir(G, folder = folder, beta = beta, D = D, mu = mu, p = p_max, done_iterations = done_iterations)
 
-    save_log_params(folder = folder, text = text)
+    
