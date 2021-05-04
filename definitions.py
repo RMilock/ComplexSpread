@@ -123,55 +123,59 @@ def itermean_sir(G, numb_iter = 200, D = None, beta = 1e-3, mu = 0.05, start_inf
   import numpy as np
   import copy
 
-  verbose = False
-  def printv(*args):
-    if verbose == True:
-      print(*args)
-    elif verbose == False:
-      None
-
   numb_idx_cl = 3
   trajectories = [[] for _ in range(numb_idx_cl)]
   avg = [[] for _ in range(numb_idx_cl)]
   counts = [[],[],[]]
   max_len = 0
 
-  for i in range(numb_iter):
-    #tmp_traj = sir(G, beta = beta, mu = mu, start_inf = start_inf, D = D)
+  import datetime as dt
+  start_time = dt.datetime.now()
 
-    i+=1; tmp_traj = [1]*i,[2,3]*i,[4,5,6]*i
+  for i in range(numb_iter):
+    if i % 50 == 0: print("time for %s its of max-for-loop %s" % (i, dt.datetime.now()-start_time))
+    tmp_traj = sir(G, beta = beta, mu = mu, start_inf = start_inf, D = D)
     for idx_cl in range(numb_idx_cl):
-        if idx_cl == 0: printv("\ntmp_traj", tmp_traj)
+        #if idx_cl == 0: print("\ntmp_traj", tmp_traj)
         trajectories[idx_cl].append(tmp_traj[idx_cl])
         tmp_max = len(max(tmp_traj, key = len))
         if tmp_max > max_len: max_len = tmp_max
-        printv("tmp_max: %s, len tmp_traj: %s, tmp_traj[%s]: %s, len tmp_traj %s" % 
-          (len(max(tmp_traj, key = len)), len(tmp_traj), idx_cl, tmp_traj[idx_cl], len(tmp_traj[idx_cl]) ))
-  printv("\nOverall max_len", max_len)
-  printv("All traj", trajectories)
+        #print("tmp_max: %s, len tmp_traj: %s, tmp_traj[%s]: %s, len tmp_traj %s" % 
+        #  (len(max(tmp_traj, key = len)), len(tmp_traj), idx_cl, tmp_traj[idx_cl], len(tmp_traj[idx_cl]) ))
+  #print("\nOverall max_len", max_len)
+  #print("All traj", trajectories)
   plot_trajectories = copy.deepcopy(trajectories)
-  
-  #traj[classes to be considered, e.g. infected = 0][precise iteration we want, e.g. "-1"]
+
+  start_time = dt.datetime.now()
+
   for i in range(numb_iter):
-      for idx_cl in range(numb_idx_cl):
-          last_el_list = [trajectories[idx_cl][i][-1] for _ in range(max_len-len(trajectories[idx_cl][i]))]
-          trajectories[idx_cl][i] += last_el_list
-          length = len(trajectories[idx_cl][i])
-          it_sum = [sum(x) for x in zip_longest(*trajectories[idx_cl], fillvalue=0)]
-          for j in range(length):
-              try: counts[idx_cl][j]+=1
-              except: counts[idx_cl].append(1)
-          avg[idx_cl] = list(np.divide(it_sum,counts[idx_cl]))
-          printv("\niteration(s):", i, "idx_cl ", idx_cl)
-          printv("last el extension", last_el_list)
-          printv("(new) trajectories[%s]: %s" % (idx_cl, trajectories[idx_cl]))
-          printv( "--> trajectories[%s][%s]: %s" % (idx_cl, i, trajectories[idx_cl][i]), 
-          "len:", length)
-          printv("zip_longest same index" , list(zip_longest(*trajectories[idx_cl], fillvalue=0)))#"and traj_idx_cl", trajectories[idx_cl])
-          printv("global sum indeces", it_sum)
-          printv("counts of made its", counts[idx_cl])
-          printv("avg", avg)
-          if length != max_len: raise Exception("Error: %s not max_len" % length)
+    if i % 50 == 0: print("time for %s for avg-for-loop %s" % (i, dt.datetime.now()-start_time))
+    for idx_cl in range(numb_idx_cl):
+        last_el_list = [trajectories[idx_cl][i][-1] for _ in range(max_len-len(trajectories[idx_cl][i]))]
+        'traj[classes to be considered, e.g. infected = 0][precise iteration we want, e.g. "-1"]'
+        trajectories[idx_cl][i] += last_el_list
+        length = len(trajectories[idx_cl][i])
+        it_sum = [sum(x) for x in zip_longest(*trajectories[idx_cl], fillvalue=0)]
+        for j in range(length):
+            try: counts[idx_cl][j]+=1
+            except: counts[idx_cl].append(1)
+        avg[idx_cl] = list(np.divide(it_sum,counts[idx_cl]))
+        
+        '''
+        print("\niteration(s):", i, "idx_cl ", idx_cl)
+        print("last el extension", last_el_list)
+        print("(new) trajectories[%s]: %s" % (idx_cl, trajectories[idx_cl]))
+        print( "--> trajectories[%s][%s]: %s" % (idx_cl, i, trajectories[idx_cl][i]), 
+        "len:", length)
+        print("zip_longest same index" , list(zip_longest(*trajectories[idx_cl], fillvalue=0)))#"and traj_idx_cl", trajectories[idx_cl])
+        print("global sum indeces", it_sum)
+        print("counts of made its", counts[idx_cl])
+        print("avg", avg)
+        '''
+        
+        if length != max_len: raise Exception("Error: %s not max_len" % length)
+    if i % 50 == 0: print("End of it: %s" % i)
+    if i == 199: print("End of 200 scenarios")
 
   return plot_trajectories, avg
 
@@ -184,7 +188,7 @@ def plot_sir(G, ax, folder = None, D = None, beta = 1e-3, mu = 0.05, start_inf =
 
   'plot ratio of daily infected and daily cumulative recovered'
   'Inf and Cum_Infected from Net_Sir; Recovered from MF_SIR'
-  trajectories, avg = itermean_sir(G, D = None, beta = beta, mu = mu, start_inf  = start_inf, numb_iter=numb_iter)
+  trajectories, avg = itermean_sir(G, D = D, beta = beta, mu = mu, start_inf  = start_inf, numb_iter=numb_iter)
   mf_trajectories, mf_avg = itermean_sir(G, mu = mu, beta = beta, D = D, start_inf = start_inf, numb_iter = numb_iter)
 
   'plotting the many realisations'    
@@ -246,10 +250,9 @@ def plot_save_net(G, folder, p = 0, done_iterations = 1, D = None, log_dd = Fals
   if done_iterations == 1: mode = "w"
   my_dir = my_dir() #"/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/Tests/"
   N = G.number_of_nodes()
-  if D == None: 
-    D = rhu( np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes(), 1)
-    print("Real D", D)
-    D = rhu(D)
+  D = np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes()
+  print("Real D", rhu(D,1))
+  D = rhu(D)
   adj_or_sir = "AdjMat"
   log_upper_path = my_dir + folder + "/" #"../Plots/WS_Epids/"
   my_dir+=folder+"/p%s/"%rhu(p,3)+adj_or_sir+"/" #"../Plots/WS_Epids/p0.001/AdjMat/"
@@ -278,14 +281,16 @@ def plot_save_net(G, folder, p = 0, done_iterations = 1, D = None, log_dd = Fals
     
     'plot the real G not the scaled one and dont put description of the scaled_G via ax.text'
     width = 0.8
-    long_range_edges = list(filter( lambda x: x > int(N/4), [np.min((np.abs(i-j),np.abs(j-i))) for i,j in G.edges()] )) #list( filter(lambda x: x > 0, )
-    print("long_range_edges", long_range_edges, len(long_range_edges))
+    long_range_edges = list(filter( lambda x: x > 30, [np.min((np.abs(i-j),np.abs(j-i))) for i,j in G.edges()] )) #list( filter(lambda x: x > 0, )
+    length_long_range = len(long_range_edges)
+    if length_long_range < 20: print("\nLong_range_edges", long_range_edges, length_long_range)
+    else: print("len(long_range_edges", length_long_range)
     folders = ["WS_Pruned"]
     if folder in folders: width = 0.001
-    if folder == "Barabasi": width = 1-N/len(long_range_edges)
+    if folder == "Barabasi": width = 0.2*N/len(long_range_edges); print("The edge with is", width)
     if folder== "Caveman_Model":
       nx.draw(G, pos, node_color=list(partition.values()), node_size = 5, width = 0.5, with_labels = False)
-    else: nx.draw_circular(G, ax=ax, with_labels=False, font_size=20, node_size=100, width=width)
+    else: nx.draw_circular(G, ax=ax, with_labels=False, font_size=20, node_size=25, width=width)
 
     '''
     if folder[:3] == "WS_Pruned":
@@ -302,8 +307,8 @@ def plot_save_net(G, folder, p = 0, done_iterations = 1, D = None, log_dd = Fals
     'degree distribution + possonian distr'
     from scipy.stats import poisson
     bins = np.arange(sorted_degree[0]-1,sorted_degree[-1]+2)
-    mean = rhu(D)
-    print("rounded degrees mean", mean)
+    mean = rhu( D )
+    print("Rounded degrees mean", mean)
     y = poisson.pmf(bins, mean)
     axs = plt.subplot(212)
     n, hist_bins, _ = axs.hist(sorted_degree, bins = bins, \
@@ -334,13 +339,11 @@ def plot_save_net(G, folder, p = 0, done_iterations = 1, D = None, log_dd = Fals
     plt.savefig(file_path)
     plt.close()
 
-    print(log_path)
     with open(log_path, mode) as text_file: #write only 1 time
       text_file.write("N: " + file_name + "\n")
   
   else: 
     if not os.path.exists(log_upper_path): os.makedirs(log_upper_path)
-    print(log_path)
     with open(log_path, mode) as text_file: #write only 1 time
       text_file.write("O: " + file_name + "\n")
 
@@ -354,14 +357,16 @@ def plot_save_net(G, folder, p = 0, done_iterations = 1, D = None, log_dd = Fals
     for line in sorted_lines:
       r.write(line)
 
-def plot_save_sir(G, folder, D, done_iterations, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 10, numb_iter = 200):
+def plot_save_sir(G, folder, D = None, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 10, numb_iter = 200):
   import os.path
   from definitions import my_dir
-  
+
   mode = "a"
   if done_iterations == 1: mode = "w"
   my_dir = my_dir() #"/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/Tests/"
   N = G.number_of_nodes()
+  D = np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes()
+  D = rhu(D)
   adj_or_sir = "SIR"
   log_upper_path = my_dir + folder + "/" #../Plots/Tests/
   my_dir+=folder+"/p%s/"%rhu(p,3)+adj_or_sir+"/" #"../Plots/Test/WS_Epids/p0.001/SIR/"
@@ -389,14 +394,13 @@ def plot_save_sir(G, folder, D, done_iterations, p = 0, beta = 0.001, mu = 0.16,
             N,D, rhu(p,3), rhu(beta,3), rhu(mu,3) ) + ".png"
       file_path = my_dir + r0_folder + file_name
       
-
       if not os.path.exists(file_path):
         'plot all'
         _, ax = plt.subplots(figsize = (20,12))
 
         'plot always sir'
         if D == None: D = np.sum([j for (i,j) in G.degree()]) / N
-        print("The model has N: %s, D: %s, beta: %s, mu: %s, p: %s, R0: %s" % (N,D,rhu(beta,3),rhu(mu,3),rhu(p,3),rhu(R0,3)) )
+        print("\nThe model has N: %s, D: %s, beta: %s, mu: %s, p: %s, R0: %s" % (N,D,rhu(beta,3),rhu(mu,3),rhu(p,3),rhu(R0,3)) )
         plot_sir(G, ax=ax, folder = folder, beta = beta, mu = mu, start_inf = start_inf, D = D, numb_iter = numb_iter)
         plt.subplots_adjust(
         top=0.920,
@@ -411,12 +415,10 @@ def plot_save_sir(G, folder, D, done_iterations, p = 0, beta = 0.001, mu = 0.16,
         plt.savefig( file_path )
         print("time 1_plot_save_sir:", dt.datetime.now()-start_time) 
         
-        print(log_path)
         with open(log_path, mode) as text_file: #write only 1 time
           text_file.write("N: " + file_name + "\n")
         
         plt.close()
-        print("---")
 
       else: 
         if not os.path.exists(log_upper_path): os.makedirs(log_upper_path)
@@ -435,50 +437,10 @@ def plot_save_sir(G, folder, D, done_iterations, p = 0, beta = 0.001, mu = 0.16,
 def save_log_params(folder, text):
   import os
   from definitions import my_dir
-  print(my_dir() + folder)
+  print("log_params is @:", my_dir() + folder)
   if not os.path.exists(my_dir() + folder): os.makedirs(my_dir() + folder)
   with open(my_dir() +  folder + "/" + folder + "_log_params.txt", "w") as text_file: #write only 1 time
       text_file.write(text)
-
-'Net Infos'
-def infos_sorted_nodes(G, num_nodes = False):
-    import networkx as nx
-    'sort nodes by key = degree. printing order: node, adjacent nodes, degree'
-    nodes = G.nodes()
-    print("Sum_i k_i: ", np.sum([j for (i,j) in G.degree() ]), \
-          " <k>: ", np.sum([j for (i,j) in G.degree() ]) / len(nodes), 
-          " and <k>/N ", np.sum([j for (i,j) in G.degree() ]) / len(nodes)**2, end="\n\n" )
-    
-    'put adj_matrix into dic from better visualisation'
-    adj_matrix =  nx.adjacency_matrix(G).todense()
-    adj_dict = {i: np.nonzero(row)[1].tolist() for i,row in enumerate(adj_matrix)}
-
-    infos = zip([x for x in nodes], [adj_dict[i] for i in range(len(nodes))], [G.degree(x) for x in nodes])
-    inner_sorted_nodes = sorted( infos, key = lambda x: x[2])
-    
-    if num_nodes == True:  num_nodes = len(nodes)
-    if num_nodes == False: num_nodes = 0
-    for i in range(num_nodes):
-      if i == 0: print("Triplets of (nodes, linked_node(s), degree) sorted by degree:")
-      print( inner_sorted_nodes[i] )
-
-def remove_loops_parallel_edges(G, remove_loops = True):
-  import networkx as nx
-  full_ls = list((G.edges()))
-  lpe = []
-  for i in full_ls:
-    full_ls.remove(i)
-    for j in full_ls:
-      if i == j: lpe.append(j) #print("i", i, "index", full_ls.index(i)+1, "j", j)
-  if remove_loops == True:  
-    for x in list(nx.selfloop_edges(G)): lpe.append(x)
-    print("Parallel edges and loops removed!")
-  return G.remove_edges_from(lpe)
-
-def check_loops_parallel_edges(G):
-  ls = list(G.edges())
-  print("parallel edges", set([i for i in ls for j in ls[ls.index(i)+1:] if i==j]))
-  print("loops", [(i,j) for (i,j) in set(G.edges()) if i == j])
 
 
 '===Watts-Strogatz Model'
@@ -509,7 +471,7 @@ def ws_sir(G, folder, p, saved_nets, done_iterations,pruning = False, D = None, 
   if "N%s_D%s_p%s"% (N,D,rhu(p,3)) not in saved_nets: 
     plot_save_net(G = G, folder = folder, D = D, p = p, done_iterations = done_iterations)
     saved_nets.append("N%s_D%s_p%s" % (N,D,rhu(p,3)))
-    print(saved_nets, "\n---")
+    print("saved nets", saved_nets)
   plot_save_sir(G = G, folder = folder, beta = beta, D = D, mu = mu, p = p, start_inf = start_inf, done_iterations = done_iterations )
 
 '===Configurational Model'
@@ -526,13 +488,11 @@ def config_pois_model(N, D, seed = 123):
   np.random.seed(seed)
   degrees = pois_pos_degrees(D,N) #poiss distr with deg != 0
 
-  print("Degree sum:", np.sum(degrees), "with seed:", seed)
   while(np.sum(degrees)%2 != 0): #i.e. sum is odd --> change seed
       seed+=1
       np.random.seed(seed)
       degrees = pois_pos_degrees(D,N)
-      print("Degree sum:", np.sum(degrees), "with seed:", seed, )
-  print("numb of 0-degree nodes:", len([x for x in degrees if x == 0]) )
+  #print("Degree sum:", np.sum(degrees), "with seed:", seed)
 
   print("\nNetwork Created but w/o standard neighbors wiring!")
   '''create and remove loops since they apppears as neighbors of a node. Check it via print(list(G.neighbors(18))'''
@@ -571,7 +531,7 @@ def NN_pois_net(G, D, p = 0):
 
   '------ Start of Rewiring with NNR! ---------'
   'Hint: create edges rewiring from ascending degree'
-  print("\nStart fo NN-Rewiring")
+  print("Start of NN-Rewiring")
   def get_var_name(my_name):
     variables = dict(globals())
     for name in variables:
@@ -628,13 +588,55 @@ def NN_pois_net(G, D, p = 0):
       if node in l_nodes and node in sorted_nodes: ls_nodes_remove(node);  verboseprint(node, "is removed since it was the selected node")
       if len(l_nodes)==1: verboseprint("I will stop here"); break
 
-  verboseprint("End of wiring")
-
   replace_edges_from(G, edges)
   check_loops_parallel_edges(G)
   infos_sorted_nodes(G, num_nodes=False)
 
+  print("End of wiring")
+
   return G
+
+
+'Net Infos'
+def check_loops_parallel_edges(G):
+  ls = list(G.edges())
+  print("parallel edges", set([i for i in ls for j in ls[ls.index(i)+1:] if i==j]),
+        "; loops", [(i,j) for (i,j) in set(G.edges()) if i == j])
+
+def infos_sorted_nodes(G, num_nodes = False):
+    import networkx as nx
+    'sort nodes by key = degree. printing order: node, adjacent nodes, degree'
+    nodes = G.nodes()
+    print("<k>: ", np.sum([j for (i,j) in G.degree() ]) / len(nodes), 
+          " and <k>/N ", np.sum([j for (i,j) in G.degree() ]) / len(nodes)**2, end="\n" )
+    
+    'put adj_matrix into dic for better visualisation'
+    adj_matrix =  nx.adjacency_matrix(G).todense()
+    adj_dict = {i: np.nonzero(row)[1].tolist() for i,row in enumerate(adj_matrix)}
+
+    infos = zip([x for x in nodes], [adj_dict[i] for i in range(len(nodes))], [G.degree(x) for x in nodes])
+    inner_sorted_nodes = sorted( infos, key = lambda x: x[2])
+    
+    if num_nodes == True:  num_nodes = len(nodes)
+    if num_nodes == False: num_nodes = 0
+    for i in range(num_nodes):
+      if i == 0: print("Triplets of (nodes, linked_node(s), degree) sorted by degree:")
+      print( inner_sorted_nodes[i] )
+
+def remove_loops_parallel_edges(G, remove_loops = True):
+  import networkx as nx
+  full_ls = list((G.edges()))
+  lpe = []
+  for i in full_ls:
+    full_ls.remove(i)
+    for j in full_ls:
+      if i == j: lpe.append(j) #print("i", i, "index", full_ls.index(i)+1, "j", j)
+  if remove_loops == True:  
+    for x in list(nx.selfloop_edges(G)): lpe.append(x)
+    print("Parallel edges and loops removed!")
+  return G.remove_edges_from(lpe)
+
+
 
 def replace_edges_from(G,list_edges=[]):
   '''def:: "replace" existing edges, since built-in method only adds'''
@@ -642,6 +644,7 @@ def replace_edges_from(G,list_edges=[]):
   G.remove_edges_from(present_edges)
   if list_edges!=[]: return G.add_edges_from(list_edges)
   return G
+
 
 '===Caveman Defs'
 def caveman_defs():
@@ -788,21 +791,19 @@ def caveman_defs():
       #if numb_rel_inring != 0: 
       for clique in range(cliques):
           nodes_inclique = np.arange(clique_size*(clique), clique_size*(1+clique))
-          tests = nodes_inclique
+          nodes_inclique
           if numb_rel_inring != 0:
-              #tests = npr.choice(nodes_inclique, size = numb_rel_inring) #reshuffle
               attached_nodes = npr.choice( np.arange(clique_size*(1+clique), 
                                           clique_size*(2+clique)), 
-                                          size = len(tests) )
+                                          size = len(nodes_inclique) )
               attached_nodes = attached_nodes % np.max((total_nodes,1))
-              for test, att_node in zip(tests, attached_nodes):
+              for test, att_node in zip(nodes_inclique, attached_nodes):
                   #print("NN - clique add:", (test,att_node))
                   G.add_edge(test,att_node)
           if p != 0:
-              #tests = npr.choice(nodes_inclique, size = relink_rnd) #reshuffle
               attached_nodes = npr.choice([x for x in G.nodes() if x not in nodes_inclique], 
-                                          size = len(tests))
-              for test, att_node in zip(tests, attached_nodes):
+                                          size = len(nodes_inclique))
+              for test, att_node in zip(nodes_inclique, attached_nodes):
                   #print("relink", (test,att_node))
                   if npr.uniform() < p: G.add_edge(test,att_node)
 
