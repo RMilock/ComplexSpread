@@ -7,7 +7,7 @@ import networkx as nx
 # %matplotlib inline
 from itertools import product
 import os #to create a folder
-from definitions import ws_sir, infos_sorted_nodes, \
+from past_definitions import ws_sir, infos_sorted_nodes, \
   remove_loops_parallel_edges, check_loops_parallel_edges, config_pois_model, replace_edges_from, \
     rhu, pow_max, save_log_params, my_dir
 
@@ -21,13 +21,13 @@ it drives to a nearer pruning.
 '''
 
 'rewire all the edges with a probability of p'
-N = int(50)
+N = int(1e3)
 
 def even_int(x):
   if int(x) % 2 != 0: return int(x-1)
   return int(x)
 
-for pruning in [False]: #if 1 needed: add ``break``
+for pruning in [True]: #if 1 needed: add ``break``
   if pruning == True:
     p_max = 0.2
     p_prog = np.linspace(0,p_max,int(p_max*10)+1)
@@ -39,7 +39,7 @@ for pruning in [False]: #if 1 needed: add ``break``
               [2**i for i in range(0,pow_max(N, num_iter = "all"))]]*len(betas) #if pow_max +1 --> error of connectivity: D = k_odd - 1
     beta_prog = [beta*N/k for beta in betas for k in k_prog[:len(set(k_prog))]]
     mu_prog = np.linspace(0.16,1,10) #[0.467, 0.385, 0.631]
-    R0_min = 0; R0_max = 7
+    R0_min = 0; R0_max = 4
     
     folder = "WS_Pruned" 
     text = "N %s;\n k_prog %s, len: %s;\np_prog %s, len: %s;\nbeta_prog %s, len: %s;\nmu_prog %s, len: %s;\nR0_min %s, R0_max %s\n---\n" \
@@ -64,9 +64,8 @@ for pruning in [False]: #if 1 needed: add ``break``
           if R0_min < beta*D/mu < R0_max and beta <= 1:
             done_iterations+=1
             print("Iterations left: %s" % ( total_iterations - done_iterations ) )
-            print("beta", rhu(beta,3), "D", D, "R0", rhu(beta*D/mu,3), \
-                  "mu", rhu(mu,3), "p", p) 
             ws_sir(G, saved_nets=saved_nets, pruning = pruning, folder = folder, D = D, p = p, beta = beta, mu = mu, done_iterations = done_iterations)
+            print("---")
     
     save_log_params(folder = folder, text = text)
 
@@ -113,5 +112,6 @@ for pruning in [False]: #if 1 needed: add ``break``
       for beta, mu in product(beta_prog, mu_prog): 
         if  R0_min < beta*D/mu < R0_max:   
           done_iterations+=1
-          print("Iterations left: %s" % ( total_iterations - done_iterations ) )
+          print("\nIterations left: %s" % ( total_iterations - done_iterations ) )
           ws_sir(G, saved_nets = saved_nets, folder = folder, pruning = pruning, D = D, p = p, beta = beta, mu = mu, done_iterations = done_iterations)
+          print("---\n\n")
