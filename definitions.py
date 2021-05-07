@@ -33,7 +33,7 @@ def plot_params():
   plt.rc('xtick.major', pad = 16)
   #plt.rcParams['xtick.major.pad']='16'
 
-def sir(G, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False, D = None):
+def sir(G, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
     'If D == None, the neighbors are not fixed;' 
     'If D == number, MF_sir with fixed numb of neighbors'
 
@@ -41,6 +41,8 @@ def sir(G, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False, D = None):
     #here's the modifications of the "test_ver1"
     'Number of nodes in the graph'
     N = G.number_of_nodes()
+    D = int(rhu(np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes()))
+
     
     'Label the individual wrt to the # of the node'
     node_labels = G.nodes()
@@ -116,7 +118,7 @@ def sir(G, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False, D = None):
  
     return prevalence, recovered, cum_positives
 
-def itermean_sir(G, numb_iter = 200, D = None, beta = 1e-3, mu = 0.05, start_inf = 10,):
+def itermean_sir(G, numb_iter = 200, beta = 1e-3, mu = 0.05, start_inf = 10,):
   'def a function that iters numb_iter and make an avg of the trajectories'
   from itertools import product
   from itertools import zip_longest
@@ -130,14 +132,14 @@ def itermean_sir(G, numb_iter = 200, D = None, beta = 1e-3, mu = 0.05, start_inf
   max_len = 0
 
   import datetime as dt
-  start_time = dt.datetime.now()
-
+  
   for i in range(numb_iter):
+    start_time = dt.datetime.now()
     if i % 50 == 0: print("time for %s its of max-for-loop %s" % (i, dt.datetime.now()-start_time))
-    tmp_traj = sir(G, beta = beta, mu = mu, start_inf = start_inf, D = D)
+    tmp_traj = sir(G, beta = beta, mu = mu, start_inf = start_inf)
     for idx_cl in range(numb_idx_cl):
         #if idx_cl == 0: print("\ntmp_traj", tmp_traj)
-        trajectories[idx_cl].append(tmp_traj[idx_cl])
+        np.append(trajectories[idx_cl], tmp_traj[idx_cl])
         tmp_max = len(max(tmp_traj, key = len))
         if tmp_max > max_len: max_len = tmp_max
         #print("tmp_max: %s, len tmp_traj: %s, tmp_traj[%s]: %s, len tmp_traj %s" % 
@@ -179,17 +181,18 @@ def itermean_sir(G, numb_iter = 200, D = None, beta = 1e-3, mu = 0.05, start_inf
 
   return plot_trajectories, avg
 
-def plot_sir(G, ax, folder = None, D = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter = 200):
+def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter = 200):
 
   'D = numb acts only in mf_avg'
   import itertools
   # MF_SIR: beta = 1e-3, MF_SIR: mu = 0.05
+  D = int(rhu(np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes()))
   N = G.number_of_nodes(); R0 = beta*D/mu
 
   'plot ratio of daily infected and daily cumulative recovered'
   'Inf and Cum_Infected from Net_Sir; Recovered from MF_SIR'
-  trajectories, avg = itermean_sir(G, D = D, beta = beta, mu = mu, start_inf  = start_inf, numb_iter=numb_iter)
-  mf_trajectories, mf_avg = itermean_sir(G, mu = mu, beta = beta, D = D, start_inf = start_inf, numb_iter = numb_iter)
+  trajectories, avg = itermean_sir(G, beta = beta, mu = mu, start_inf  = start_inf, numb_iter=numb_iter)
+  mf_trajectories, mf_avg = itermean_sir(G, mu = mu, beta = beta, start_inf = start_inf, numb_iter = numb_iter)
 
   'plotting the many realisations'    
   colors = ["paleturquoise","wheat","lightgreen", "thistle"]
@@ -241,7 +244,7 @@ def rhu(n, decimals=0): #round_half_up
     multiplier = 10 ** decimals
     return math.floor(n*multiplier + 0.5) / multiplier
   
-def plot_save_net(G, folder, p = 0, done_iterations = 1, D = None, log_dd = False, partition = None, pos = None):
+def plot_save_net(G, folder, p = 0, done_iterations = 1, log_dd = False, partition = None, pos = None):
   import os.path
   from definitions import my_dir
   from functools import reduce
@@ -251,7 +254,8 @@ def plot_save_net(G, folder, p = 0, done_iterations = 1, D = None, log_dd = Fals
   my_dir = my_dir() #"/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/Tests/"
   N = G.number_of_nodes()
   D = np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes()
-  print("Real D", rhu(D,1))
+  real_D = rhu(D,1)
+  print("Real D", real_D)
   D = rhu(D)
   adj_or_sir = "AdjMat"
   log_upper_path = my_dir + folder + "/" #"../Plots/WS_Epids/"
@@ -340,12 +344,12 @@ def plot_save_net(G, folder, p = 0, done_iterations = 1, D = None, log_dd = Fals
     plt.close()
 
     with open(log_path, mode) as text_file: #write only 1 time
-      text_file.write("N: " + file_name + "\n")
+      text_file.write("".join(("N: ", file_name, "; D=%s" % real_D, "\n")) )
   
   else: 
     if not os.path.exists(log_upper_path): os.makedirs(log_upper_path)
     with open(log_path, mode) as text_file: #write only 1 time
-      text_file.write("O: " + file_name + "\n")
+      text_file.write("".join(("N: ", file_name, "; D=%s" % real_D, "\n")))
 
   'sorting lines to have New lines @ first'
   sorted_lines = []
@@ -357,7 +361,7 @@ def plot_save_net(G, folder, p = 0, done_iterations = 1, D = None, log_dd = Fals
     for line in sorted_lines:
       r.write(line)
 
-def plot_save_sir(G, folder, D = None, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 10, numb_iter = 200):
+def plot_save_sir(G, folder, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 10, numb_iter = 200):
   import os.path
   from definitions import my_dir
 
@@ -401,7 +405,7 @@ def plot_save_sir(G, folder, D = None, done_iterations = 1, p = 0, beta = 0.001,
         'plot always sir'
         if D == None: D = np.sum([j for (i,j) in G.degree()]) / N
         print("\nThe model has N: %s, D: %s, beta: %s, mu: %s, p: %s, R0: %s" % (N,D,rhu(beta,3),rhu(mu,3),rhu(p,3),rhu(R0,3)) )
-        plot_sir(G, ax=ax, folder = folder, beta = beta, mu = mu, start_inf = start_inf, D = D, numb_iter = numb_iter)
+        plot_sir(G, ax=ax, folder = folder, beta = beta, mu = mu, start_inf = start_inf, numb_iter = numb_iter)
         plt.subplots_adjust(
         top=0.920,
         bottom=0.151,
@@ -453,26 +457,18 @@ def pow_max(N, num_iter = "all"):
     return i-1
   return int(num_iter)
 
-def ws_sir(G, folder, p, saved_nets, done_iterations,pruning = False, D = None, infos = False, beta = 0.001, mu = 0.16, start_inf = 10):    
-  'in this def: cut_factor = % of links remaining from the full net'
+def ws_sir(G, folder, p, saved_nets, done_iterations,pruning = False, infos = False, beta = 0.001, mu = 0.16, start_inf = 10):    
   'round_half_up D for a better approximation of nx.c_w_s_graph+sir'
   import networkx as nx
   N = G.number_of_nodes()
-  if pruning == True:
-    if D == None: D = N
-    D = int(rhu(D))
-    cut_factor = D / N #float
-    'set spreading parameters'
-    cut_factor = 1
-    beta = beta/cut_factor; mu = mu
-
+  D = int(rhu(np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes()))
   if infos == True: check_loops_parallel_edges(G); infos_sorted_nodes(G, num_nodes = False)
 
   if "N%s_D%s_p%s"% (N,D,rhu(p,3)) not in saved_nets: 
-    plot_save_net(G = G, folder = folder, D = D, p = p, done_iterations = done_iterations)
+    plot_save_net(G = G, folder = folder, p = p, done_iterations = done_iterations)
     saved_nets.append("N%s_D%s_p%s" % (N,D,rhu(p,3)))
     print("saved nets", saved_nets)
-  plot_save_sir(G = G, folder = folder, beta = beta, D = D, mu = mu, p = p, start_inf = start_inf, done_iterations = done_iterations )
+  plot_save_sir(G = G, folder = folder, beta = beta, mu = mu, p = p, start_inf = start_inf, done_iterations = done_iterations )
 
 '===Configurational Model'
 def pois_pos_degrees(D, N, L = int(2e3)):
@@ -483,7 +479,7 @@ def pois_pos_degrees(D, N, L = int(2e3)):
   #print("len(s) in pos_degrees", len([x for x in pos_degrees if x == 0]))
   return pos_degrees
 
-def config_pois_model(N, D, seed = 123):
+def config_pois_model(N, D, seed = 123, folder = None):
   '''create a network with the node degrees drawn from a poissonian with even sum of degrees'''
   np.random.seed(seed)
   degrees = pois_pos_degrees(D,N) #poiss distr with deg != 0
@@ -495,14 +491,32 @@ def config_pois_model(N, D, seed = 123):
   #print("Degree sum:", np.sum(degrees), "with seed:", seed)
 
   print("\nNetwork Created but w/o standard neighbors wiring!")
-  '''create and remove loops since they apppears as neighbors of a node. Check it via print(list(G.neighbors(18))'''
   G = nx.configuration_model(degrees, seed = seed)
 
+  if folder != "Overlapping_Rew": folder = "Config_Model" 
+  if folder == "Overlapping_Rew":
+    dsc_sorted_nodes = {k: v for k,v in sorted( G.degree(), key = lambda x: x[1], reverse=True)}
+    edges = set()
+    for node in dsc_sorted_nodes.keys():
+      k = dsc_sorted_nodes[node]//2
+      for i in range(1, k + 1):
+          edges.add((node, (node+i)%N))
+          edges.add((node, (node-i)%N))
+      if dsc_sorted_nodes[node] % 2 == 1: edges.add((node, (node+k+1)%N))
+      elif dsc_sorted_nodes[node] % 2 != 0: print("Error of Wiring: dsc[node]%2", dsc_sorted_nodes[node] % 2); break
+    replace_edges_from(G, edges)
+    remove_loops_parallel_edges(G)
+    avg_degree = np.sum([j for i,j in G.degree()])/G.number_of_nodes()
+    if avg_degree != D: print("!! avg_deg_Overl_Rew - avg_deg_Conf_Model = ", avg_degree - D)
+
+    return G
+
   'If D/N !<< 1, by removing loops and parallel edges, we lost degrees. Ex. with N = 50 = D, <k> = 28 != 49.8'
-  #print("Total Edges", G.edges())
-  #check_loops_parallel_edges(G)
+  check_loops_parallel_edges(G)
   remove_loops_parallel_edges(G)
-  #check_loops_parallel_edges(G)    
+  infos_sorted_nodes(G)
+  print("End of %s " % folder)
+  
   return G
 
 def NN_pois_net(G, D, p = 0):
@@ -614,23 +628,30 @@ def infos_sorted_nodes(G, num_nodes = False):
     adj_matrix =  nx.adjacency_matrix(G).todense()
     adj_dict = {i: np.nonzero(row)[1].tolist() for i,row in enumerate(adj_matrix)}
 
-    infos = zip([x for x in nodes], [adj_dict[i] for i in range(len(nodes))], [G.degree(x) for x in nodes])
-    inner_sorted_nodes = sorted( infos, key = lambda x: x[2])
-    
-    if num_nodes == True:  num_nodes = len(nodes)
+    infos = zip([x for x in nodes], [len(adj_dict[i]) for i in range(len(nodes))], [G.degree(x) for x in nodes])
+    dsc_sorted_nodes = sorted( infos, key = lambda x: x[2], reverse=True)
+
+    cut_off = 4
+    if num_nodes == True:  
+      num_nodes = len(nodes) 
+      for i in range(cut_off):
+        if i == 0: print("Triplets of (nodes, neighbors(%s), degree) sorted by descending degree:" % i)
+        print( dsc_sorted_nodes[i] )
+
     if num_nodes == False: num_nodes = 0
-    for i in range(num_nodes):
-      if i == 0: print("Triplets of (nodes, linked_node(s), degree) sorted by degree:")
-      print( inner_sorted_nodes[i] )
+    
 
 def remove_loops_parallel_edges(G, remove_loops = True):
+  print("\n")
   import networkx as nx
+
+  'create a list of what we want to remove'
   full_ls = list((G.edges()))
   lpe = []
   for i in full_ls:
     full_ls.remove(i)
     for j in full_ls:
-      if i == j: lpe.append(j) #print("i", i, "index", full_ls.index(i)+1, "j", j)
+      if i == j: lpe.append(j) #print("i", i, "index", full_ls.index(i), "j", j)
   if remove_loops == True:  
     for x in list(nx.selfloop_edges(G)): lpe.append(x)
     print("Parallel edges and loops removed!")
@@ -791,7 +812,6 @@ def caveman_defs():
       #if numb_rel_inring != 0: 
       for clique in range(cliques):
           nodes_inclique = np.arange(clique_size*(clique), clique_size*(1+clique))
-          nodes_inclique
           if numb_rel_inring != 0:
               attached_nodes = npr.choice( np.arange(clique_size*(1+clique), 
                                           clique_size*(2+clique)), 
@@ -800,6 +820,9 @@ def caveman_defs():
               for test, att_node in zip(nodes_inclique, attached_nodes):
                   #print("NN - clique add:", (test,att_node))
                   G.add_edge(test,att_node)
+          
+          'here I add a new edge but as for the Overl_Rew, I relink one of the existing node'
+          'In the last way, avg_degree is preserved'
           if p != 0:
               attached_nodes = npr.choice([x for x in G.nodes() if x not in nodes_inclique], 
                                           size = len(nodes_inclique))
