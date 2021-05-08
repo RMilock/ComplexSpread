@@ -33,15 +33,16 @@ def plot_params():
   plt.rc('xtick.major', pad = 16)
   #plt.rcParams['xtick.major.pad']='16'
 
-def sir(G, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False, mf = False):
-    'If D == None, the neighbors are not fixed;' 
-    'If D == number, MF_sir with fixed numb of neighbors'
+def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
+    'If mf == False, the neighbors are not fixed;' 
+    'If mf == True, "Quenched" - MF_sir with fixed numb of neighbors'
 
     import random
     #here's the modifications of the "test_ver1"
     'Number of nodes in the graph'
     N = G.number_of_nodes()
     D = int(rhu(np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes()))
+
     
     'Label the individual wrt to the # of the node'
     node_labels = G.nodes()
@@ -117,7 +118,7 @@ def sir(G, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False, mf = False):
  
     return prevalence, recovered, cum_positives
 
-def itermean_sir(G, numb_iter = 200, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10,):
+def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_inf = 10,):
   'def a function that iters numb_iter and make an avg of the trajectories'
   from itertools import product
   from itertools import zip_longest
@@ -130,38 +131,54 @@ def itermean_sir(G, numb_iter = 200, mf = False, beta = 1e-3, mu = 0.05, start_i
   counts = [[],[],[]]
   max_len = 0
 
+  import datetime as dt
+  
   for i in range(numb_iter):
+    start_time = dt.datetime.now()
+    if i % 50 == 0: print("time for %s its of max-for-loop %s" % (i, dt.datetime.now()-start_time))
     tmp_traj = sir(G, beta = beta, mu = mu, start_inf = start_inf, mf = mf)
     for idx_cl in range(numb_idx_cl):
-        #print("tmp_traj", tmp_traj)
+        #if idx_cl == 0: print("\ntmp_traj", tmp_traj)
         trajectories[idx_cl].append(tmp_traj[idx_cl])
         tmp_max = len(max(tmp_traj, key = len))
         if tmp_max > max_len: max_len = tmp_max
+        print("\nIteration: %s, tmp_max: %s, len tmp_traj: %s, len tmp_traj %s, len traj[%s] %s" % 
+          (i, len(max(tmp_traj, key = len)), len(tmp_traj),  \
+            len(tmp_traj[idx_cl]), idx_cl, len(trajectories[idx_cl]) ))
   #print("\nOverall max_len", max_len)
   #print("All traj", trajectories)
   plot_trajectories = copy.deepcopy(trajectories)
-  #traj[classes to be considered, e.g. infected = 0][precise iteration we want, e.g. "-1"]
+
+  start_time = dt.datetime.now()
+
   for i in range(numb_iter):
-      for idx_cl in range(numb_idx_cl):
-          last_el_list = [trajectories[idx_cl][i][-1] for _ in range(max_len-len(trajectories[idx_cl][i]))]
-          #print("\nlast el list", last_el_list)
-          trajectories[idx_cl][i] += last_el_list
-          #print("new_traj", trajectories[idx_cl])
-          #print("iteration(s):", i, "idx_cl ", idx_cl, )
-          #"\n--> trajectories[%s]: %s" % (idx_cl, trajectories[idx_cl]))
-          length = len(trajectories[idx_cl][i])
-          #print( "--> trajectories[%s][%s]: %s" % (idx_cl, i, trajectories[idx_cl][i]), 
-          #"len:", length)
-          it_sum = [sum(x) for x in zip_longest(*trajectories[idx_cl], fillvalue=0)]
-          #print("\nit.zip_longest" , list(itertools.zip_longest(*trajectories[idx_cl], fillvalue=0)))#"and traj_idx_cl", trajectories[idx_cl])
-          for j in range(length):
-              try: counts[idx_cl][j]+=1
-              except: counts[idx_cl].append(1)
-          avg[idx_cl] = list(np.divide(it_sum,counts[idx_cl]))
-          #print("global sum", it_sum)
-          #print("counts", counts[idx_cl])
-          #print("avg", avg)
-          if length != max_len: raise Exception("Error: %s not max_len" % length)
+    if i % 50 == 0: print("time for %s for avg-for-loop %s" % (i, dt.datetime.now()-start_time))
+    for idx_cl in range(numb_idx_cl):
+        last_el_list = [trajectories[idx_cl][i][-1] for _ in range(max_len-len(trajectories[idx_cl][i]))]
+        'traj[classes to be considered, e.g. infected = 0][precise iteration we want, e.g. "-1"]'
+        trajectories[idx_cl][i] += last_el_list
+        length = len(trajectories[idx_cl][i])
+        it_sum = [sum(x) for x in zip_longest(*trajectories[idx_cl], fillvalue=0)]
+        for j in range(length):
+            try: counts[idx_cl][j]+=1
+            except: counts[idx_cl].append(1)
+        avg[idx_cl] = list(np.divide(it_sum,counts[idx_cl]))
+        
+        '''
+        print("\niteration(s):", i, "idx_cl ", idx_cl)
+        print("last el extension", last_el_list)
+        print("(new) trajectories[%s]: %s" % (idx_cl, trajectories[idx_cl]))
+        print( "--> trajectories[%s][%s]: %s" % (idx_cl, i, trajectories[idx_cl][i]), 
+        "len:", length)
+        print("zip_longest same index" , list(zip_longest(*trajectories[idx_cl], fillvalue=0)))#"and traj_idx_cl", trajectories[idx_cl])
+        print("global sum indeces", it_sum)
+        print("counts of made its", counts[idx_cl])
+        print("avg", avg)
+        '''
+        
+        if length != max_len: raise Exception("Error: %s not max_len" % length)
+    if i % 50 == 0: print("End of it: %s" % i)
+    if i == 199: print("End of 200 scenarios")
 
   return plot_trajectories, avg
 
