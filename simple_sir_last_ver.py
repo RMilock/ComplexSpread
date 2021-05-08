@@ -7,7 +7,7 @@ import networkx as nx
 # %matplotlib inline
 from itertools import product
 import os #to create a folder
-from past_definitions import ws_sir, infos_sorted_nodes, \
+from definitions import ws_sir, infos_sorted_nodes, \
   remove_loops_parallel_edges, check_loops_parallel_edges, config_pois_model, replace_edges_from, \
     rhu, pow_max, save_log_params, my_dir
 
