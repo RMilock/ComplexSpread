@@ -75,14 +75,14 @@ def NN_Overlapping_Conf_Model(N, D, p, add_edges_only = False):
     return G
 
 
-N = int(1e3); p_max = 0.2; add_edges_only = True
+N = int(1e3); p_max = 0.1; add_edges_only = True
 
 'progression of net-parameters'
 k_prog = np.arange(2,18,2)
 p_prog = np.linspace(0,p_max,int(p_max*10)+1)
-mu_prog = np.linspace(0.01,1,10)
-beta_prog = np.linspace(0.0001,.5,15)
-p_prog = [0]
+mu_prog = np.linspace(0.001,0.5,10
+    )
+beta_prog = np.linspace(0.01,1,8)
 R0_min = 0; R0_max = 3
 
 
@@ -117,4 +117,4 @@ for D,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog):
       plot_save_net(G = G, folder = folder, p = p, done_iterations = done_iterations)
       saved_nets.append("N%s_D%s_p%s"% (N,D,rhu(p,3)))
       #print(saved_nets)
-    plot_save_sir(G, folder = folder, beta = beta, mu = mu, p = p_max, done_iterations = done_iterations)
+    plot_save_sir(G, folder = folder, beta = beta, mu = mu, p = p, done_iterations = done_iterations)

@@ -64,7 +64,7 @@ for pruning in [True]: #if 1 needed: add ``break``
           if R0_min < beta*D/mu < R0_max and beta <= 1:
             done_iterations+=1
             print("Iterations left: %s" % ( total_iterations - done_iterations ) )
-            ws_sir(G, saved_nets=saved_nets, pruning = pruning, folder = folder, D = D, p = p, beta = beta, mu = mu, done_iterations = done_iterations)
+            ws_sir(G, p = p, beta = beta, mu = mu, saved_nets=saved_nets, pruning = pruning, folder = folder,  done_iterations = done_iterations)
             print("---")
     
     save_log_params(folder = folder, text = text)
@@ -113,5 +113,5 @@ for pruning in [True]: #if 1 needed: add ``break``
         if  R0_min < beta*D/mu < R0_max:   
           done_iterations+=1
           print("\nIterations left: %s" % ( total_iterations - done_iterations ) )
-          ws_sir(G, saved_nets = saved_nets, folder = folder, pruning = pruning, D = D, p = p, beta = beta, mu = mu, done_iterations = done_iterations)
+          ws_sir(G, saved_nets = saved_nets, folder = folder, pruning = pruning, p = p, beta = beta, mu = mu, done_iterations = done_iterations)
           print("---\n\n")

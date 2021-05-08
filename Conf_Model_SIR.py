@@ -22,8 +22,8 @@ p_max = 0; N = int(1e3)
 'progression of net-parameters'
 k_prog = np.arange(2,34,2)
 p_prog = np.linspace(0,p_max,int(p_max*10)+1)
-mu_prog = np.linspace(0.01,1,15)
-beta_prog = np.linspace(0.01,1,15)
+mu_prog = np.linspace(0.1,1,15)
+beta_prog = np.linspace(0.1,1,15)
 p_prog = [0]
 R0_min = 0.5; R0_max = 6
 
@@ -54,9 +54,9 @@ for D,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog):
     'plot G, degree distribution and the adiaciency matrix and save them'
     save_log_params(folder = folder, text = text)
     if "N%s_D%s_p%s"% (N,D,rhu(p,3)) not in saved_nets: 
-      plot_save_net(G = G, folder = folder, D = D, p = p, done_iterations = done_iterations)
+      plot_save_net(G = G, folder = folder, p = p, done_iterations = done_iterations)
       saved_nets.append("N%s_D%s_p%s"% (N,D,rhu(p,3)))
       #print(saved_nets)
-    plot_save_sir(G, folder = folder, beta = beta, D = D, mu = mu, p = p_max, done_iterations = done_iterations)
+    plot_save_sir(G, folder = folder, beta = beta, mu = mu, p = p_max, done_iterations = done_iterations)
 
     

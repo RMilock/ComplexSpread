@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from functools import reduce
 import numpy as np
 from itertools import product
-from definitions import save_log_params, rhu, plot_save_net, plot_save_sir
+from definitions import save_log_params, rhu, plot_save_net, plot_save_sir, infos_sorted_nodes
 
 def bam(N,m,m0 = 4):
     '''    
@@ -92,8 +92,13 @@ for D,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog):
     
     'plot G, degree distribution and the adiaciency matrix and save them'
     save_log_params(folder = folder, text = text)
+
+    infos_sorted_nodes(G, num_nodes= True)
+    
     if "N%s_D%s_p%s"% (N,D,rhu(p,3)) not in saved_nets: 
-      plot_save_net(G = G, folder = folder, D = D, p = p, done_iterations = done_iterations)
+      plot_save_net(G = G, folder = folder, p = p, done_iterations = done_iterations)
       saved_nets.append("N%s_D%s_p%s"% (N,D,rhu(p,3)))
       #print(saved_nets)
-    plot_save_sir(G, folder = folder, beta = beta, D = D, mu = mu, p = p_max, done_iterations = done_iterations)
+    '''
+    plot_save_sir(G, folder = folder, beta = beta, mu = mu, p = p_max, done_iterations = done_iterations)
+    '''
