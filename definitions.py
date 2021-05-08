@@ -33,9 +33,9 @@ def plot_params():
   plt.rc('xtick.major', pad = 16)
   #plt.rcParams['xtick.major.pad']='16'
 
-def sir(G, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
-    'If D == None, the neighbors are not fixed;' 
-    'If D == number, MF_sir with fixed numb of neighbors'
+def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
+    'If mf == False, the neighbors are not fixed;' 
+    'If mf == True, "Quenched" - MF_sir with fixed numb of neighbors'
 
     import random
     #here's the modifications of the "test_ver1"
@@ -78,8 +78,8 @@ def sir(G, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
         'Infection Phase: each infected tries to infect all of the neighbors'
         for i in inf_list:
             'Select the neighbors of the infected node'
-            if D == None: tests = G.neighbors(i) #only != wrt to the SIS: contact are taken from G.neighbors            
-            if D != None: 
+            if not mf: tests = G.neighbors(i) #only != wrt to the SIS: contact are taken from G.neighbors            
+            if mf: 
               ls = list(range(N)); ls.remove(i)
               tests = random.choices(ls, k = int(D)) #spread very fast since multiple infected center
             tests = [int(x) for x in tests] #convert 35.0 into int
@@ -118,7 +118,7 @@ def sir(G, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
  
     return prevalence, recovered, cum_positives
 
-def itermean_sir(G, numb_iter = 200, beta = 1e-3, mu = 0.05, start_inf = 10,):
+def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_inf = 10,):
   'def a function that iters numb_iter and make an avg of the trajectories'
   from itertools import product
   from itertools import zip_longest
@@ -139,11 +139,12 @@ def itermean_sir(G, numb_iter = 200, beta = 1e-3, mu = 0.05, start_inf = 10,):
     tmp_traj = sir(G, beta = beta, mu = mu, start_inf = start_inf)
     for idx_cl in range(numb_idx_cl):
         #if idx_cl == 0: print("\ntmp_traj", tmp_traj)
-        np.append(trajectories[idx_cl], tmp_traj[idx_cl])
+        trajectories[idx_cl].append(tmp_traj[idx_cl])
         tmp_max = len(max(tmp_traj, key = len))
         if tmp_max > max_len: max_len = tmp_max
-        #print("tmp_max: %s, len tmp_traj: %s, tmp_traj[%s]: %s, len tmp_traj %s" % 
-        #  (len(max(tmp_traj, key = len)), len(tmp_traj), idx_cl, tmp_traj[idx_cl], len(tmp_traj[idx_cl]) ))
+        print("\nIteration: %s, tmp_max: %s, len tmp_traj: %s, len tmp_traj %s, len traj[%s] %s" % 
+          (i, len(max(tmp_traj, key = len)), len(tmp_traj),  \
+            len(tmp_traj[idx_cl]), idx_cl, len(trajectories[idx_cl]) ))
   #print("\nOverall max_len", max_len)
   #print("All traj", trajectories)
   plot_trajectories = copy.deepcopy(trajectories)
@@ -191,8 +192,8 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
 
   'plot ratio of daily infected and daily cumulative recovered'
   'Inf and Cum_Infected from Net_Sir; Recovered from MF_SIR'
-  trajectories, avg = itermean_sir(G, beta = beta, mu = mu, start_inf  = start_inf, numb_iter=numb_iter)
-  mf_trajectories, mf_avg = itermean_sir(G, mu = mu, beta = beta, start_inf = start_inf, numb_iter = numb_iter)
+  trajectories, avg = itermean_sir(G, mf = False, beta = beta, mu = mu, start_inf  = start_inf, numb_iter=numb_iter)
+  mf_trajectories, mf_avg = itermean_sir(G, mf = True, mu = mu, beta = beta, start_inf = start_inf, numb_iter = numb_iter)
 
   'plotting the many realisations'    
   colors = ["paleturquoise","wheat","lightgreen", "thistle"]
@@ -457,7 +458,7 @@ def pow_max(N, num_iter = "all"):
     return i-1
   return int(num_iter)
 
-def ws_sir(G, folder, p, saved_nets, done_iterations,pruning = False, infos = False, beta = 0.001, mu = 0.16, start_inf = 10):    
+def ws_sir(G, folder, p, saved_nets, done_iterations, pruning = False, infos = False, beta = 0.001, mu = 0.16, start_inf = 10):    
   'round_half_up D for a better approximation of nx.c_w_s_graph+sir'
   import networkx as nx
   N = G.number_of_nodes()
