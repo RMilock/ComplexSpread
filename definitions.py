@@ -142,9 +142,9 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
         trajectories[idx_cl].append(tmp_traj[idx_cl])
         tmp_max = len(max(tmp_traj, key = len))
         if tmp_max > max_len: max_len = tmp_max
-        print("\nIteration: %s, tmp_max: %s, len tmp_traj: %s, len tmp_traj %s, len traj[%s] %s" % 
-          (i, len(max(tmp_traj, key = len)), len(tmp_traj),  \
-            len(tmp_traj[idx_cl]), idx_cl, len(trajectories[idx_cl]) ))
+        #print("\nIteration: %s, tmp_max: %s, len tmp_traj: %s, len tmp_traj %s, len traj[%s] %s" % 
+        #  (i, len(max(tmp_traj, key = len)), len(tmp_traj),  \
+        #    len(tmp_traj[idx_cl]), idx_cl, len(trajectories[idx_cl]) ))
   #print("\nOverall max_len", max_len)
   #print("All traj", trajectories)
   plot_trajectories = copy.deepcopy(trajectories)
@@ -438,13 +438,14 @@ def plot_save_sir(G, folder, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16
     for line in sorted_lines:
       r.write(line)
 
-def save_log_params(folder, text):
+def save_log_params(folder, text, done_iterations):
   import os
   from definitions import my_dir
   print("log_params is @:", my_dir() + folder)
-  if not os.path.exists(my_dir() + folder): os.makedirs(my_dir() + folder)
-  with open(my_dir() +  folder + "/" + folder + "_log_params.txt", "w") as text_file: #write only 1 time
-      text_file.write(text)
+  if done_iterations == 1:
+    if not os.path.exists(my_dir() + folder): os.makedirs(my_dir() + folder)
+    with open(my_dir() +  folder + "/" + folder + "_log_params.txt", "a") as text_file: #write only 1 time
+        text_file.write(text)
 
 
 '===Watts-Strogatz Model'
