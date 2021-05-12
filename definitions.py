@@ -250,109 +250,105 @@ def plot_save_net(G, folder, p = 0, done_iterations = 1, log_dd = False, partiti
   from definitions import my_dir
   from functools import reduce
   
+
   mode = "a"
-  if done_iterations == 1: mode = "w"
+  #if done_iterations == 1: mode = "w"
   my_dir = my_dir() #"/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/Tests/"
   N = G.number_of_nodes()
-  D = np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes()
+  D = rhu( np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes() )
   real_D = rhu(D,1)
   print("Real D", real_D)
   D = rhu(D)
   adj_or_sir = "AdjMat"
-  log_upper_path = my_dir + folder + "/" #"../Plots/WS_Epids/"
-  my_dir+=folder+"/p%s/"%rhu(p,3)+adj_or_sir+"/" #"../Plots/WS_Epids/p0.001/AdjMat/"
-  file_name = "%s_N%s_D%s_p%s"% (
+  log_upper_path = my_dir + folder + "/" #"../Plots/Tests/WS_Epids/"
+  my_dir+=folder+"/p%s/"%rhu(p,3)+adj_or_sir+"/" #"../Plots/Tests/WS_Epids/p0.001/AdjMat/"
+  file_name = folder + "_%s_N%s_D%s_p%s"% (
         adj_or_sir,
         N,D,rhu(p,3)) + \
       ".png"
   file_path = my_dir + file_name #../AdjMat/AdjMat_N1000_D500_p0.001.png
-  log_path = log_upper_path + folder + "_log_saved_nets.txt" #"../Plots/WS_Epids/AdjMat_log_saved_nets.txt"
+  log_path = log_upper_path + folder + f"_log_saved_{adj_or_sir}.txt" #"../Plots/Tests/WS_Epids/WS_Epids_log_saved_nets.txt"
       
+  plot_params()
 
-  if not os.path.exists(file_path):
-    plot_params()
+  'plot G, adj_mat, degree distribution'
+  plt.figure(figsize = (20,20))
 
-    'plot G, adj_mat, degree distribution'
-    plt.figure(figsize = (20,20))
+  ax = plt.subplot(221)
 
-    ax = plt.subplot(221)
-
-    '''
-    if p == 0 and folder[:3] == "WS_":
-      scaled_G = nx.connected_watts_strogatz_graph( n = N, k = 500, p = p, seed = 1 ) 
-    elif p >= 0.1 and folder[:3] == "WS_":
-      scaled_G = nx.connected_watts_strogatz_graph( n = N, k = 2, p = p, seed = 1 )
-    '''
-    
-    'plot the real G not the scaled one and dont put description of the scaled_G via ax.text'
-    width = 0.8
-    long_range_edges = list(filter( lambda x: x > 30, [np.min((np.abs(i-j),np.abs(j-i))) for i,j in G.edges()] )) #list( filter(lambda x: x > 0, )
-    length_long_range = len(long_range_edges)
-    if length_long_range < 20: print("\nLong_range_edges", long_range_edges, length_long_range)
-    else: print("len(long_range_edges", length_long_range)
-    folders = ["WS_Pruned"]
-    if folder in folders: width = 0.001
-    if folder == "Barabasi": width = 0.2*N/len(long_range_edges); print("The edge with is", width)
-    if folder== "Caveman_Model":
-      nx.draw(G, pos, node_color=list(partition.values()), node_size = 5, width = 0.5, with_labels = False)
-    else: nx.draw_circular(G, ax=ax, with_labels=False, font_size=20, node_size=25, width=width)
-
-    '''
-    if folder[:3] == "WS_Pruned":
-      ax.text(0,1,transform=ax.transAxes,
-        s = "D:%s, p:%s" % \
-        ( 
-          rhu(2*scaled_G.number_of_edges() / float(scaled_G.number_of_nodes()),3), 
-          rhu(p,3)) )
-    '''
-    
-    'set xticks of the degree distribution to be centered'
-    sorted_degree = np.sort([G.degree(n) for n in G.nodes()])
-
-    'degree distribution + possonian distr'
-    from scipy.stats import poisson
-    bins = np.arange(sorted_degree[0]-1,sorted_degree[-1]+2)
-    mean = rhu( D )
-    print("Rounded degrees mean", mean)
-    y = poisson.pmf(bins, mean)
-    axs = plt.subplot(212)
-    n, hist_bins, _ = axs.hist(sorted_degree, bins = bins, \
-                                          log = log_dd, density=0, color="green", ec="black", lw=1, align="left", label = "degrees distr")
-    hist_mean = n[np.where(hist_bins == mean)]; pois_mean = poisson.pmf(mean, mean)
-    'useful but deletable print'
-    axs.plot(bins, y * hist_mean / pois_mean, "bo--", lw = 2, label = "poissonian distr")
-    axs.set_xlabel('Degree', )
-    axs.set_ylabel('Counts', )
-    axs.set_xlim(bins[0],bins[-1]) 
-    axs.legend(loc = "best")
-      
-    'plot adjiacency matrix'
-    axs = plt.subplot(222)
-    adj_matrix = nx.adjacency_matrix(G).todense()
-    axs.matshow(adj_matrix, cmap=cm.get_cmap("Greens"))
-    #print("Adj_matrix is symmetric", np.allclose(adj_matrix, adj_matrix.T))
-    plt.subplots_adjust(top=0.898,
-    bottom=0.088,
-    left=0.1,
-    right=0.963,
-    hspace=0.067,
-    wspace=0.164)
-    plt.suptitle(r"$N:%s, D:%s, p:%s$"% (N,D,rhu(p,3)))
-
-    'TO SAVE PLOTS'
-    if not os.path.exists(my_dir): os.makedirs(my_dir)
-    plt.savefig(file_path)
-    plt.close()
-
-    with open(log_path, mode) as text_file: #write only 1 time
-      text_file.write("".join(("N: ", file_name, "; D=%s" % real_D, "\n")) )
+  '''
+  if p == 0 and folder[:3] == "WS_":
+    scaled_G = nx.connected_watts_strogatz_graph( n = N, k = 500, p = p, seed = 1 ) 
+  elif p >= 0.1 and folder[:3] == "WS_":
+    scaled_G = nx.connected_watts_strogatz_graph( n = N, k = 2, p = p, seed = 1 )
+  '''
   
-  else: 
-    if not os.path.exists(log_upper_path): os.makedirs(log_upper_path)
-    with open(log_path, mode) as text_file: #write only 1 time
-      text_file.write("".join(("N: ", file_name, "; D=%s" % real_D, "\n")))
+  'plot the real G not the scaled one and dont put description of the scaled_G via ax.text'
+  width = 0.8
+  long_range_edges = list(filter( lambda x: x > 30, [np.min((np.abs(i-j),np.abs(j-i))) for i,j in G.edges()] )) #list( filter(lambda x: x > 0, )
+  length_long_range = len(long_range_edges)
+  if length_long_range < 20: print("\nLong_range_edges", long_range_edges, length_long_range)
+  else: print("len(long_range_edges", length_long_range)
+  folders = ["WS_Pruned"]
+  if folder in folders: width = 0.001
+  if folder == "Barabasi": width = 0.2*N/len(long_range_edges); print("The edge with is", width)
+  if folder== "Caveman_Model":
+    nx.draw(G, pos, node_color=list(partition.values()), node_size = 5, width = 0.5, with_labels = False)
+  else: nx.draw_circular(G, ax=ax, with_labels=False, font_size=20, node_size=25, width=width)
 
-  'sorting lines to have New lines @ first'
+  '''
+  if folder[:3] == "WS_Pruned":
+    ax.text(0,1,transform=ax.transAxes,
+      s = "D:%s, p:%s" % \
+      ( 
+        rhu(2*scaled_G.number_of_edges() / float(scaled_G.number_of_nodes()),3), 
+        rhu(p,3)) )
+  '''
+  
+  'set xticks of the degree distribution to be centered'
+  sorted_degree = np.sort([G.degree(n) for n in G.nodes()])
+
+  'degree distribution + possonian distr'
+  from scipy.stats import poisson
+  bins = np.arange(sorted_degree[0]-1,sorted_degree[-1]+2)
+  mean = rhu( D )
+  print("Rounded degrees mean", mean)
+  y = poisson.pmf(bins, mean)
+  axs = plt.subplot(212)
+  n, hist_bins, _ = axs.hist(sorted_degree, bins = bins, \
+                                        log = log_dd, density=0, color="green", ec="black", lw=1, align="left", label = "degrees distr")
+  hist_mean = n[np.where(hist_bins == mean)]; pois_mean = poisson.pmf(mean, mean)
+  'useful but deletable print'
+  axs.plot(bins, y * hist_mean / pois_mean, "bo--", lw = 2, label = "poissonian distr")
+  axs.set_xlabel('Degree', )
+  axs.set_ylabel('Counts', )
+  axs.set_xlim(bins[0],bins[-1]) 
+  axs.legend(loc = "best")
+    
+  'plot adjiacency matrix'
+  axs = plt.subplot(222)
+  adj_matrix = nx.adjacency_matrix(G).todense()
+  axs.matshow(adj_matrix, cmap=cm.get_cmap("Greens"))
+  #print("Adj_matrix is symmetric", np.allclose(adj_matrix, adj_matrix.T))
+  plt.subplots_adjust(top=0.898,
+  bottom=0.088,
+  left=0.1,
+  right=0.963,
+  hspace=0.067,
+  wspace=0.164)
+  plt.suptitle(r"$N:%s, D:%s, p:%s$"% (N,D,rhu(p,3)))
+
+  'TO SAVE PLOTS'
+  if not os.path.exists(my_dir): os.makedirs(my_dir)
+  plt.savefig(file_path)
+  plt.close()
+
+  with open(log_path, mode) as text_file: #write only 1 time
+    print("file_name", file_name)
+    text_file.write("".join((file_name, "\n")) )    
+    #text_file.write("".join(("N: ", file_name, "; D=%s" % real_D, "\n")) )
+
+  'sort line to have the new ones at first'
   sorted_lines = []
   with open(log_path, 'r') as r:
     for line in sorted(r):
@@ -370,13 +366,12 @@ def plot_save_sir(G, folder, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16
   if done_iterations == 1: mode = "w"
   my_dir = my_dir() #"/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/Tests/"
   N = G.number_of_nodes()
-  D = np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes()
-  D = rhu(D)
+  D = rhu( np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes() )
   adj_or_sir = "SIR"
-  log_upper_path = my_dir + folder + "/" #../Plots/Tests/
+  log_upper_path = my_dir + folder + "/" #../Plots/Tests/WS_Epids/
   my_dir+=folder+"/p%s/"%rhu(p,3)+adj_or_sir+"/" #"../Plots/Test/WS_Epids/p0.001/SIR/"
   #file_path depends on a "r0_folder"
-  log_path = log_upper_path + "/" + folder + "_log_saved_SIRs.txt" #"../Plots/WS_Epids/SIR_log_saved_SIRs.txt"
+  log_path = log_upper_path + "/" + folder + "_log_saved_SIR.txt" #"../Plots/Test/WS_Epids/SIR_log_saved_SIR.txt"
       
   import datetime as dt
   start_time = dt.datetime.now()
@@ -399,36 +394,31 @@ def plot_save_sir(G, folder, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16
             N,D, rhu(p,3), rhu(beta,3), rhu(mu,3) ) + ".png"
       file_path = my_dir + r0_folder + file_name
       
-      if not os.path.exists(file_path):
-        'plot all'
-        _, ax = plt.subplots(figsize = (20,12))
+      'plot all'
+      _, ax = plt.subplots(figsize = (20,12))
 
-        'plot always sir'
-        print("\nThe model has N: %s, D: %s, beta: %s, mu: %s, p: %s, R0: %s" % (N,D,rhu(beta,3),rhu(mu,3),rhu(p,3),rhu(R0,3)) )
-        plot_sir(G, ax=ax, folder = folder, beta = beta, mu = mu, start_inf = start_inf, numb_iter = numb_iter)
-        plt.subplots_adjust(
-        top=0.920,
-        bottom=0.151,
-        left=0.086,
-        right=0.992,
-        hspace=0.2,
-        wspace=0.2)
-        plt.suptitle(r"$R_0:%s, N:%s, D:%s, p:%s, \beta:%s, \mu:%s$"% (rhu(beta/mu*D,3),N,D,rhu(p,3), rhu(beta,3), rhu(mu,3), ))
-        #plt.show()
+      'plot always sir'
+      print("\nThe model has N: %s, D: %s, beta: %s, mu: %s, p: %s, R0: %s" % (N,D,rhu(beta,3),rhu(mu,3),rhu(p,3),rhu(R0,3)) )
+      plot_sir(G, ax=ax, folder = folder, beta = beta, mu = mu, start_inf = start_inf, numb_iter = numb_iter)
+      plt.subplots_adjust(
+      top=0.920,
+      bottom=0.151,
+      left=0.086,
+      right=0.992,
+      hspace=0.2,
+      wspace=0.2)
+      plt.suptitle(r"$R_0:%s, N:%s, D:%s, p:%s, \beta:%s, \mu:%s$"% (rhu(beta/mu*D,3),N,D,rhu(p,3), rhu(beta,3), rhu(mu,3), ))
+      #plt.show()
 
-        plt.savefig( file_path )
-        print("time 1_plot_save_sir:", dt.datetime.now()-start_time) 
-        
-        with open(log_path, mode) as text_file: #write only 1 time
-          text_file.write("N: " + file_name + "\n")
-        
-        plt.close()
+      plt.savefig( file_path )
+      print("time 1_plot_save_sir:", dt.datetime.now()-start_time) 
+      
+      with open(log_path, mode) as text_file: #write only 1 time
+        text_file.write(file_name + "\n")
+      
+      plt.close()
 
-      else: 
-        if not os.path.exists(log_upper_path): os.makedirs(log_upper_path)
-        with open(log_path, mode) as text_file: #write only 1 time
-          text_file.write("O: " + file_name + "\n")
-
+  'sort line to have the new ones at first'
   sorted_lines = []
   with open(log_path, 'r') as r:
     for line in sorted(r):
@@ -611,6 +601,74 @@ def NN_pois_net(G, D, p = 0):
 
   return G
 
+def NN_Overl_pois_net(N, D, p, add_edges_only = False):
+    from itertools import chain
+    import datetime as dt
+    import random
+
+    
+    def edges_node(x):
+        return [(i,j) for i,j in all_edges if i == x]
+
+    G = config_pois_model(N,D)
+    adeg_CM = sum([j for i,j in G.degree()])/G.number_of_nodes()
+
+    dsc_sorted_nodes = {k: v for k,v in sorted( G.degree(), key = lambda x: x[1], reverse=True)}
+    edges = set()
+    for node in dsc_sorted_nodes.keys():
+        k = dsc_sorted_nodes[node]//2
+        for i in range(1, k + 1):
+            edges.add((node, (node+i)%N))
+            edges.add((node, (node-i)%N))
+        if dsc_sorted_nodes[node] % 2 == 1: edges.add((node, (node+k+1)%N))
+        elif dsc_sorted_nodes[node] % 2 != 0: print("Error of Wiring: dsc[node]%2", dsc_sorted_nodes[node] % 2); break
+    replace_edges_from(G, edges)
+    #print("bef rmv loops and //", G.edges(), G.degree(), sum([j for i,j in G.degree()])/G.number_of_nodes())
+
+    remove_loops_parallel_edges(G)
+    #print("after rmv loops and //", G.edges(), G.degree(), sum([j for i,j in G.degree()])/G.number_of_nodes())
+    #print([(i,npr.choice(G.nodes().pop(i))) for i in G.edges() if i == 0])
+
+    all_edges = [list(G.edges(node)) for node in G.nodes()]
+    all_edges = list(chain.from_iterable(all_edges))
+    initial_length = len(all_edges)
+    #print( "inital edges ", all_edges )
+
+    start_time = dt.datetime.now()
+
+    if add_edges_only:
+        for node in G.nodes():
+            left_nodes = list(G.nodes())
+            left_nodes.remove(node) 
+            re_link = random.choice( left_nodes )
+            if random.random() < p:
+                all_edges.append((node,re_link))
+
+    else:
+        for node in G.nodes():
+            left_nodes = list(G.nodes())
+            left_nodes.remove(node) 
+            #print("edges of the node %s: %s" % (node, edges_node(node)) ) 
+            i_rmv, j_rmv = random.choice(edges_node(node))  
+            if random.random() < p and len(edges_node(j_rmv)) > 1: #if, with prob p, the "node" is not the only friend of "j_rmv" 
+                all_edges.remove((i_rmv,j_rmv)); all_edges.remove((j_rmv,i_rmv))
+                re_link = random.choice(left_nodes)
+                #print("rmv_choice: (%s,%s)" % (i_rmv, j_rmv), "relink with node: ", re_link)
+                all_edges.append((node, re_link)); all_edges.append((re_link, node))
+                all_edges = [(node,j) for node in range(len(all_edges)) for j in [j for i,j in all_edges if i == node] ]
+                #print("all_edges", all_edges)
+
+
+    print("len(all_edges)_final", len(all_edges), "is? equal to start", initial_length )
+    replace_edges_from(G, all_edges)
+    remove_loops_parallel_edges(G, False)
+    print(f"Time for add_edges = {add_edges_only}:", dt.datetime.now()-start_time)
+
+    adeg_OR = sum([j for i,j in G.degree()])/G.number_of_nodes()
+    print("Rel Error wrt to D %s %%" % (rhu((adeg_OR - D)/D,1 )*100))
+    print("Rel Error wrt to adeg_CM %s %%" % (rhu( (adeg_OR - adeg_CM)/adeg_CM,1 )*100))
+    
+    return G
 
 'Net Infos'
 def check_loops_parallel_edges(G):
@@ -641,7 +699,6 @@ def infos_sorted_nodes(G, num_nodes = False):
 
     if num_nodes == False: num_nodes = 0
     
-
 def remove_loops_parallel_edges(G, remove_loops = True):
   print("\n")
   import networkx as nx
@@ -657,8 +714,6 @@ def remove_loops_parallel_edges(G, remove_loops = True):
     for x in list(nx.selfloop_edges(G)): lpe.append(x)
     print("Parallel edges and loops removed!")
   return G.remove_edges_from(lpe)
-
-
 
 def replace_edges_from(G,list_edges=[]):
   '''def:: "replace" existing edges, since built-in method only adds'''
@@ -841,3 +896,51 @@ def caveman_defs():
       return G
   
   return partition_layout, comm_caveman_relink
+
+
+'===Saving Strategies'
+def already_saved_list(folder, adj_or_sir, chr_min, chr_max = None, my_print = True, done_iterations = 1):
+  log_upper_path = "".join((my_dir(),folder,"/")) #../Plots/Test/Overlapping.../
+  log_path = "".join((log_upper_path, folder, f"_log_saved_{adj_or_sir}.txt"))
+
+  '''good idea but not in the goal of succint
+  if done_iterations == 1 and os.path.exists(log_path):
+    'set to O_ld all the already saved nets'
+    lines = []
+    with open(log_path, 'r') as r:
+      for line in r:
+        tmp_list = list(line)
+        tmp_list[0] = "O"
+        lines.append("".join(tmp_list)) 
+    with open(log_path, 'w') as r:
+      for line in lines:
+        r.write(line)
+    '''
+  saved_list = []
+  if os.path.exists(log_path):
+    with open(log_path, "r") as file:
+        saved_list = [l.rstrip("\n")[chr_min:] for l in file]
+  if my_print: print(f"\nThe already saved {adj_or_sir} are", saved_list)
+  return saved_list
+
+def plot_save_nes(G, p, folder, adj_or_sir, beta = 0.3, \
+  mu = 0.3, my_print = True, done_iterations = 1, chr_min = 0): #save new_entrys
+  'save net only if does not exist in the .txt. So, to overwrite all just delete .txt'
+  from definitions import already_saved_list
+  D = mean = rhu( np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes() )
+  N = G.number_of_nodes()
+  if adj_or_sir == "AdjMat": 
+    saved_files = already_saved_list(folder, adj_or_sir, chr_min = chr_min, my_print= my_print, done_iterations= done_iterations)
+    file_name = folder + "_AdjMat_N%s_D%s_p%s.png" % (N,rhu(D,1),rhu(p,3)) 
+  if adj_or_sir == "SIR": 
+    saved_files = already_saved_list(folder, adj_or_sir, chr_min = chr_min, my_print= my_print, done_iterations=done_iterations)
+    file_name = folder + "_%s_R0_%s_N%s_D%s_p%s_beta%s_mu%s" % (
+      "SIR", '{:.3f}'.format(rhu(beta/mu*D,3)),
+      N,D, rhu(p,3), rhu(beta,3), rhu(mu,3) ) + ".png"
+  if file_name not in saved_files: 
+    print("I'm saving", file_name)
+    infos_sorted_nodes(G, num_nodes= True)
+    if adj_or_sir == "AdjMat": 
+      plot_save_net(G = G, folder = folder, p = p, done_iterations = done_iterations)
+    if adj_or_sir == "SIR": 
+      plot_save_sir(G, folder = folder, beta = beta, mu = mu, p = p, done_iterations = done_iterations)
