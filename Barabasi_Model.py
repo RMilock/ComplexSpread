@@ -52,7 +52,7 @@ def bam(N,m,N0):
     'returns the graph'
 
     return G
-
+   
 N = int(1e3); p_max = 0 
 
 'progression of net-parameters'
