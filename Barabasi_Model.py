@@ -4,30 +4,25 @@ import matplotlib.pyplot as plt
 from functools import reduce
 import numpy as np
 from itertools import product
-from definitions import save_log_params, rhu, plot_save_net, plot_save_sir, infos_sorted_nodes
+from definitions import save_log_params, plot_save_nes
 
-def bam(N,m,m0 = 4):
+def bam(N,m,N0):
     '''    
     Arguments:
     1) N: number of nodes in the graph   
     2) m: number of links to be added at each time
+    3) N0: starting fully connected clique
     '''
     
     'Creates an empty graph'
     G = nx.Graph()
     
-    'size of the initial clique of the network'
-    m0 = m0
-    
-    'adds the m0 initial nodes'
-    G.add_nodes_from(range(m0))
+    'adds the N0 initial nodes'
+    G.add_nodes_from(range(N0))
     edges = []
     
-    'creates the initial clique connecting all the m0 nodes'
-    for i in range(m0):
-        for j in range(i,m0):                
-                if i != j: #avoid loops
-                    edges.append((i,j))
+    'creates the initial clique connecting all the N0 nodes'
+    edges = [(i,j) for i in range(N0) for j in range(i,N0) if i!=j]
     
     'adds the initial clique to the network'
     G.add_edges_from(edges)
@@ -38,14 +33,14 @@ def bam(N,m,m0 = 4):
     prob = []
     
     'runs over all the reamining nodes'
-    for i in range(m0,N):
+    for i in range(N0,N):
         G.add_node(i)
         'for each new node, creates m new links'
         for j in range(m):
             'creates the list of nodes'
             for k in list(G.nodes):
-                'each node is added to the list according to its degree'
-                for _ in range(nx.degree(G,k)):
+                'add to prob a node as many time as its degree'
+                for _ in range(G.degree(k)):
                     prob.append(k)
             'picks up a random node, so nodes will be selected proportionally to their degree'
             node = random.choice(prob)
@@ -61,12 +56,13 @@ def bam(N,m,m0 = 4):
 N = int(1e3); p_max = 0 
 
 'progression of net-parameters'
-k_prog = np.arange(2,18,2)
+k_prog = np.arange(2,18,2) # these are the fully connected initial cliques
 p_prog = np.linspace(0,p_max,int(p_max*10)+1)
 mu_prog = np.linspace(0.01,1,10)
-beta_prog = np.linspace(0.0001,.5,15)
+beta_prog = np.linspace(0.001,.5,15)
 p_prog = [0]
-R0_min = 0; R0_max = 3
+R0_min = 0; R0_max = 3    
+folder = "B-A_Model"
 
 
 'try only with p = 0.1'
@@ -80,25 +76,16 @@ done_iterations = 0
 saved_nets = []
 for D,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog):  
   if R0_min < beta*D/mu < R0_max:
+    m, N0 = D,D
     done_iterations+=1
     print("\nIterations left: %s" % ( total_iterations - done_iterations ) )
-    text = "N %s;\n k_prog %s, len: %s;\np_prog %s, len: %s;\nbeta_prog %s, len: %s;\nmu_prog %s, len: %s;\nR0_min %s, R0_max %s\n---\n" \
+    text = "N %s;\nk_prog %s, len: %s;\np_prog %s, len: %s;\nbeta_prog %s, len: %s;\nmu_prog %s, len: %s;\nR0_min %s, R0_max %s; \nTotal Iterations: %s;\n---\n" \
             % (N, k_prog, len(k_prog), p_prog, len(p_prog), beta_prog, len(beta_prog), \
-            mu_prog, len(mu_prog),  R0_min, R0_max)
-    
-    folder = "Barabasi"
-    print("N: %s, D: %s" % (N,D) ) 
-    G = nx.barabasi_albert_graph(N,D)
-    
-    'plot G, degree distribution and the adiaciency matrix and save them'
-    save_log_params(folder = folder, text = text)
+            mu_prog, len(mu_prog),  R0_min, R0_max, total_iterations)
 
-    infos_sorted_nodes(G, num_nodes= True)
-    
-    if "N%s_D%s_p%s"% (N,D,rhu(p,3)) not in saved_nets: 
-      plot_save_net(G = G, folder = folder, p = p, done_iterations = done_iterations)
-      saved_nets.append("N%s_D%s_p%s"% (N,D,rhu(p,3)))
-      #print(saved_nets)
-    '''
-    plot_save_sir(G, folder = folder, beta = beta, mu = mu, p = p_max, done_iterations = done_iterations)
-    '''
+    save_log_params(folder = folder, text = text, done_iterations = done_iterations)
+
+    plot_save_nes(G = bam(N, m = m, N0 = N0), m = m, N0 = N0,
+    p = p, folder = folder, adj_or_sir="AdjMat", done_iterations=done_iterations)
+    plot_save_nes(G = bam(N, m = m, N0 = N0), m = m, N0 = N0,
+    p = p, folder = folder, adj_or_sir="SIR", beta = beta, mu = mu, done_iterations=done_iterations)

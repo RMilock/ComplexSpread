@@ -1,46 +1,33 @@
-import numpy as np
-from itertools import product
-import networkx as nx
-import os
-from definitions import NN_Overl_pois_net, save_log_params, rhu, plot_save_nes 
 
-N = int(20); p_max = 0.1; add_edges_only = True
+string = "AdjMat_N:%s, k_{max}: %s" %(10000,3)
+folder = "AdjMat"
+print(string)
 
-'progression of net-parameters'
-k_prog = np.arange(2,18,2)
-p_prog = np.linspace(0,p_max,int(p_max*10)+1)
-beta_prog = np.linspace(0.01,1,10)
-mu_prog = np.linspace(0.01,1,8)
-R0_min = 0; R0_max = 6
+string = string.strip("".join((folder,"_")))
+string = "".join(("r\"$", string,"$\""))
+print(string, eval(string))
 
-folder = f"Overlapping_Rew_Add_{add_edges_only}"
+folder = "B-A_Model"
+N = 1000; D = 3; p = 0.0; adj_or_sir = "AdjMat"; max_degree = 3; m, N0 = 1,1
 
-'try only with p = 0.1 -- since NN_Overl_add_edge augment D, we are overestimating tot_number'
-total_iterations = 0
-for D,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog):  
-  if R0_min < beta*D/mu < R0_max:
-    total_iterations+=1
-print("Total Iterations:", total_iterations)
-done_iterations = 0
+def func_file_name(folder, adj_or_sir, N, D, p, max_degree, m = 0, N0 = 0, beta = 0.111, mu = 1.111):
+  from definitions import rhu
+  max_degree = 0
+  if adj_or_sir == "AdjMat":
+    print( adj_or_sir, N, D, rhu(p,3), max_degree, m, N0 )
+    if folder == "B-A_Model": 
+      name = folder + "_%s_N%s_D%s_p%s_k_max%s_m%s_N0_%s" % (
+      adj_or_sir, N, D, rhu(p,3), max_degree, m, N0) + \
+        ".png"
+      print("name", name)
+      return name
+    else: return folder + "_%s_N%s_D%s_p%s.png" % (adj_or_sir, N,rhu(D,1),rhu(p,3)) 
 
-saved_nets = []
-for D,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog):  
-  if R0_min < beta*D/mu < R0_max:
+  if adj_or_sir == "SIR":
+    return folder + "_%s_R0_%s_N%s_D%s_p%s_beta%s_mu%s"% (
+            adj_or_sir, '{:.3f}'.format(rhu(beta/mu*D,3)),
+            N,D, rhu(p,3), rhu(beta,4), rhu(mu,3) ) + ".png"
 
-    done_iterations+=1
-    print("\nIterations left: %s" % ( total_iterations - done_iterations ) )
-    
-    'save parameters'
-    text = "N %s;\n k_prog %s, len: %s;\np_prog %s, len: %s;\nbeta_prog %s, len: %s;\nmu_prog %s, len: %s;\nR0_min %s, R0_max %s\n---\n" \
-            % (N, k_prog, len(k_prog), p_prog, len(p_prog), beta_prog, len(beta_prog), \
-            mu_prog, len(mu_prog),  R0_min, R0_max)
-    save_log_params(folder = folder, text = text, done_iterations = done_iterations)
+file_name = func_file_name(folder, adj_or_sir, N, D, p, max_degree, m, N0)
 
-
-    print("Start with the Network")
-    G = NN_Overl_pois_net(N, D, p = p, add_edges_only = add_edges_only)
-    print("Made Net!")
-
-    mean = rhu( np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes() )
-    plot_save_nes(G, D = mean, p = p, folder = folder, adj_or_sir="AdjMat", done_iterations=done_iterations)
-    plot_save_nes(G, D = mean, p = p, folder = folder, adj_or_sir="SIR", beta = beta, mu = mu, done_iterations=done_iterations)
+print(file_name)

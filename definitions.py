@@ -13,6 +13,26 @@ def my_dir():
   #return "/content/"
   return "/home/hal21/MEGAsync/Tour_Physics2.0/Thesis/NetSciThesis/Project/Plots/Test/"
 
+'for now the difference in name are only for the net'
+def func_file_name(folder, adj_or_sir, N, D, p, max_degree, m = 0, N0 = 0, beta = 0.111, mu = 1.111):
+  from definitions import rhu
+  max_degree = 0
+  if adj_or_sir == "AdjMat":
+    print( adj_or_sir, N, D, rhu(p,3), max_degree, m, N0 )
+    if folder == "B-A_Model": 
+      name = folder + "_%s_N%s_D%s_p%s_k_max%s_m%s_N0_%s" % (
+      adj_or_sir, N, D, rhu(p,3), max_degree, m, N0) + \
+        ".png"
+      print("name", name)
+      return name
+    else: return folder + "_%s_N%s_D%s_p%s.png" % (adj_or_sir, N,rhu(D,1),rhu(p,3)) 
+
+  if adj_or_sir == "SIR":
+    return folder + "_%s_R0_%s_N%s_D%s_p%s_beta%s_mu%s"% (
+            adj_or_sir, '{:.3f}'.format(rhu(beta/mu*D,3)),
+            N,D, rhu(p,3), rhu(beta,4), rhu(mu,3) ) + ".png"
+
+
 '===Plot and Save SIR + Net'
 def plot_params():
   import matplotlib.pyplot as plt
@@ -41,7 +61,7 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
     #here's the modifications of the "test_ver1"
     'Number of nodes in the graph'
     N = G.number_of_nodes()
-    D = int(rhu(np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes()))
+    mean = int(rhu(np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes()))
 
     
     'Label the individual wrt to the # of the node'
@@ -81,7 +101,7 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
             if not mf: tests = G.neighbors(i) #only != wrt to the SIS: contact are taken from G.neighbors            
             if mf: 
               ls = list(range(N)); ls.remove(i)
-              tests = random.choices(ls, k = int(D)) #spread very fast since multiple infected center
+              tests = random.choices(ls, k = int(mean)) #spread very fast since multiple infected center
             tests = [int(x) for x in tests] #convert 35.0 into int
             for j in tests:
                 'If the contact is susceptible and not infected by another node in the future_state, try to infect it'
@@ -132,11 +152,17 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
   max_len = 0
 
   import datetime as dt
-  
+  start_time = dt.datetime.now()
+
   for i in range(numb_iter):
-    start_time = dt.datetime.now()
-    if i % 50 == 0: print("time for %s its of max-for-loop %s" % (i, dt.datetime.now()-start_time))
+    sir_start_time = dt.datetime.now()
     tmp_traj = sir(G, beta = beta, mu = mu, start_inf = start_inf, mf = mf)
+    if i % 50 == 0: 
+      time_1sir = dt.datetime.now()-sir_start_time
+      print("The time for 1 sir is", time_1sir)
+      time_50sir = dt.datetime.now()-start_time
+      print("time for %s its of max-for-loop %s" % (i+1, time_50sir))
+      start_time = dt.datetime.now()
     for idx_cl in range(numb_idx_cl):
         #if idx_cl == 0: print("\ntmp_traj", tmp_traj)
         trajectories[idx_cl].append(tmp_traj[idx_cl])
@@ -177,8 +203,7 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
         '''
         
         if length != max_len: raise Exception("Error: %s not max_len" % length)
-    if i % 50 == 0: print("End of it: %s" % i)
-    if i == 199: print("End of 200 scenarios")
+    if i == 199: print("End of avg on 200 scenarios")
 
   return plot_trajectories, avg
 
@@ -192,7 +217,9 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
 
   'plot ratio of daily infected and daily cumulative recovered'
   'Inf and Cum_Infected from Net_Sir; Recovered from MF_SIR'
+  print("\nNetwork-SIR loading...")
   trajectories, avg = itermean_sir(G, mf = False, beta = beta, mu = mu, start_inf  = start_inf, numb_iter=numb_iter)
+  print("\nMF-SIR loading...")
   mf_trajectories, mf_avg = itermean_sir(G, mf = True, mu = mu, beta = beta, start_inf = start_inf, numb_iter = numb_iter)
 
   'plotting the many realisations'    
@@ -245,12 +272,11 @@ def rhu(n, decimals=0): #round_half_up
     multiplier = 10 ** decimals
     return math.floor(n*multiplier + 0.5) / multiplier
   
-def plot_save_net(G, folder, p = 0, done_iterations = 1, log_dd = False, partition = None, pos = None):
+def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = False, partition = None, pos = None):
   import os.path
-  from definitions import my_dir
+  from definitions import my_dir, func_file_name
   from functools import reduce
   
-
   mode = "a"
   #if done_iterations == 1: mode = "w"
   my_dir = my_dir() #"/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/Tests/"
@@ -260,13 +286,22 @@ def plot_save_net(G, folder, p = 0, done_iterations = 1, log_dd = False, partiti
   print("Real D", real_D)
   D = rhu(D)
   adj_or_sir = "AdjMat"
+  'find the hubs'
+  infos = G.degree()
+  dsc_sorted_nodes = sorted( infos, key = lambda x: x[1], reverse=True)
+  _, max_degree = dsc_sorted_nodes[0]
+  #print("dsc", dsc_sorted_nodes)
+
+
   log_upper_path = my_dir + folder + "/" #"../Plots/Tests/WS_Epids/"
   my_dir+=folder+"/p%s/"%rhu(p,3)+adj_or_sir+"/" #"../Plots/Tests/WS_Epids/p0.001/AdjMat/"
-  file_name = folder + "_%s_N%s_D%s_p%s"% (
-        adj_or_sir,
-        N,D,rhu(p,3)) + \
+  file_name = func_file_name(folder, adj_or_sir, N, D, p, max_degree, m, N0)
+  '''
+  folder + "_N%s_D%s_k_{max}%s_m%s_N0_%s_p%s" % (
+    N, D, max_degree, m, N0, rhu(p,3) ) + \
       ".png"
-  file_path = my_dir + file_name #../AdjMat/AdjMat_N1000_D500_p0.001.png
+  '''
+  file_path = my_dir + file_name #../Plot/Test/AdjMat/AdjMat_N1000_D500_p0.001.png
   log_path = log_upper_path + folder + f"_log_saved_{adj_or_sir}.txt" #"../Plots/Tests/WS_Epids/WS_Epids_log_saved_nets.txt"
       
   plot_params()
@@ -291,7 +326,7 @@ def plot_save_net(G, folder, p = 0, done_iterations = 1, log_dd = False, partiti
   else: print("len(long_range_edges", length_long_range)
   folders = ["WS_Pruned"]
   if folder in folders: width = 0.001
-  if folder == "Barabasi": width = 0.2*N/len(long_range_edges); print("The edge with is", width)
+  if folder == "B-A_Model": width = 0.2*N/len(long_range_edges); print("The edge width is", width)
   if folder== "Caveman_Model":
     nx.draw(G, pos, node_color=list(partition.values()), node_size = 5, width = 0.5, with_labels = False)
   else: nx.draw_circular(G, ax=ax, with_labels=False, font_size=20, node_size=25, width=width)
@@ -314,6 +349,8 @@ def plot_save_net(G, folder, p = 0, done_iterations = 1, log_dd = False, partiti
   mean = rhu( D )
   print("Rounded degrees mean", mean)
   y = poisson.pmf(bins, mean)
+
+
   axs = plt.subplot(212)
   n, hist_bins, _ = axs.hist(sorted_degree, bins = bins, \
                                         log = log_dd, density=0, color="green", ec="black", lw=1, align="left", label = "degrees distr")
@@ -336,7 +373,10 @@ def plot_save_net(G, folder, p = 0, done_iterations = 1, log_dd = False, partiti
   right=0.963,
   hspace=0.067,
   wspace=0.164)
-  plt.suptitle(r"$N:%s, D:%s, p:%s$"% (N,D,rhu(p,3)))
+  if folder == "B-A_Model": 
+    plt.suptitle(r"$N:%s, D:%s, k_{max}: %s, m: %s, N0: %s, p:%s$" % (
+    N, D, max_degree, m, N0, rhu(p,3) ))
+  else: plt.suptitle(r"$N:%s, D:%s, p:%s$"% (N,D,rhu(p,3)))
 
   'TO SAVE PLOTS'
   if not os.path.exists(my_dir): os.makedirs(my_dir)
@@ -358,9 +398,9 @@ def plot_save_net(G, folder, p = 0, done_iterations = 1, log_dd = False, partiti
     for line in sorted_lines:
       r.write(line)
 
-def plot_save_sir(G, folder, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 10, numb_iter = 200):
+def plot_save_sir(G, folder, done_iterations = 1, p = 0, max_degree = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 10, numb_iter = 200):
   import os.path
-  from definitions import my_dir
+  from definitions import my_dir, func_file_name
 
   mode = "a"
   if done_iterations == 1: mode = "w"
@@ -389,16 +429,19 @@ def plot_save_sir(G, folder, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16
       if folder != "W": r0_folder += "mu%s/" % (rhu(mu,3)) #"R0_1-2/mu0.16/"
       #if folder == "WS_Epids": r0_folder += "D%s/" % D  #"R0_1-2/mu0.16/D6/"
       if not os.path.exists(my_dir + r0_folder): os.makedirs(my_dir + r0_folder)
+      file_name = func_file_name(folder, adj_or_sir, N, D, p, max_degree, beta = beta, mu = mu)
+      '''
       file_name = folder + "_%s_R0_%s_N%s_D%s_p%s_beta%s_mu%s"% (
             adj_or_sir, '{:.3f}'.format(rhu(beta/mu*D,3)),
-            N,D, rhu(p,3), rhu(beta,3), rhu(mu,3) ) + ".png"
+            N,D, rhu(p,3), rhu(beta,4), rhu(mu,3) ) + ".png"
+      '''
       file_path = my_dir + r0_folder + file_name
       
       'plot all'
       _, ax = plt.subplots(figsize = (20,12))
 
       'plot always sir'
-      print("\nThe model has N: %s, D: %s, beta: %s, mu: %s, p: %s, R0: %s" % (N,D,rhu(beta,3),rhu(mu,3),rhu(p,3),rhu(R0,3)) )
+      print("\nThe model has N: %s, D: %s, beta: %s, mu: %s, p: %s, R0: %s" % (N,D,rhu(beta,4),rhu(mu,3),rhu(p,3),rhu(R0,3)) )
       plot_sir(G, ax=ax, folder = folder, beta = beta, mu = mu, start_inf = start_inf, numb_iter = numb_iter)
       plt.subplots_adjust(
       top=0.920,
@@ -407,9 +450,8 @@ def plot_save_sir(G, folder, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16
       right=0.992,
       hspace=0.2,
       wspace=0.2)
-      plt.suptitle(r"$R_0:%s, N:%s, D:%s, p:%s, \beta:%s, \mu:%s$"% (rhu(beta/mu*D,3),N,D,rhu(p,3), rhu(beta,3), rhu(mu,3), ))
+      plt.suptitle(r"$R_0:%s, N:%s, D:%s, p:%s, \beta:%s, \mu:%s$"% (rhu(beta/mu*D,3),N,D,rhu(p,3), rhu(beta,4), rhu(mu,3), ))
       #plt.show()
-
       plt.savefig( file_path )
       print("time 1_plot_save_sir:", dt.datetime.now()-start_time) 
       
@@ -428,6 +470,56 @@ def plot_save_sir(G, folder, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16
     for line in sorted_lines:
       r.write(line)
 
+def already_saved_list(folder, adj_or_sir, chr_min, chr_max = None, my_print = True, done_iterations = 1):
+  from definitions import infos_sorted_nodes
+  log_upper_path = "".join((my_dir(),folder,"/")) #../Plots/Test/Overlapping.../
+  log_path = "".join((log_upper_path, folder, f"_log_saved_{adj_or_sir}.txt"))
+
+  '''good idea but not in the goal of succint
+  if done_iterations == 1 and os.path.exists(log_path):
+    'set to O_ld all the already saved nets'
+    lines = []
+    with open(log_path, 'r') as r:
+      for line in r:
+        tmp_list = list(line)
+        tmp_list[0] = "O"
+        lines.append("".join(tmp_list)) 
+    with open(log_path, 'w') as r:
+      for line in lines:
+        r.write(line)
+    '''
+  saved_list = []
+  if os.path.exists(log_path):
+    with open(log_path, "r") as file:
+        saved_list = [l.rstrip("\n")[chr_min:] for l in file]
+  if my_print: print(f"\nThe already saved {adj_or_sir} are", saved_list)
+  return saved_list
+
+def plot_save_nes(G, p, folder, adj_or_sir, m = 1, N0 = 1, beta = 0.3, \
+  mu = 0.3, my_print = True, dsc_sorted_nodes = False, done_iterations = 1, chr_min = 0): #save new_entrys
+  'save net only if does not exist in the .txt. So, to overwrite all just delete .txt'
+  from definitions import already_saved_list, func_file_name
+  D = rhu( np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes() )
+  N = G.number_of_nodes()
+  if adj_or_sir == "AdjMat": 
+    saved_files = already_saved_list(folder, adj_or_sir, chr_min = chr_min, my_print= my_print, done_iterations= done_iterations)
+    print("folder, N, D, p, m, N0", folder, N, D, p, m, N0)
+    file_name = func_file_name(folder = folder, adj_or_sir = adj_or_sir, \
+    N = N, D = D, p = p, max_degree = 0, m = m, N0 = N0)
+    print(file_name)
+  if adj_or_sir == "SIR": 
+    saved_files = already_saved_list(folder, adj_or_sir, chr_min = chr_min, my_print= my_print, done_iterations=done_iterations)
+    file_name = func_file_name(folder = folder, adj_or_sir = adj_or_sir, \
+    N = N, D = D, p = p, max_degree = 0, m = m, N0 = N0, beta = beta, mu = mu)
+  if file_name not in saved_files: 
+    print("I'm saving", file_name)
+    infos_sorted_nodes(G, num_sorted_nodes = True)
+    if adj_or_sir == "AdjMat": 
+      plot_save_net(G = G, m = m, N0 = N0, folder = folder, p = p, done_iterations = done_iterations)
+      infos_sorted_nodes(G, num_sorted_nodes = 0)
+    if adj_or_sir == "SIR": 
+      plot_save_sir(G, folder = folder, beta = beta, mu = mu, p = p, done_iterations = done_iterations)
+
 def save_log_params(folder, text, done_iterations):
   import os
   from definitions import my_dir
@@ -436,7 +528,6 @@ def save_log_params(folder, text, done_iterations):
     if not os.path.exists(my_dir() + folder): os.makedirs(my_dir() + folder)
     with open(my_dir() +  folder + "/" + folder + "_log_params.txt", "a") as text_file: #write only 1 time
         text_file.write(text)
-
 
 '===Watts-Strogatz Model'
 'Number of iterations, i.e. or max power or fixed by user'
@@ -453,7 +544,7 @@ def ws_sir(G, folder, p, saved_nets, done_iterations, pruning = False, infos = F
   import networkx as nx
   N = G.number_of_nodes()
   D = int(rhu(np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes()))
-  if infos == True: check_loops_parallel_edges(G); infos_sorted_nodes(G, num_nodes = False)
+  if infos == True: check_loops_parallel_edges(G); infos_sorted_nodes(G, num_sorted_nodes = False)
 
   if "N%s_D%s_p%s"% (N,D,rhu(p,3)) not in saved_nets: 
     plot_save_net(G = G, folder = folder, p = p, done_iterations = done_iterations)
@@ -595,7 +686,7 @@ def NN_pois_net(G, D, p = 0):
 
   replace_edges_from(G, edges)
   check_loops_parallel_edges(G)
-  infos_sorted_nodes(G, num_nodes=False)
+  infos_sorted_nodes(G, num_sorted_nodes=False)
 
   print("End of wiring")
 
@@ -676,7 +767,7 @@ def check_loops_parallel_edges(G):
   print("parallel edges", set([i for i in ls for j in ls[ls.index(i)+1:] if i==j]),
         "; loops", [(i,j) for (i,j) in set(G.edges()) if i == j])
 
-def infos_sorted_nodes(G, num_nodes = False):
+def infos_sorted_nodes(G, num_sorted_nodes = False):
     import networkx as nx
     'sort nodes by key = degree. printing order: node, adjacent nodes, degree'
     nodes = G.nodes()
@@ -691,13 +782,13 @@ def infos_sorted_nodes(G, num_nodes = False):
     dsc_sorted_nodes = sorted( infos, key = lambda x: x[2], reverse=True)
 
     cut_off = 4
-    if num_nodes == True:  
-      num_nodes = len(nodes) 
+    if num_sorted_nodes == True:  
+      num_sorted_nodes = len(nodes) 
       for i in range(cut_off):
         if i == 0: print("Triplets of (nodes, neighbors(%s), degree) sorted by descending degree:" % i)
         print( dsc_sorted_nodes[i] )
 
-    if num_nodes == False: num_nodes = 0
+    if num_sorted_nodes == False: num_sorted_nodes = 0
     
 def remove_loops_parallel_edges(G, remove_loops = True):
   print("\n")
@@ -721,7 +812,6 @@ def replace_edges_from(G,list_edges=[]):
   G.remove_edges_from(present_edges)
   if list_edges!=[]: return G.add_edges_from(list_edges)
   return G
-
 
 '===Caveman Defs'
 def caveman_defs():
@@ -898,49 +988,4 @@ def caveman_defs():
   return partition_layout, comm_caveman_relink
 
 
-'===Saving Strategies'
-def already_saved_list(folder, adj_or_sir, chr_min, chr_max = None, my_print = True, done_iterations = 1):
-  log_upper_path = "".join((my_dir(),folder,"/")) #../Plots/Test/Overlapping.../
-  log_path = "".join((log_upper_path, folder, f"_log_saved_{adj_or_sir}.txt"))
 
-  '''good idea but not in the goal of succint
-  if done_iterations == 1 and os.path.exists(log_path):
-    'set to O_ld all the already saved nets'
-    lines = []
-    with open(log_path, 'r') as r:
-      for line in r:
-        tmp_list = list(line)
-        tmp_list[0] = "O"
-        lines.append("".join(tmp_list)) 
-    with open(log_path, 'w') as r:
-      for line in lines:
-        r.write(line)
-    '''
-  saved_list = []
-  if os.path.exists(log_path):
-    with open(log_path, "r") as file:
-        saved_list = [l.rstrip("\n")[chr_min:] for l in file]
-  if my_print: print(f"\nThe already saved {adj_or_sir} are", saved_list)
-  return saved_list
-
-def plot_save_nes(G, p, folder, adj_or_sir, beta = 0.3, \
-  mu = 0.3, my_print = True, done_iterations = 1, chr_min = 0): #save new_entrys
-  'save net only if does not exist in the .txt. So, to overwrite all just delete .txt'
-  from definitions import already_saved_list
-  D = mean = rhu( np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes() )
-  N = G.number_of_nodes()
-  if adj_or_sir == "AdjMat": 
-    saved_files = already_saved_list(folder, adj_or_sir, chr_min = chr_min, my_print= my_print, done_iterations= done_iterations)
-    file_name = folder + "_AdjMat_N%s_D%s_p%s.png" % (N,rhu(D,1),rhu(p,3)) 
-  if adj_or_sir == "SIR": 
-    saved_files = already_saved_list(folder, adj_or_sir, chr_min = chr_min, my_print= my_print, done_iterations=done_iterations)
-    file_name = folder + "_%s_R0_%s_N%s_D%s_p%s_beta%s_mu%s" % (
-      "SIR", '{:.3f}'.format(rhu(beta/mu*D,3)),
-      N,D, rhu(p,3), rhu(beta,3), rhu(mu,3) ) + ".png"
-  if file_name not in saved_files: 
-    print("I'm saving", file_name)
-    infos_sorted_nodes(G, num_nodes= True)
-    if adj_or_sir == "AdjMat": 
-      plot_save_net(G = G, folder = folder, p = p, done_iterations = done_iterations)
-    if adj_or_sir == "SIR": 
-      plot_save_sir(G, folder = folder, beta = beta, mu = mu, p = p, done_iterations = done_iterations)
