@@ -18,19 +18,17 @@ def func_file_name(folder, adj_or_sir, N, D, p, max_degree, m = 0, N0 = 0, beta 
   from definitions import rhu
   max_degree = 0
   if adj_or_sir == "AdjMat":
-    print( adj_or_sir, N, D, rhu(p,3), max_degree, m, N0 )
     if folder == "B-A_Model": 
       name = folder + "_%s_N%s_D%s_p%s_k_max%s_m%s_N0_%s" % (
       adj_or_sir, N, D, rhu(p,3), max_degree, m, N0) + \
-        ".png"
-      print("name", name)
+        ".png"  
       return name
     else: return folder + "_%s_N%s_D%s_p%s.png" % (adj_or_sir, N,rhu(D,1),rhu(p,3)) 
 
   if adj_or_sir == "SIR":
     return folder + "_%s_R0_%s_N%s_D%s_p%s_beta%s_mu%s"% (
             adj_or_sir, '{:.3f}'.format(rhu(beta/mu*D,3)),
-            N,D, rhu(p,3), rhu(beta,4), rhu(mu,3) ) + ".png"
+            N,D, rhu(p,3), rhu(beta,3), rhu(mu,3) ) + ".png"
 
 
 '===Plot and Save SIR + Net'
@@ -286,12 +284,16 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
   print("Real D", real_D)
   D = rhu(D)
   adj_or_sir = "AdjMat"
-  'find the hubs'
+
+  'find the major hub and the "ousiders", i.e. highly connected nodes'
   infos = G.degree()
   dsc_sorted_nodes = sorted( infos, key = lambda x: x[1], reverse=True)
   _, max_degree = dsc_sorted_nodes[0]
-  #print("dsc", dsc_sorted_nodes)
-
+  i,count_outsiders, threshold = 0,0,4*D
+  while( list(map(lambda x: x[1], dsc_sorted_nodes))[i] >  threshold):
+    count_outsiders += 1
+    i+=1
+  print("Outsiders", count_outsiders)
 
   log_upper_path = my_dir + folder + "/" #"../Plots/Tests/WS_Epids/"
   my_dir+=folder+"/p%s/"%rhu(p,3)+adj_or_sir+"/" #"../Plots/Tests/WS_Epids/p0.001/AdjMat/"
@@ -323,10 +325,10 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
   long_range_edges = list(filter( lambda x: x > 30, [np.min((np.abs(i-j),np.abs(j-i))) for i,j in G.edges()] )) #list( filter(lambda x: x > 0, )
   length_long_range = len(long_range_edges)
   if length_long_range < 20: print("\nLong_range_edges", long_range_edges, length_long_range)
-  else: print("len(long_range_edges", length_long_range)
+  else: print("len(long_range_edges)", length_long_range)
   folders = ["WS_Pruned"]
   if folder in folders: width = 0.001
-  if folder == "B-A_Model": width = 0.2*N/len(long_range_edges); print("The edge width is", width)
+  if folder == "B-A_Model": width = 0.2*N/len(long_range_edges); print("The edge width is", int(width*10)/10)
   if folder== "Caveman_Model":
     nx.draw(G, pos, node_color=list(partition.values()), node_size = 5, width = 0.5, with_labels = False)
   else: nx.draw_circular(G, ax=ax, with_labels=False, font_size=20, node_size=25, width=width)
@@ -347,7 +349,6 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
   from scipy.stats import poisson
   bins = np.arange(sorted_degree[0]-1,sorted_degree[-1]+2)
   mean = rhu( D )
-  print("Rounded degrees mean", mean)
   y = poisson.pmf(bins, mean)
 
 
@@ -373,10 +374,17 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
   right=0.963,
   hspace=0.067,
   wspace=0.164)
+
+  '''
+  if you need to automatize the procedure. Try with,
+  string = string.strip("".join((folder,"_")))
+  string = "".join(("r\"$", string,"$\""))
+  '''
+
   if folder == "B-A_Model": 
-    plt.suptitle(r"$N:%s, D:%s, k_{max}: %s, m: %s, N0: %s, p:%s$" % (
-    N, D, max_degree, m, N0, rhu(p,3) ))
-  else: plt.suptitle(r"$N:%s, D:%s, p:%s$"% (N,D,rhu(p,3)))
+    plt.suptitle(r"$N:%s, D:%s, k_{max}: %s, N_{out}: %s, m: %s, N_0: %s, p:%s$" % (
+    N, D, max_degree, count_outsiders, m, N0, rhu(p,3),  ))
+  else: plt.suptitle(r"$N:%s, D:%s, N_{out}: %s, p:%s$"% (N,D, count_outsiders, rhu(p,3)))
 
   'TO SAVE PLOTS'
   if not os.path.exists(my_dir): os.makedirs(my_dir)
@@ -408,6 +416,16 @@ def plot_save_sir(G, folder, done_iterations = 1, p = 0, max_degree = 0, beta = 
   N = G.number_of_nodes()
   D = rhu( np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes() )
   adj_or_sir = "SIR"
+  'find the major hub and the "ousiders", i.e. highly connected nodes'
+  infos = G.degree()
+  dsc_sorted_nodes = sorted( infos, key = lambda x: x[1], reverse=True)
+  i,count_outsiders, threshold = 0,0,4*D
+  while( list(map(lambda x: x[1], dsc_sorted_nodes))[i] >  threshold):
+    count_outsiders += 1
+    i+=1
+  print("Outsiders", count_outsiders)
+
+  'directiories'
   log_upper_path = my_dir + folder + "/" #../Plots/Tests/WS_Epids/
   my_dir+=folder+"/p%s/"%rhu(p,3)+adj_or_sir+"/" #"../Plots/Test/WS_Epids/p0.001/SIR/"
   #file_path depends on a "r0_folder"
@@ -433,7 +451,7 @@ def plot_save_sir(G, folder, done_iterations = 1, p = 0, max_degree = 0, beta = 
       '''
       file_name = folder + "_%s_R0_%s_N%s_D%s_p%s_beta%s_mu%s"% (
             adj_or_sir, '{:.3f}'.format(rhu(beta/mu*D,3)),
-            N,D, rhu(p,3), rhu(beta,4), rhu(mu,3) ) + ".png"
+            N,D, rhu(p,3), rhu(beta,3), rhu(mu,3) ) + ".png"
       '''
       file_path = my_dir + r0_folder + file_name
       
@@ -441,7 +459,7 @@ def plot_save_sir(G, folder, done_iterations = 1, p = 0, max_degree = 0, beta = 
       _, ax = plt.subplots(figsize = (20,12))
 
       'plot always sir'
-      print("\nThe model has N: %s, D: %s, beta: %s, mu: %s, p: %s, R0: %s" % (N,D,rhu(beta,4),rhu(mu,3),rhu(p,3),rhu(R0,3)) )
+      print("\nThe model has N: %s, D: %s, beta: %s, mu: %s, p: %s, R0: %s" % (N,D,rhu(beta,3),rhu(mu,3),rhu(p,3),rhu(R0,3)) )
       plot_sir(G, ax=ax, folder = folder, beta = beta, mu = mu, start_inf = start_inf, numb_iter = numb_iter)
       plt.subplots_adjust(
       top=0.920,
@@ -450,7 +468,7 @@ def plot_save_sir(G, folder, done_iterations = 1, p = 0, max_degree = 0, beta = 
       right=0.992,
       hspace=0.2,
       wspace=0.2)
-      plt.suptitle(r"$R_0:%s, N:%s, D:%s, p:%s, \beta:%s, \mu:%s$"% (rhu(beta/mu*D,3),N,D,rhu(p,3), rhu(beta,4), rhu(mu,3), ))
+      plt.suptitle(r"$R_0:%s, N:%s, D:%s, N_{out}: %s, p:%s, \beta:%s, \mu:%s$"% (rhu(beta/mu*D,3),N,D, count_outsiders, rhu(p,3), rhu(beta,3), rhu(mu,3), ))
       #plt.show()
       plt.savefig( file_path )
       print("time 1_plot_save_sir:", dt.datetime.now()-start_time) 
@@ -475,19 +493,6 @@ def already_saved_list(folder, adj_or_sir, chr_min, chr_max = None, my_print = T
   log_upper_path = "".join((my_dir(),folder,"/")) #../Plots/Test/Overlapping.../
   log_path = "".join((log_upper_path, folder, f"_log_saved_{adj_or_sir}.txt"))
 
-  '''good idea but not in the goal of succint
-  if done_iterations == 1 and os.path.exists(log_path):
-    'set to O_ld all the already saved nets'
-    lines = []
-    with open(log_path, 'r') as r:
-      for line in r:
-        tmp_list = list(line)
-        tmp_list[0] = "O"
-        lines.append("".join(tmp_list)) 
-    with open(log_path, 'w') as r:
-      for line in lines:
-        r.write(line)
-    '''
   saved_list = []
   if os.path.exists(log_path):
     with open(log_path, "r") as file:
@@ -503,10 +508,8 @@ def plot_save_nes(G, p, folder, adj_or_sir, m = 1, N0 = 1, beta = 0.3, \
   N = G.number_of_nodes()
   if adj_or_sir == "AdjMat": 
     saved_files = already_saved_list(folder, adj_or_sir, chr_min = chr_min, my_print= my_print, done_iterations= done_iterations)
-    print("folder, N, D, p, m, N0", folder, N, D, p, m, N0)
     file_name = func_file_name(folder = folder, adj_or_sir = adj_or_sir, \
     N = N, D = D, p = p, max_degree = 0, m = m, N0 = N0)
-    print(file_name)
   if adj_or_sir == "SIR": 
     saved_files = already_saved_list(folder, adj_or_sir, chr_min = chr_min, my_print= my_print, done_iterations=done_iterations)
     file_name = func_file_name(folder = folder, adj_or_sir = adj_or_sir, \
