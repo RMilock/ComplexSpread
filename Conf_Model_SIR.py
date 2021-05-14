@@ -41,7 +41,7 @@ for D,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog):
   if R0_min < beta*D/mu < R0_max:
     done_iterations+=1
     print("\nIterations left: %s" % ( total_iterations - done_iterations ) )
-
+   
     text = "N %s;\n k_prog %s, len: %s;\np_prog %s, len: %s;\nbeta_prog %s, len: %s;\nmu_prog %s, len: %s;\nR0_min %s, R0_max %s\n---\n" \
             % (N, k_prog, len(k_prog), p_prog, len(p_prog), beta_prog, len(beta_prog), \
             mu_prog, len(mu_prog),  R0_min, R0_max)

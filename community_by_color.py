@@ -12,7 +12,7 @@ from itertools import product
 from definitions import rhu, plot_save_net, plot_save_sir
 
 partition_layout, comm_caveman_relink = caveman_defs()
-
+   
 p_max = 0.1; N = int(1e3)
 
 'progression of net-parameters'
