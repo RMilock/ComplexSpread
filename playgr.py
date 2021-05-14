@@ -31,3 +31,6 @@ def func_file_name(folder, adj_or_sir, N, D, p, max_degree, m = 0, N0 = 0, beta 
 file_name = func_file_name(folder, adj_or_sir, N, D, p, max_degree, m, N0)
 
 print(file_name)
+
+asd  
+
