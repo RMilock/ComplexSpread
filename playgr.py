@@ -1,36 +1,69 @@
+'def a function that iters numb_iter and make an avg of the trajectories'
+from itertools import zip_longest
+import numpy as np
+import copy
 
-string = "AdjMat_N:%s, k_{max}: %s" %(10000,3)
-folder = "AdjMat"
-print(string)
+numb_idx_cl = 2
+trajectories = [[] for _ in range(numb_idx_cl)]
+avg = [[] for _ in range(numb_idx_cl)]
+counts = [[],[],[]]
+max_len = 0
+numb_iter = 2
 
-string = string.strip("".join((folder,"_")))
-string = "".join(("r\"$", string,"$\""))
-print(string, eval(string))
+tank_of_values = [[3,4,5], [2,4,6,8,10]],[[1,2,3,4,4],[4,5,6]]
 
-folder = "B-A_Model"
-N = 1000; D = 3; p = 0.0; adj_or_sir = "AdjMat"; max_degree = 3; m, N0 = 1,1
+import datetime as dt
+start_time = dt.datetime.now()
 
-def func_file_name(folder, adj_or_sir, N, D, p, max_degree, m = 0, N0 = 0, beta = 0.111, mu = 1.111):
-  from definitions import rhu
-  max_degree = 0
-  if adj_or_sir == "AdjMat":
-    print( adj_or_sir, N, D, rhu(p,3), max_degree, m, N0 )
-    if folder == "B-A_Model": 
-      name = folder + "_%s_N%s_D%s_p%s_k_max%s_m%s_N0_%s" % (
-      adj_or_sir, N, D, rhu(p,3), max_degree, m, N0) + \
-        ".png"
-      print("name", name)
-      return name
-    else: return folder + "_%s_N%s_D%s_p%s.png" % (adj_or_sir, N,rhu(D,1),rhu(p,3)) 
+for i in range(numb_iter):
+  sir_start_time = dt.datetime.now()
+  tmp_traj = tank_of_values[i]
+  print(tmp_traj)
+  for idx_cl in range(numb_idx_cl):
+      #if idx_cl == 0: print("\ntmp_traj", tmp_traj)
+      trajectories[idx_cl].append(tmp_traj[idx_cl])
+      tmp_max = len(max(tmp_traj, key = len))
+      if tmp_max > max_len: max_len = tmp_max
+      #print("\nIteration: %s, tmp_max: %s, len tmp_traj: %s, len tmp_traj %s, len traj[%s] %s" % 
+      #  (i, len(max(tmp_traj, key = len)), len(tmp_traj),  \
+      #    len(tmp_traj[idx_cl]), idx_cl, len(trajectories[idx_cl]) ))
+#print("\nOverall max_len", max_len)
+#print("All traj", trajectories)
+plot_trajectories = copy.deepcopy(trajectories)
 
-  if adj_or_sir == "SIR":
-    return folder + "_%s_R0_%s_N%s_D%s_p%s_beta%s_mu%s"% (
-            adj_or_sir, '{:.3f}'.format(rhu(beta/mu*D,3)),
-            N,D, rhu(p,3), rhu(beta,4), rhu(mu,3) ) + ".png"
+start_time = dt.datetime.now()
 
-file_name = func_file_name(folder, adj_or_sir, N, D, p, max_degree, m, N0)
+for i in range(numb_iter):
+  if i % 50 == 0: print("time for %s for avg-for-loop %s" % (i, dt.datetime.now()-start_time))
+  for idx_cl in range(numb_idx_cl):
+      last_el_list = [trajectories[idx_cl][i][-1] for _ in range(max_len-len(trajectories[idx_cl][i]))]
+      'traj[classes to be considered, e.g. infected = 0][precise iteration we want, e.g. "-1"]'
+      trajectories[idx_cl][i] += last_el_list
+      length = len(trajectories[idx_cl][i])
+      it_sum = [sum(x) for x in zip_longest(*trajectories[idx_cl], fillvalue=0)]
+      for j in range(length):
+          try: counts[idx_cl][j]+=1
+          except: counts[idx_cl].append(1)
+      avg[idx_cl] = list(np.divide(it_sum,counts[idx_cl]))
+      
+      
+      print("\niteration(s):", i, "idx_cl ", idx_cl)
+      print("last el extension", last_el_list)
+      print("(new) trajectories[%s]: %s" % (idx_cl, trajectories[idx_cl]))
+      print( "--> trajectories[%s][%s]: %s" % (idx_cl, i, trajectories[idx_cl][i]), 
+      "len:", length)
+      print("zip_longest same index" , list(zip_longest(*trajectories[idx_cl], fillvalue=0)))#"and traj_idx_cl", trajectories[idx_cl])
+      print("global sum same indeces", it_sum)
+      print("counts of made its", counts[idx_cl])
+      print("avg", avg)
 
-print(file_name)
-
-asd  
-
+import matplotlib.pyplot as plt
+x = np.arange(max_len)
+plt.plot(trajectories[0][0], "r--", label = "first bunch")
+plt.plot(trajectories[0][1], "b--", label = "second bunch")
+plt.plot(avg[0], "o", label = "bunch averaged")
+#plt.plot(avg[1], "*", label = "second bunch averaged")
+plt.title("Trial of the avg Algorithm")
+plt.legend()
+plt.show()
+      
