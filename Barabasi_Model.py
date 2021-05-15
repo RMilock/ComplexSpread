@@ -58,8 +58,8 @@ N = int(1e3); p_max = 0
 'progression of net-parameters'
 k_prog = np.arange(2,18,2) # these are the fully connected initial cliques
 p_prog = np.linspace(0,p_max,int(p_max*10)+1)
-mu_prog = np.linspace(0.01,1,10)
-beta_prog = np.linspace(0.001,.5,15)
+beta_prog = np.linspace(0.001,1,15)
+mu_prog = np.linspace(0.01,1,13)
 p_prog = [0]
 R0_min = 0; R0_max = 3    
 folder = "B-A_Model"
@@ -75,7 +75,8 @@ done_iterations = 0
 
 saved_nets = []
 for D,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog):  
-  if R0_min < beta*D/mu < R0_max:
+  'since D_real ~ 2*D (D here is fixing only the m and N0), R0_max-folder ~ 2*R0_max'
+  if R0_min < beta*D/mu < R0_max: 
     m, N0 = D,D
     done_iterations+=1
     print("\nIterations left: %s" % ( total_iterations - done_iterations ) )
