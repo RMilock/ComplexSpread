@@ -1,15 +1,11 @@
 # Commented out IPython magic to ensure Python compatibility.
-import random
-import math
 import numpy as np
 import matplotlib.pyplot as plt
 import networkx as nx
 # %matplotlib inline
 from itertools import product
 import os #to create a folder
-from definitions import ws_sir, infos_sorted_nodes, \
-  remove_loops_parallel_edges, check_loops_parallel_edges, config_pois_model, replace_edges_from, \
-    rhu, pow_max, save_log_params, my_dir
+from definitions import ws_sir, plot_save_nes, pow_max, save_log_params
 
 '''
 CONNECTED_Watts-Strogatz Net!
@@ -27,7 +23,7 @@ def even_int(x):
   if int(x) % 2 != 0: return int(x-1)
   return int(x)
 
-for pruning in [True]: #if 1 needed: add ``break``
+for pruning in [False]: 
   if pruning == True:
     p_max = 0.2
     p_prog = np.linspace(0,p_max,int(p_max*10)+1)
@@ -40,12 +36,7 @@ for pruning in [True]: #if 1 needed: add ``break``
     beta_prog = [beta*N/k for beta in betas for k in k_prog[:len(set(k_prog))]]
     mu_prog = np.linspace(0.16,1,10) #[0.467, 0.385, 0.631]
     R0_min = 0; R0_max = 4
-    
     folder = "WS_Pruned" 
-    text = "N %s;\n k_prog %s, len: %s;\np_prog %s, len: %s;\nbeta_prog %s, len: %s;\nmu_prog %s, len: %s;\nR0_min %s, R0_max %s\n---\n" \
-          % (N, k_prog, len(k_prog), p_prog, len(p_prog), beta_prog, len(beta_prog), \
-          mu_prog, len(mu_prog), R0_min, R0_max)
-    print(text)    
 
     total_iterations = 0
     for mu, p in product(mu_prog, p_prog):
@@ -53,19 +44,27 @@ for pruning in [True]: #if 1 needed: add ``break``
           #print("R0: ", beta*D/mu)
           if  R0_min < beta*D/mu < R0_max and beta <= 1:
             total_iterations += 1
-    print("Total Iterations:", total_iterations)
+    print("Total SIR Pruned Iterations:", total_iterations)
+
+    'save parameters'
+    text = "N %s;\nk_prog %s, len: %s;\np_prog %s, len: %s;\nbeta_prog %s, len: %s;\nmu_prog %s, len: %s;\nR0_min %s, R0_max %s; \nTotal Iterations: %s;\n---\n" \
+            % (N, k_prog, len(k_prog), p_prog, len(p_prog), beta_prog, len(beta_prog), \
+            mu_prog, len(mu_prog),  R0_min, R0_max, total_iterations)
+    save_log_params(folder = folder, text = text)    
 
     done_iterations = 0; saved_nets = []
     for D, beta in zip(k_prog, beta_prog):
-      for p in p_prog:
-        G = nx.connected_watts_strogatz_graph( n = N, k = D, p = p, seed = 1 ) #k is the number of near linked nodes  
-        for mu in mu_prog:
-          'With p = 1 and <k>/N ~ 0, degree distr is sim to a Poissonian'
-          if R0_min < beta*D/mu < R0_max and beta <= 1:
-            done_iterations+=1
-            print("Iterations left: %s" % ( total_iterations - done_iterations ) )
-            ws_sir(G, p = p, beta = beta, mu = mu, saved_nets=saved_nets, pruning = pruning, folder = folder,  done_iterations = done_iterations)
-            print("---")
+      for p, mu in product(p_prog, mu_prog):
+        'With p = 1 and <k>/N ~ 0, degree distr is sim to a Poissonian'
+        if R0_min < beta*D/mu < R0_max and beta <= 1:
+          done_iterations+=1
+          print("Iterations left: %s" % ( total_iterations - done_iterations ) )
+
+          plot_save_nes(G = nx.connected_watts_strogatz_graph( n = N, k = D, p = p, seed = 1 ), 
+          p = p, folder = folder, adj_or_sir="AdjMat", done_iterations=done_iterations)
+          plot_save_nes(G = nx.connected_watts_strogatz_graph( n = N, k = D, p = p, seed = 1 ),
+          p = p, folder = folder, adj_or_sir="SIR", beta = beta, mu = mu, done_iterations=done_iterations)
+          print("---")
     
     save_log_params(folder = folder, text = text)
 
@@ -74,25 +73,25 @@ for pruning in [True]: #if 1 needed: add ``break``
     print("---I'm NOT pruning!")
     'if p_prog has sequence save_it like ./R0_0-1/R0_0.087'
     p_prog = np.concatenate((np.array([0.001]), np.linspace(0.012,0.1,10)))
-    mu_prog = np.linspace(0.1,1,7)
-    beta_prog = np.linspace(0.1,1,7)
-    k_prog = np.arange(2,18,4)
+    p_prog = [0,0.1]
+    mu_prog = np.linspace(0.95,1,6)
+    beta_prog = np.linspace(0.95,1,6)
+    k_prog = np.arange(2,18,2)
     R0_min = 0.3; R0_max = 5
-    
     folder = "WS_Epids"
     
-    text = "N %s;\n k_prog %s, len: %s;\np_prog %s, len: %s;\nbeta_prog %s, len: %s;\nmu_prog %s, len: %s;\nR0_min %s, R0_max %s\n---\n" \
-          % (N, k_prog, len(k_prog), p_prog, len(p_prog), beta_prog, len(beta_prog), \
-          mu_prog, len(mu_prog), R0_min, R0_max)
-    print(text)
-
-    save_log_params(folder = folder, text = text)
-
     total_iterations = 0
     for D, p in product(k_prog, p_prog):
-      for beta, mu in product(beta_prog, mu_prog):
+      for beta, mu in zip(beta_prog, mu_prog):
         if  R0_min < beta*D/mu < R0_max:
           total_iterations += 1
+    print("Total SIR Epids Iterations:", total_iterations)
+
+    'save parameters'
+    text = "N %s;\nk_prog %s, len: %s;\np_prog %s, len: %s;\nbeta_prog %s, len: %s;\nmu_prog %s, len: %s;\nR0_min %s, R0_max %s; \nTotal Iterations: %s;\n---\n" \
+            % (N, k_prog, len(k_prog), p_prog, len(p_prog), beta_prog, len(beta_prog), \
+            mu_prog, len(mu_prog),  R0_min, R0_max, total_iterations)
+    save_log_params(folder = folder, text = text)    
     
     '''
     if os.path.exists("/home/hal21/MEGAsync/Tour_Physics2.0/Thesis/NetSciThesis/Project/Plots/Test/WS_Epids/WS_Epids_log_saved_nets.txt"):
@@ -102,16 +101,16 @@ for pruning in [True]: #if 1 needed: add ``break``
     else: line_count = 0
     print("New AdjMat", line_count)
     '''
-    
-    print("Total SIR Iterations:", total_iterations)
-    
-    done_iterations = 0
-    saved_nets = []
-    for D, p in product(k_prog, p_prog):
-      G = nx.connected_watts_strogatz_graph( n = N, k = D, p = p, seed = 1 ) #k is the number of near linked nodes
-      for beta, mu in product(beta_prog, mu_prog): 
-        if  R0_min < beta*D/mu < R0_max:   
+    done_iterations = 0; saved_nets = []
+    for D,p in product(k_prog, p_prog):  
+      for beta, mu in zip(beta_prog, mu_prog):
+        'With p = 1 and <k>/N ~ 0, degree distr is sim to a Poissonian'
+        if R0_min < beta*D/mu < R0_max and beta <= 1:
           done_iterations+=1
-          print("\nIterations left: %s" % ( total_iterations - done_iterations ) )
-          ws_sir(G, saved_nets = saved_nets, folder = folder, pruning = pruning, p = p, beta = beta, mu = mu, done_iterations = done_iterations)
-          print("---\n\n")
+          print("Iterations left: %s" % ( total_iterations - done_iterations ) )
+
+          plot_save_nes(G = nx.connected_watts_strogatz_graph( n = N, k = D, p = p, seed = 1 ), 
+          p = p, folder = folder, adj_or_sir="AdjMat", done_iterations=done_iterations)
+          plot_save_nes(G = nx.connected_watts_strogatz_graph( n = N, k = D, p = p, seed = 1 ),
+          p = p, folder = folder, adj_or_sir="SIR", beta = beta, mu = mu, done_iterations=done_iterations)
+          print("---")
