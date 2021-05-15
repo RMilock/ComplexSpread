@@ -14,13 +14,12 @@ def my_dir():
   return "/home/hal21/MEGAsync/Tour_Physics2.0/Thesis/NetSciThesis/Project/Plots/Test/"
 
 'for now the difference in name are only for the net'
-def func_file_name(folder, adj_or_sir, N, D, p, max_degree, m = 0, N0 = 0, beta = 0.111, mu = 1.111):
+def func_file_name(folder, adj_or_sir, N, D, p, m = 0, N0 = 0, beta = 0.111, mu = 1.111):
   from definitions import rhu
-  max_degree = 0
   if adj_or_sir == "AdjMat":
     if folder == "B-A_Model": 
-      name = folder + "_%s_N%s_D%s_p%s_k_max%s_m%s_N0_%s" % (
-      adj_or_sir, N, D, rhu(p,3), max_degree, m, N0) + \
+      name = folder + "_%s_N%s_D%s_p%s_m%s_N0_%s" % (
+      adj_or_sir, N, D, rhu(p,3), m, N0) + \
         ".png"  
       return name
     else: return folder + "_%s_N%s_D%s_p%s.png" % (adj_or_sir, N,rhu(D,1),rhu(p,3)) 
@@ -29,7 +28,6 @@ def func_file_name(folder, adj_or_sir, N, D, p, max_degree, m = 0, N0 = 0, beta 
     return folder + "_%s_R0_%s_N%s_D%s_p%s_beta%s_mu%s"% (
             adj_or_sir, '{:.3f}'.format(rhu(beta/mu*D,3)),
             N,D, rhu(p,3), rhu(beta,3), rhu(mu,3) ) + ".png"
-
 
 '===Plot and Save SIR + Net'
 def plot_params():
@@ -138,9 +136,9 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
 
 def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_inf = 10,):
   'def a function that iters numb_iter and make an avg of the trajectories'
-  from itertools import product
   from itertools import zip_longest
   import numpy as np
+  import datetime as dt
   import copy
 
   numb_idx_cl = 3
@@ -148,8 +146,6 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
   avg = [[] for _ in range(numb_idx_cl)]
   counts = [[],[],[]]
   max_len = 0
-
-  import datetime as dt
   start_time = dt.datetime.now()
 
   for i in range(numb_iter):
@@ -224,10 +220,10 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
   colors = ["paleturquoise","wheat","lightgreen", "thistle"]
   
   for j in range(numb_iter):
-    ax.plot(mf_trajectories[2][j], color = colors[1])
-    ax.plot(trajectories[2][j], color = colors[2])
     ax.plot(trajectories[0][j], color = colors[0])
     ax.plot(mf_trajectories[0][j], color = colors[3])
+    ax.plot(mf_trajectories[2][j], color = colors[1])
+    ax.plot(trajectories[2][j], color = colors[2])
     
     '''if R0 <= 2 and folder == "NNR_Conf_Model":
       'to set legend above the plot'
@@ -235,14 +231,14 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
           np.max(trajectories[2][j]), mf_trajectories[2][j],
           np.max(trajectories[0][j]) ), axis = None ) )'''
 
-  ax.plot(mf_avg[2], label="MF::CD_Inf/N (%s%%)"% np.round(mf_avg[2][-1]*100,1), \
-    color = "tab:orange" ) #mf::cd_inf
-  ax.plot(avg[2], label="Net::CD_Inf/N (%s%%)" % np.round(avg[2][-1]*100,1), \
-    color = "tab:green") #net::cd_inf    
   ax.plot(mf_avg[0], label="MF::Infected/N ", \
     color = "darkviolet") #prevalence
   ax.plot(avg[0], label="Net::Infected/N ", \
     color = "tab:blue") #prevalence
+  ax.plot(mf_avg[2], label="MF::CD_Inf/N (%s%%)"% np.round(mf_avg[2][-1]*100,1), \
+    color = "tab:orange" ) #mf::cd_inf
+  ax.plot(avg[2], label="Net::CD_Inf/N (%s%%)" % np.round(avg[2][-1]*100,1), \
+    color = "tab:green") #net::cd_inf
 
   'plot horizontal line to highlight the initial infected'
   ax.axhline(start_inf/N, color = "r", ls="dashed", \
@@ -327,7 +323,7 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
   if length_long_range < 20: print("\nLong_range_edges", long_range_edges, length_long_range)
   else: print("len(long_range_edges)", length_long_range)
   folders = ["WS_Pruned"]
-  if folder in folders: width = 0.001
+  if folder in folders: width = 0.2*N/len(long_range_edges)
   if folder == "B-A_Model": width = 0.2*N/len(long_range_edges); print("The edge width is", int(width*10)/10)
   if folder== "Caveman_Model":
     nx.draw(G, pos, node_color=list(partition.values()), node_size = 5, width = 0.5, with_labels = False)
@@ -501,7 +497,7 @@ def already_saved_list(folder, adj_or_sir, chr_min, chr_max = None, my_print = T
   return saved_list
 
 def plot_save_nes(G, p, folder, adj_or_sir, m = 1, N0 = 1, beta = 0.3, \
-  mu = 0.3, my_print = True, dsc_sorted_nodes = False, done_iterations = 1, chr_min = 0): #save new_entrys
+  mu = 0.3, my_print = True, pos = None, partition = None, dsc_sorted_nodes = False, done_iterations = 1, chr_min = 0): #save new_entrys
   'save net only if does not exist in the .txt. So, to overwrite all just delete .txt'
   from definitions import already_saved_list, func_file_name
   D = rhu( np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes() )
@@ -509,21 +505,21 @@ def plot_save_nes(G, p, folder, adj_or_sir, m = 1, N0 = 1, beta = 0.3, \
   if adj_or_sir == "AdjMat": 
     saved_files = already_saved_list(folder, adj_or_sir, chr_min = chr_min, my_print= my_print, done_iterations= done_iterations)
     file_name = func_file_name(folder = folder, adj_or_sir = adj_or_sir, \
-    N = N, D = D, p = p, max_degree = 0, m = m, N0 = N0)
+    N = N, D = D, p = p, m = m, N0 = N0)
   if adj_or_sir == "SIR": 
     saved_files = already_saved_list(folder, adj_or_sir, chr_min = chr_min, my_print= my_print, done_iterations=done_iterations)
     file_name = func_file_name(folder = folder, adj_or_sir = adj_or_sir, \
-    N = N, D = D, p = p, max_degree = 0, m = m, N0 = N0, beta = beta, mu = mu)
+    N = N, D = D, p = p, m = m, N0 = N0, beta = beta, mu = mu)
   if file_name not in saved_files: 
     print("I'm saving", file_name)
     infos_sorted_nodes(G, num_sorted_nodes = True)
     if adj_or_sir == "AdjMat": 
-      plot_save_net(G = G, m = m, N0 = N0, folder = folder, p = p, done_iterations = done_iterations)
+      plot_save_net(G = G, pos = pos, partition = partition, m = m, N0 = N0, folder = folder, p = p, done_iterations = done_iterations)
       infos_sorted_nodes(G, num_sorted_nodes = 0)
     if adj_or_sir == "SIR": 
       plot_save_sir(G, folder = folder, beta = beta, mu = mu, p = p, done_iterations = done_iterations)
 
-def save_log_params(folder, text, done_iterations):
+def save_log_params(folder, text, done_iterations = 1):
   import os
   from definitions import my_dir
   print("log_params is @:", my_dir() + folder)
@@ -544,7 +540,6 @@ def pow_max(N, num_iter = "all"):
 
 def ws_sir(G, folder, p, saved_nets, done_iterations, pruning = False, infos = False, beta = 0.001, mu = 0.16, start_inf = 10):    
   'round_half_up D for a better approximation of nx.c_w_s_graph+sir'
-  import networkx as nx
   N = G.number_of_nodes()
   D = int(rhu(np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes()))
   if infos == True: check_loops_parallel_edges(G); infos_sorted_nodes(G, num_sorted_nodes = False)
@@ -956,28 +951,33 @@ def caveman_defs():
       'caveman_graph'
       G = nx.caveman_graph(l = cliques, k = clique_size)
 
-      'relink nodes to neighbor "cave"'
+      'decide how many nodes are going to relink to the neighbor "cave" (cfr numb_rel_inring'
       total_nodes = clique_size*cliques
       #if numb_rel_inring != 0: 
       for clique in range(cliques):
-          nodes_inclique = np.arange(clique_size*(clique), clique_size*(1+clique))
-          if numb_rel_inring != 0:
-              attached_nodes = npr.choice( np.arange(clique_size*(1+clique), 
-                                          clique_size*(2+clique)), 
-                                          size = len(nodes_inclique) )
-              attached_nodes = attached_nodes % np.max((total_nodes,1))
-              for test, att_node in zip(nodes_inclique, attached_nodes):
-                  #print("NN - clique add:", (test,att_node))
-                  G.add_edge(test,att_node)
+        if numb_rel_inring != 0:
+          first_cl_node = clique_size*clique
+          nodes_inclique = np.arange(first_cl_node, first_cl_node+numb_rel_inring)
+          attached_nodes = npr.choice( np.arange(clique_size*(1+clique), 
+                                      clique_size*(2+clique)), 
+                                      size = len(nodes_inclique) )
+          attached_nodes = attached_nodes % np.max((total_nodes,1))
+          for test, att_node in zip(nodes_inclique, attached_nodes):
+              #print("NN - clique add:", (test,att_node))
+              G.add_edge(test,att_node)
           
-          'here I add a new edge but as for the Overl_Rew, I relink one of the existing node'
-          'In the last way, avg_degree is preserved'
-          if p != 0:
-              attached_nodes = npr.choice([x for x in G.nodes() if x not in nodes_inclique], 
-                                          size = len(nodes_inclique))
-              for test, att_node in zip(nodes_inclique, attached_nodes):
-                  #print("relink", (test,att_node))
-                  if npr.uniform() < p: G.add_edge(test,att_node)
+        'here I add a new edge by relinking one of the existing node'
+        'decide how many nodes in the clique would go into rnd relink via relink_rnd'
+        'In the last way, avg_degree is preserved'
+        if p != 0:
+          relink_rnd = clique_size
+          first_cl_node = clique_size*clique
+          nodes_inclique = np.arange(first_cl_node, first_cl_node + relink_rnd)
+          attached_nodes = npr.choice([x for x in G.nodes() if x not in nodes_inclique], 
+                                      size = len(nodes_inclique))
+          for test, att_node in zip(nodes_inclique, attached_nodes):
+            #print("relink", (test,att_node))
+            if npr.uniform() < p: G.add_edge(test,att_node)
 
       #check_loops_parallel_edges(G)
       remove_loops_parallel_edges(G)
