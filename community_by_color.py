@@ -3,9 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import networkx as nx
-from definitions import save_log_params, plot_sir, \
-check_loops_parallel_edges, remove_loops_parallel_edges, \
-caveman_defs
+from definitions import save_log_params, parameters_net_and_sir, caveman_defs
     
 'start of the main()'
 from itertools import product
@@ -13,15 +11,18 @@ from definitions import rhu, plot_save_nes
 
 partition_layout, comm_caveman_relink = caveman_defs()
    
-p_max = 0.1; N = int(1e3)
+N = int(1e3); p_max = 0.1; folder = "Caveman_Model"
+
 
 'progression of net-parameters'
-k_prog = np.arange(1,11,2) #https://www.prb.org/about/ -> Europe householdsize = 3
+k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max =  parameters_net_and_sir(folder = folder, p_max = p_max) 
+
+'''
 p_prog = np.linspace(0,p_max,2)
 mu_prog = np.linspace(0.001,1,7)
 beta_prog = np.linspace(0.001,1,7)
 R0_min = 0.5; R0_max = 5
-folder = "Caveman_Model"
+'''
 
 'try only with p = 0.1'
 total_iterations = 0
@@ -32,6 +33,12 @@ for D,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog):
 print("Total Iterations:", total_iterations)
 done_iterations = 0
 
+text = "N %s;\nk_prog %s, len: %s;\np_prog %s, len: %s;\nbeta_prog %s, len: %s;\nmu_prog %s, len: %s;\nR0_min %s, R0_max %s; \nTotal Iterations: %s;\n---\n" \
+              % (N, k_prog, len(k_prog), p_prog, len(p_prog), beta_prog, len(beta_prog), \
+              mu_prog, len(mu_prog),  R0_min, R0_max, total_iterations)
+
+save_log_params(folder = folder, text = text)
+
 saved_nets = []
 for D,p,beta,mu in product(k_prog, p_prog, beta_prog, mu_prog):  
   for n_rl_ring in [rhu(x) for x in np.linspace(1,D,3)]:
@@ -39,11 +46,6 @@ for D,p,beta,mu in product(k_prog, p_prog, beta_prog, mu_prog):
       done_iterations+=1
       print("Iterations left: %s" % ( total_iterations - done_iterations ) )
       clique_size = D; cliques = int(N/D)
-      text = "N %s;\nk_prog %s, len: %s;\np_prog %s, len: %s;\nbeta_prog %s, len: %s;\nmu_prog %s, len: %s;\nR0_min %s, R0_max %s; \nTotal Iterations: %s;\n---\n" \
-              % (N, k_prog, len(k_prog), p_prog, len(p_prog), beta_prog, len(beta_prog), \
-              mu_prog, len(mu_prog),  R0_min, R0_max, total_iterations)
-
-      save_log_params(folder = folder, text = text, done_iterations = done_iterations)
 
       
       G = comm_caveman_relink(cliques=cliques, clique_size = D, 

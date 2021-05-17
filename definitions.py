@@ -13,6 +13,29 @@ def my_dir():
   #return "/content/"
   return "/home/hal21/MEGAsync/Tour_Physics2.0/Thesis/NetSciThesis/Project/Plots/Test/"
 
+def parameters_net_and_sir(folder = None, p_max = 0.1):
+  'progression of net-parameters'
+  #B-A_Model parameters
+  k_prog = np.arange(2,18,2) # these are the fully connected initial cliques
+  p_prog = np.linspace(0,p_max,int(p_max*10)+1)
+
+  bar_beta_prog = np.linspace(0.01,1,14)
+  beta_prog = np.concatenate(([0.001],bar_beta_prog))
+  mu_prog = beta_prog
+  R0_min = 0.3; R0_max = 6   
+  if folder == "B-A_Model": 
+    beta_prog = bar_beta_prog; mu_prog = beta_prog
+    p_prog = [0]; R0_min = 0; R0_max = 3  
+  if folder == "NNR_Conf_Model": k_prog = np.arange(2,34,2)    
+  if folder == "Caveman_Model": 
+    k_prog = np.arange(1,11,2) #https://www.prb.org/about/ -> Europe householdsize = 3
+    beta_prog = np.linspace(0.001,1,6); mu_prog = beta_prog
+
+  return k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max 
+  '''useful ro copy/paste: 
+  k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max =  parameters_net_and_sir(folder = folder, p_max = p_max) 
+  '''
+
 'for now the difference in name are only for the net'
 def func_file_name(folder, adj_or_sir, N, D, p, m = 0, N0 = 0, beta = 0.111, mu = 1.111):
   from definitions import rhu
@@ -258,8 +281,15 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
     ax_ymin, ax_ymax = ax.get_ylim()
     set_ax_ymax = 1.5*ax_ymax
     ax.set_ylim(ax_ymin, set_ax_ymax)
-    ax.legend(bbox_to_anchor=(1, 1), edgecolor="grey", loc='upper right') #add: leg = 
-  else: ax.legend(loc="best"); 'set legend in the "best" mat plot lib location'
+
+    handles, labels = plt.gca().get_legend_handles_labels()
+    order = [2,3,0,1,4]
+    ax.legend([handles[idx] for idx in order],[labels[idx] for idx in order],
+              bbox_to_anchor=(1, 1), edgecolor="grey", loc='upper right') #add: leg = 
+  else: 
+    handles, labels = plt.gca().get_legend_handles_labels()
+    order = [2,3,0,1,4]
+    ax.legend([handles[idx] for idx in order],[labels[idx] for idx in order],loc="best"); 'set legend in the "best" mat plot lib location'
 
 def rhu(n, decimals=0): #round_half_up
     import math
@@ -293,7 +323,8 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
 
   log_upper_path = my_dir + folder + "/" #"../Plots/Tests/WS_Epids/"
   my_dir+=folder+"/p%s/"%rhu(p,3)+adj_or_sir+"/" #"../Plots/Tests/WS_Epids/p0.001/AdjMat/"
-  file_name = func_file_name(folder, adj_or_sir, N, D, p, max_degree, m, N0)
+  file_name = func_file_name(folder = folder, adj_or_sir = adj_or_sir, \
+    N = N, D = D, p = p, m = m, N0 = N0)
   '''
   folder + "_N%s_D%s_k_{max}%s_m%s_N0_%s_p%s" % (
     N, D, max_degree, m, N0, rhu(p,3) ) + \
@@ -402,7 +433,7 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
     for line in sorted_lines:
       r.write(line)
 
-def plot_save_sir(G, folder, done_iterations = 1, p = 0, max_degree = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 10, numb_iter = 200):
+def plot_save_sir(G, folder, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 10, numb_iter = 200):
   import os.path
   from definitions import my_dir, func_file_name
 
@@ -440,10 +471,12 @@ def plot_save_sir(G, folder, done_iterations = 1, p = 0, max_degree = 0, beta = 
 
       'Intro R0-subfolder since R0 det epids behaviour on a fixed net'
       r0_folder = "R0_%s-%s/" % (intervals[i], intervals[i+1])
-      if folder != "W": r0_folder += "mu%s/" % (rhu(mu,3)) #"R0_1-2/mu0.16/"
+      if folder == "WS_Pruned": r0_folder += "mu%s/" % (rhu(mu,3)) #"R0_1-2/mu0.16/"
       #if folder == "WS_Epids": r0_folder += "D%s/" % D  #"R0_1-2/mu0.16/D6/"
       if not os.path.exists(my_dir + r0_folder): os.makedirs(my_dir + r0_folder)
-      file_name = func_file_name(folder, adj_or_sir, N, D, p, max_degree, beta = beta, mu = mu)
+      if not os.path.exists(my_dir + r0_folder + "/Sel_R0/"): os.makedirs(my_dir + r0_folder + "/Sel_R0/")
+      file_name = func_file_name(folder = folder, adj_or_sir = adj_or_sir, \
+        N = N, D = D, p = p, beta = beta, mu = mu)
       '''
       file_name = folder + "_%s_R0_%s_N%s_D%s_p%s_beta%s_mu%s"% (
             adj_or_sir, '{:.3f}'.format(rhu(beta/mu*D,3)),
@@ -496,7 +529,7 @@ def already_saved_list(folder, adj_or_sir, chr_min, chr_max = None, my_print = T
   if my_print: print(f"\nThe already saved {adj_or_sir} are", saved_list)
   return saved_list
 
-def plot_save_nes(G, p, folder, adj_or_sir, m = 1, N0 = 1, beta = 0.3, \
+def plot_save_nes(G, p, folder, adj_or_sir, m = 0, N0 = 0, beta = 0.3, \
   mu = 0.3, my_print = True, pos = None, partition = None, dsc_sorted_nodes = False, done_iterations = 1, chr_min = 0): #save new_entrys
   'save net only if does not exist in the .txt. So, to overwrite all just delete .txt'
   from definitions import already_saved_list, func_file_name
@@ -523,10 +556,10 @@ def save_log_params(folder, text, done_iterations = 1):
   import os
   from definitions import my_dir
   print("log_params is @:", my_dir() + folder)
-  if done_iterations == 1:
-    if not os.path.exists(my_dir() + folder): os.makedirs(my_dir() + folder)
-    with open(my_dir() +  folder + "/" + folder + "_log_params.txt", "a") as text_file: #write only 1 time
-        text_file.write(text)
+  #if done_iterations == 1:
+  if not os.path.exists(my_dir() + folder): os.makedirs(my_dir() + folder)
+  with open(my_dir() +  folder + "/" + folder + "_log_params.txt", "a") as text_file: #write only 1 time
+      text_file.write(text)
 
 '===Watts-Strogatz Model'
 'Number of iterations, i.e. or max power or fixed by user'
@@ -538,6 +571,7 @@ def pow_max(N, num_iter = "all"):
     return i-1
   return int(num_iter)
 
+'no needed anymore -- delete it'
 def ws_sir(G, folder, p, saved_nets, done_iterations, pruning = False, infos = False, beta = 0.001, mu = 0.16, start_inf = 10):    
   'round_half_up D for a better approximation of nx.c_w_s_graph+sir'
   N = G.number_of_nodes()
@@ -564,7 +598,8 @@ def config_pois_model(N, D, seed = 123, folder = None):
   np.random.seed(seed)
   degrees = pois_pos_degrees(D,N) #poiss distr with deg != 0
 
-  while(np.sum(degrees)%2 != 0): #i.e. sum is odd --> change seed
+  'change seed to have a even sum of the degrees'
+  while(np.sum(degrees)%2 != 0):
       seed+=1
       np.random.seed(seed)
       degrees = pois_pos_degrees(D,N)
@@ -573,33 +608,18 @@ def config_pois_model(N, D, seed = 123, folder = None):
   print("\nNetwork Created but w/o standard neighbors wiring!")
   G = nx.configuration_model(degrees, seed = seed)
 
-  if folder != "Overlapping_Rew": folder = "Config_Model" 
-  if folder == "Overlapping_Rew":
-    dsc_sorted_nodes = {k: v for k,v in sorted( G.degree(), key = lambda x: x[1], reverse=True)}
-    edges = set()
-    for node in dsc_sorted_nodes.keys():
-      k = dsc_sorted_nodes[node]//2
-      for i in range(1, k + 1):
-          edges.add((node, (node+i)%N))
-          edges.add((node, (node-i)%N))
-      if dsc_sorted_nodes[node] % 2 == 1: edges.add((node, (node+k+1)%N))
-      elif dsc_sorted_nodes[node] % 2 != 0: print("Error of Wiring: dsc[node]%2", dsc_sorted_nodes[node] % 2); break
-    replace_edges_from(G, edges)
-    remove_loops_parallel_edges(G)
-    avg_degree = np.sum([j for i,j in G.degree()])/G.number_of_nodes()
-    if avg_degree != D: print("!! avg_deg_Overl_Rew - avg_deg_Conf_Model = ", avg_degree - D)
-
-    return G
-
   'If D/N !<< 1, by removing loops and parallel edges, we lost degrees. Ex. with N = 50 = D, <k> = 28 != 49.8'
   check_loops_parallel_edges(G)
   remove_loops_parallel_edges(G)
   infos_sorted_nodes(G)
   print("End of %s " % folder)
-  
   return G
 
-def NN_pois_net(G, D, p = 0):
+def NN_pois_net(N, D, p = 0):
+  from definitions import config_pois_model
+ 
+  G = config_pois_model(N, D, seed = 123, folder = None)
+
   verbose = False
   def verboseprint(*args):
     if verbose == True:
@@ -712,11 +732,10 @@ def NN_Overl_pois_net(N, D, p, add_edges_only = False):
         if dsc_sorted_nodes[node] % 2 == 1: edges.add((node, (node+k+1)%N))
         elif dsc_sorted_nodes[node] % 2 != 0: print("Error of Wiring: dsc[node]%2", dsc_sorted_nodes[node] % 2); break
     replace_edges_from(G, edges)
-    #print("bef rmv loops and //", G.edges(), G.degree(), sum([j for i,j in G.degree()])/G.number_of_nodes())
-
     remove_loops_parallel_edges(G)
-    #print("after rmv loops and //", G.edges(), G.degree(), sum([j for i,j in G.degree()])/G.number_of_nodes())
-    #print([(i,npr.choice(G.nodes().pop(i))) for i in G.edges() if i == 0])
+
+    avg_degree = np.sum([j for i,j in G.degree()])/G.number_of_nodes()
+    if avg_degree != D: print("!! avg_deg_Overl_Rew - avg_deg_Conf_Model = ", avg_degree - D)
 
     all_edges = [list(G.edges(node)) for node in G.nodes()]
     all_edges = list(chain.from_iterable(all_edges))
@@ -990,5 +1009,51 @@ def caveman_defs():
   
   return partition_layout, comm_caveman_relink
 
+'===Barabasi-Albert Model'
+def bam(N,m,N0):
+  import random
+  '''    
+  Arguments:
+  1) N: number of nodes in the graph   
+  2) m: number of links to be added at each time
+  3) N0: starting fully connected clique
+  '''
+  
+  'Creates an empty graph'
+  G = nx.Graph()
+  
+  'adds the N0 initial nodes'
+  G.add_nodes_from(range(N0))
+  edges = []
+  
+  'creates the initial clique connecting all the N0 nodes'
+  edges = [(i,j) for i in range(N0) for j in range(i,N0) if i!=j]
+  
+  'adds the initial clique to the network'
+  G.add_edges_from(edges)
 
+  'list to store the nodes to be selected for the preferential attachment.'
+  'instead of calculating the probability of being selected a trick is used: if a node has degree k, it will appear'
+  'k times in the list. This is equivalent to select them according to their probability.'
+  prob = []
+  
+  'runs over all the reamining nodes'
+  for i in range(N0,N):
+      G.add_node(i)
+      'for each new node, creates m new links'
+      for j in range(m):
+          'creates the list of nodes'
+          for k in list(G.nodes):
+              'add to prob a node as many time as its degree'
+              for _ in range(G.degree(k)):
+                  prob.append(k)
+          'picks up a random node, so nodes will be selected proportionally to their degree'
+          node = random.choice(prob)
+          
+          G.add_edge(node,i)
+      
+          'the list must be created from 0 for every link since with every new link probabilities change'
+          prob.clear()
+  'returns the graph'
 
+  return G

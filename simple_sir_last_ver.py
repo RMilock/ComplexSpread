@@ -5,7 +5,7 @@ import networkx as nx
 # %matplotlib inline
 from itertools import product
 import os #to create a folder
-from definitions import ws_sir, plot_save_nes, pow_max, save_log_params
+from definitions import plot_save_nes, pow_max, save_log_params, parameters_net_and_sir
 
 '''
 CONNECTED_Watts-Strogatz Net!
@@ -17,26 +17,27 @@ it drives to a nearer pruning.
 '''
 
 'rewire all the edges with a probability of p'
-N = int(1e3)
+N = int(1e3); p_max = 0.2
 
 def even_int(x):
   if int(x) % 2 != 0: return int(x-1)
   return int(x)
 
-for pruning in [False]: 
+for pruning in [True, False]: 
   if pruning == True:
-    p_max = 0.2
-    p_prog = np.linspace(0,p_max,int(p_max*10)+1)
+    folder = "WS_Pruned"
+    
+    _, p_prog, _, mu_prog, R0_min, R0_max =  parameters_net_and_sir(folder = folder, p_max = p_max) 
+    #old mu_prog: np.linspace(0.16,1,10)
+    #R0_min = 0; R0_max = 4
+    #p_prog = np.linspace(0,p_max,int(p_max*10)+1)
     print("---I'm pruning!")
-    betas = [1e-3, 2e-3, 1e-4]
+    betas = [1e-3, 2e-3]
 
     'In WS model, if D = odd, D = D - 1. So, convert it now'
     k_prog = [even_int(N/x) for x in \
               [2**i for i in range(0,pow_max(N, num_iter = "all"))]]*len(betas) #if pow_max +1 --> error of connectivity: D = k_odd - 1
-    beta_prog = [beta*N/k for beta in betas for k in k_prog[:len(set(k_prog))]]
-    mu_prog = np.linspace(0.16,1,10) #[0.467, 0.385, 0.631]
-    R0_min = 0; R0_max = 4
-    folder = "WS_Pruned" 
+    beta_prog = [beta*N/k for beta in betas for k in k_prog[:len(set(k_prog))]] 
 
     total_iterations = 0
     for mu, p in product(mu_prog, p_prog):
@@ -72,14 +73,18 @@ for pruning in [False]:
     'test != kind of '
     print("---I'm NOT pruning!")
     'if p_prog has sequence save_it like ./R0_0-1/R0_0.087'
+    '''
     p_prog = np.concatenate((np.array([0.001]), np.linspace(0.012,0.1,10)))
     p_prog = [0,0.1]
-    mu_prog = np.linspace(0.95,1,6)
-    beta_prog = np.linspace(0.95,1,6)
+    mu_prog = np.linspace(0.99,1,6)
+    beta_prog = np.linspace(0.99,1,6)
     k_prog = np.arange(2,18,2)
     R0_min = 0.3; R0_max = 5
-    folder = "WS_Epids"
-    
+    '''
+    folder = "WS_Epids"; p_max = 0.2
+    k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max =  parameters_net_and_sir(folder = folder, p_max = p_max) 
+    p_prog = np.concatenate((np.array([0.001]), np.linspace(0.012,0.1,10)))
+
     total_iterations = 0
     for D, p in product(k_prog, p_prog):
       for beta, mu in zip(beta_prog, mu_prog):

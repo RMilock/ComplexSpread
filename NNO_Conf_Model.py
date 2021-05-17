@@ -1,17 +1,19 @@
 import numpy as np
 from itertools import product
-from definitions import NN_Overl_pois_net, save_log_params, rhu, plot_save_nes 
+from definitions import NN_Overl_pois_net, save_log_params, plot_save_nes , parameters_net_and_sir
 
 N = int(1e3); p_max = 0.1; add_edges_only = True
 
 'progression of net-parameters'
+'''
 k_prog = np.arange(2,18,2)
 p_prog = np.linspace(0,p_max,int(p_max*10)+1)
 beta_prog = np.linspace(0.01,1,10)
 mu_prog = np.linspace(0.01,1,8)
-R0_min = 0; R0_max = 6
+R0_min = 0; R0_max = 6'''
 
 folder = f"Overlapping_Rew_Add_{add_edges_only}"
+k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max =  parameters_net_and_sir(folder = folder, p_max = p_max) 
 
 'try only with p = 0.1 -- since NN_Overl_add_edge augment D, we are overestimating tot_number'
 total_iterations = 0
