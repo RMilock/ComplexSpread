@@ -23,7 +23,7 @@ def even_int(x):
   if int(x) % 2 != 0: return int(x-1)
   return int(x)
 
-for pruning in [True, False]: 
+for pruning in [False]: 
   if pruning == True:
     folder = "WS_Pruned"
     
@@ -83,11 +83,10 @@ for pruning in [True, False]:
     '''
     folder = "WS_Epids"; p_max = 0.2
     k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max =  parameters_net_and_sir(folder = folder, p_max = p_max) 
-    p_prog = np.concatenate((np.array([0.001]), np.linspace(0.012,0.1,10)))
+    p_prog = np.concatenate((np.array([0.001]), np.linspace(0.01,0.1,5)))
 
     total_iterations = 0
-    for D, p in product(k_prog, p_prog):
-      for beta, mu in zip(beta_prog, mu_prog):
+    for D, p, beta, mu in product(k_prog, p_prog, beta_prog, mu_prog):
         if  R0_min < beta*D/mu < R0_max:
           total_iterations += 1
     print("Total SIR Epids Iterations:", total_iterations)
@@ -107,8 +106,7 @@ for pruning in [True, False]:
     print("New AdjMat", line_count)
     '''
     done_iterations = 0; saved_nets = []
-    for D,p in product(k_prog, p_prog):  
-      for beta, mu in zip(beta_prog, mu_prog):
+    for D, p, beta, mu in product(k_prog, p_prog, beta_prog, mu_prog): 
         'With p = 1 and <k>/N ~ 0, degree distr is sim to a Poissonian'
         if R0_min < beta*D/mu < R0_max and beta <= 1:
           done_iterations+=1
