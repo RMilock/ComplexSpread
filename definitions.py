@@ -20,9 +20,11 @@ def parameters_net_and_sir(folder = None, p_max = 0.1):
   p_prog = np.linspace(0,p_max,int(p_max*10)+1)
 
   bar_beta_prog = np.linspace(0.01,1,14)
-  beta_prog = np.concatenate(([0.001],bar_beta_prog))
+  beta_prog = bar_beta_prog #np.concatenate(([0.001],bar_beta_prog))
   mu_prog = beta_prog
-  R0_min = 0.3; R0_max = 6   
+  R0_min = 0; R0_max = 6   
+  if folder == "WS_Epids": 
+    beta_prog = np.linspace(0.01,1,5); mu_prog = beta_prog
   if folder == "B-A_Model": 
     beta_prog = bar_beta_prog; mu_prog = beta_prog
     p_prog = [0]; R0_min = 0; R0_max = 3  
