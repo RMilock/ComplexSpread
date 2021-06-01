@@ -16,7 +16,6 @@ N = int(1e3); p_max = 0.1; folder = "Caveman_Model"
 
 'progression of net-parameters'
 k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max =  parameters_net_and_sir(folder = folder, p_max = p_max) 
-
 '''
 p_prog = np.linspace(0,p_max,2)
 mu_prog = np.linspace(0.001,1,7)
@@ -36,7 +35,6 @@ done_iterations = 0
 text = "N %s;\nk_prog %s, len: %s;\np_prog %s, len: %s;\nbeta_prog %s, len: %s;\nmu_prog %s, len: %s;\nR0_min %s, R0_max %s; \nTotal Iterations: %s;\n---\n" \
               % (N, k_prog, len(k_prog), p_prog, len(p_prog), beta_prog, len(beta_prog), \
               mu_prog, len(mu_prog),  R0_min, R0_max, total_iterations)
-
 save_log_params(folder = folder, text = text)
 
 saved_nets = []
@@ -49,18 +47,18 @@ for D,p,beta,mu in product(k_prog, p_prog, beta_prog, mu_prog):
 
       
       G = comm_caveman_relink(cliques=cliques, clique_size = D, 
-                              p = p, relink_rnd = D, numb_rel_inring = 1)
+                              p = p, relink_rnd = D, numb_link_inring = 1)
       
       partition = {node : np.int(node/clique_size) for node in range(cliques * clique_size)}
       pos = partition_layout(G, partition, ratio=clique_size/cliques*0.1)
 
-      plot_save_nes(G = comm_caveman_relink(cliques=cliques, clique_size = D, p = p, relink_rnd = D, numb_rel_inring = 1),
+      plot_save_nes(G = comm_caveman_relink(cliques=cliques, clique_size = D, p = p, relink_rnd = D, numb_link_inring = 1),
       pos = pos, partition = partition, p = p, folder = folder, adj_or_sir="AdjMat", done_iterations=done_iterations)
 
       'diff VS plot_save_nes: "SIR", no pos, no partition'
       plot_save_nes(G = comm_caveman_relink(cliques=cliques, clique_size = D, 
-                              p = p, relink_rnd = D, numb_rel_inring = 1),
-      p = p, folder = folder, adj_or_sir="SIR", beta = beta, mu = mu, done_iterations=done_iterations)
+                              p = p, relink_rnd = D, numb_link_inring = 1),
+      p = p, folder = folder, adj_or_sir="SIR", R0_max = R0_max, beta = beta, mu = mu, done_iterations=done_iterations)
 
     '''
     if "N%s_D%s_p%s"% (N,D,rhu(p,3)) not in saved_nets: 

@@ -1,9 +1,10 @@
 import numpy as np
 from itertools import product
+import networkx as nx
 from definitions import save_log_params, plot_save_nes, \
 config_pois_model, NN_pois_net, parameters_net_and_sir
 
-'save scaled version for better visualization'
+'save scaled version for better visualization - not used'
 def scaled_conf_pois(G,D,cut_off=30):    
   scaled_N = int(G.number_of_nodes()/cut_off) # int(D/cut_off)
   return config_pois_model(scaled_N, D)
@@ -18,7 +19,7 @@ def scaled_conf_pois(G,D,cut_off=30):
   <br>Ex., $D = 50 = N, <k> ~ 28$. For $N= 1000 \text{ and } D = 3 \textrm{ or } 8, 
   <k> \textrm{is acceptable.}$
 '''
-N = int(1e3); p_max = 0;  folder = "NNR_Conf_Model"
+N = int(1e3); p_max = 0.1;  folder = "NN_Conf_Model"
 
 'progression of net-parameters'
 '''
@@ -31,7 +32,7 @@ R0_min = 0.5; R0_max = 6
 '''
 
 k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max =  parameters_net_and_sir(folder = folder, p_max = p_max) 
-
+R0_max = 6
 'try only with p = 0.1'
 total_iterations = 0
 for D,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog):  
@@ -51,18 +52,11 @@ for D,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog):
   if R0_min < beta*D/mu < R0_max:
     done_iterations+=1
     print("\nIterations left: %s" % ( total_iterations - done_iterations ) )
-    
-    done_iterations = 0; saved_nets = []
-    for D,p in product(k_prog, p_prog):  
-      for beta, mu in zip(beta_prog, mu_prog):
-        'With p = 1 and <k>/N ~ 0, degree distr is sim to a Poissonian'
-        if R0_min < beta*D/mu < R0_max and beta <= 1:
-          done_iterations+=1
-          print("Iterations left: %s" % ( total_iterations - done_iterations ) )
+    G = NN_pois_net(N, ext_D = D, p = p)
+    print("connected components", len(list(nx.connected_components(G))))
 
-          G = NN_pois_net(N, D = D)
-          plot_save_nes(G = G, 
-          p = p, folder = folder, adj_or_sir="AdjMat", done_iterations=done_iterations)
-          plot_save_nes(G = G,
-          p = p, folder = folder, adj_or_sir="SIR", beta = beta, mu = mu, done_iterations=done_iterations)
-          print("---")
+    plot_save_nes(G = G,
+    p = p, folder = folder, adj_or_sir="AdjMat", done_iterations=done_iterations)
+    plot_save_nes(G = G,
+    p = p, folder = folder, adj_or_sir="SIR", R0_max = R0_max, beta = beta, mu = mu, done_iterations=done_iterations)
+    print("---")

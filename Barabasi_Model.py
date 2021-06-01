@@ -7,6 +7,7 @@ from itertools import product
 from definitions import save_log_params, plot_save_nes, bam, parameters_net_and_sir
    
 def plot_save_net_sir(G, folder, N, k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max):
+  'unique try of saving both, but generalize to all other nets'
 
   'try only with p = 0.1'
   total_iterations = 0
@@ -34,7 +35,7 @@ def plot_save_net_sir(G, folder, N, k_prog, p_prog, beta_prog, mu_prog, R0_min, 
       plot_save_nes(G, m = m, N0 = N0,
       p = p, folder = folder, adj_or_sir="AdjMat", done_iterations=done_iterations)
       plot_save_nes(G, m = m, N0 = N0,
-      p = p, folder = folder, adj_or_sir="SIR", beta = beta, mu = mu, done_iterations=done_iterations)
+      p = p, folder = folder, adj_or_sir="SIR", R0_max = R0_max, beta = beta, mu = mu, done_iterations=done_iterations)
 
 N = int(1e3); p_max = 0 
 

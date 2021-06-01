@@ -23,7 +23,7 @@ def even_int(x):
   if int(x) % 2 != 0: return int(x-1)
   return int(x)
 
-for pruning in [False]: 
+for pruning in [True, False]: 
   if pruning == True:
     folder = "WS_Pruned"
     
@@ -64,7 +64,7 @@ for pruning in [False]:
           plot_save_nes(G = nx.connected_watts_strogatz_graph( n = N, k = D, p = p, seed = 1 ), 
           p = p, folder = folder, adj_or_sir="AdjMat", done_iterations=done_iterations)
           plot_save_nes(G = nx.connected_watts_strogatz_graph( n = N, k = D, p = p, seed = 1 ),
-          p = p, folder = folder, adj_or_sir="SIR", beta = beta, mu = mu, done_iterations=done_iterations)
+          p = p, folder = folder, adj_or_sir="SIR", R0_max = R0_max, beta = beta, mu = mu, done_iterations=done_iterations)
           print("---")
     
     save_log_params(folder = folder, text = text)
@@ -83,7 +83,7 @@ for pruning in [False]:
     '''
     folder = "WS_Epids"; p_max = 0.2
     k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max =  parameters_net_and_sir(folder = folder, p_max = p_max) 
-    p_prog = np.concatenate((np.array([0.001]), np.linspace(0.01,0.1,5)))
+    #p_prog = np.concatenate((np.array([0.001]), np.linspace(0.01,0.1,5)))
 
     total_iterations = 0
     for D, p, beta, mu in product(k_prog, p_prog, beta_prog, mu_prog):

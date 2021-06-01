@@ -36,4 +36,4 @@ for D,p,beta,mu in product(k_prog, p_prog, beta_prog, mu_prog,):
     plot_save_nes(G = NN_Overl_pois_net(N, D, p = p, add_edges_only = add_edges_only), 
     p = p, folder = folder, adj_or_sir="AdjMat", done_iterations=done_iterations)
     plot_save_nes(G = NN_Overl_pois_net(N, D, p = p, add_edges_only = add_edges_only), 
-    p = p, folder = folder, adj_or_sir="SIR", beta = beta, mu = mu, done_iterations=done_iterations)
+    p = p, folder = folder, adj_or_sir="SIR", R0_max = R0_max, beta = beta, mu = mu, done_iterations=done_iterations)

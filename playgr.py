@@ -1,17 +1,15 @@
+from scipy.stats import poisson
 import numpy as np
+import matplotlib.pyplot as plt
 
-beta_prog = np.linspace(0.001,1,15)
-print(beta_prog)
+bins = np.arange(-40,40)
+D = 3.5643
 
-a = np.linspace(0.001,0.01,8)
-b = np.linspace(0.01,1,7)[1:]
+rv = poisson(D)
+y = rv.pmf(bins)
+mean1 = rv.mean()
+mean2 = np.sum(y*bins)/np.sum(y)
 
-c = np.concatenate((a,b))
-#c = np.delete( c, np.where(c == 0.01)[0][0])
-
-print(c)
-
-bar_beta_prog = np.linspace(0.01,1,14)
-beta_prog = np.concatenate(([0.001],bar_beta_prog))
-
-print(beta_prog)
+plt.plot(bins, y    )
+print(mean1-mean2, mean1 == mean2 )
+plt.show()
