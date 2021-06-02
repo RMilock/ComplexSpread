@@ -5,9 +5,10 @@ from functools import reduce
 import numpy as np
 from itertools import product
 from definitions import save_log_params, plot_save_nes, bam, parameters_net_and_sir
-   
+      
 def plot_save_net_sir(G, folder, N, k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max):
   'unique try of saving both, but generalize to all other nets'
+
 
   'try only with p = 0.1'
   total_iterations = 0
