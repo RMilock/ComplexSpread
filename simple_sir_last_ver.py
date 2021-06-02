@@ -61,6 +61,7 @@ for pruning in [True, False]:
           done_iterations+=1
           print("Iterations left: %s" % ( total_iterations - done_iterations ) )
 
+
           plot_save_nes(G = nx.connected_watts_strogatz_graph( n = N, k = D, p = p, seed = 1 ), 
           p = p, folder = folder, adj_or_sir="AdjMat", done_iterations=done_iterations)
           plot_save_nes(G = nx.connected_watts_strogatz_graph( n = N, k = D, p = p, seed = 1 ),
