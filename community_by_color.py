@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 from definitions import save_log_params, parameters_net_and_sir, caveman_defs
     
+    
 'start of the main()'
 from itertools import product
 from definitions import rhu, plot_save_nes
