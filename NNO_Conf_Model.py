@@ -12,6 +12,7 @@ beta_prog = np.linspace(0.01,1,10)
 mu_prog = np.linspace(0.01,1,8)
 R0_min = 0; R0_max = 6'''
 
+
 folder = f"Overlapping_Rew_Add_{add_edges_only}"
 k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max =  parameters_net_and_sir(folder = folder, p_max = p_max) 
 'try only with p = 0.1 -- since NN_Overl_add_edge augment D, we are overestimating tot_number'
