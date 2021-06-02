@@ -47,6 +47,7 @@ text = "N %s;\nk_prog %s, len: %s;\np_prog %s, len: %s;\nbeta_prog %s, len: %s;\
         mu_prog, len(mu_prog),  R0_min, R0_max, total_iterations)
 save_log_params(folder = folder, text = text)
 
+
 saved_nets = []
 for D,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog):  
   if R0_min < beta*D/mu < R0_max:
