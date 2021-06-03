@@ -79,7 +79,7 @@ def plot_params():
 
 def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
   'If mf == False, the neighbors are not fixed;' 
-  'If mf == True, "Quenched" - MF_sir with fixed numb of neighbors'
+  'If mf == True, std mf by choosing @ rnd the num of neighbors'
 
   import random
   #here's the modifications of the "test_ver1"
@@ -111,38 +111,38 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
   'initilize prevalence and revocered list'
   prevalence = [len(inf_list)/N]
   recovered = [0]
-  cum_positives = [start_inf/N]
+  cum_prevalence = [start_inf/N]
   num_susc = [N-start_inf]
 
   'start and continue whenever there s 1 infected'
   while(len(inf_list)>0):        
     daily_new_inf = 0
-    'Infection Phase: each infected tries to infect all of the neighbors'
-    for i in inf_list:
-        'Select the neighbors of the infected node'
-        if not mf: tests = G.neighbors(i) #only != wrt to the SIS: contact are taken from G.neighbors            
-        if mf: 
-          ls = list(range(N)); ls.remove(i)
-          tests = random.choices(ls, k = int(mean)) #spread very fast since multiple infected center
-        tests = [int(x) for x in tests] #convert 35.0 into int
-        for j in tests:
-            'If the contact is susceptible and not infected by another node in the future_state, try to infect it'
-            if current_state[j] == 'S' and future_state[j] == 'S':
-                if random.random() < beta:
-                    future_state[j] = 'I'; daily_new_inf += 1
-                else:
-                    future_state[j] = 'S'
     
-    cum_positives.append(cum_positives[-1]+daily_new_inf/N)  
-    #loop +=1;
-    #print("loop:", loop, cum_total_inf, cum_total_inf[-1], daily_new_inf/N)
-
-    'Recovery Phase: each infected in the current state recovers with probability mu'        
+    'Infection Phase: inf_list = prev_time infecteds'
+    'each infected tries to infect all of the neighbors'
     for i in inf_list:
-        if random.random() < mu:
-            future_state[i] = 'R'
-        else:
-            future_state[i] = 'I'
+      'Select the neighbors of the infected node'
+      if not mf: tests = G.neighbors(i) #only != wrt to the SIS: contact are taken from G.neighbors            
+      if mf: 
+        ls = list(range(N)); ls.remove(i)
+        tests = random.choices(ls, k = int(mean)) #spread very fast since multiple infected center
+      tests = [int(x) for x in tests] #convert 35.0 into int
+      for j in tests:
+        'If the contact is susceptible and not infected by another node in the future_state, try to infect it'
+        if current_state[j] == 'S' and future_state[j] == 'S':
+          if random.random() < beta:
+            future_state[j] = 'I'; daily_new_inf += 1 
+
+          else:
+            future_state[j] = 'S'
+    
+    'Recovery Phase: only the prev inf nodes (=inf_list) recovers with probability mu'
+    'not the new infected'        
+    for i in inf_list:
+      if random.random() < mu:
+        future_state[i] = 'R'
+      else:
+        future_state[i] = 'I'
     
     'Time update: once infections and recovery ended, we move to the next time-step'
     'The future state becomes the current one'
@@ -155,21 +155,32 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
     'Saves the fraction of infected and recovered in the current time-step'
     prevalence.append(len(inf_list)/float(N))
     recovered.append(len(rec_list)/float(N))
+    cum_prevalence.append(cum_prevalence[-1]+daily_new_inf)  
+    
+    '''def diff_prev(): 
+      diff = rhu(prevalence[-1],3)-rhu(prevalence[-2],3)
+      if diff > 0: return diff
+      return 0
 
-    num_susc.append(N*(1 - prevalence[-1] - recovered[-1])) #
+    if not np.isclose( daily_new_inf/N, diff_prev() ):
+      print("Not close:: daily_new_cases/N == prevalence[-1]", prevalence[-4:], daily_new_inf/N, 
+      prevalence[-1], prevalence[-2], diff_prev(), rhu(diff_prev(),3))'''
+    
+    num_susc.append(N*(1 - prevalence[-1] - recovered[-1]))
     #print("\nnum_susc, prevalence, recovered",num_susc, prevalence, recovered, 
-    #len(num_susc), len(prevalence), len(recovered))
+    # len(num_susc), len(prevalence), len(recovered))
   
   degrees = [j for i,j in G.degree()]
-  #print(degrees, np.sum(degrees), N)
-  D = np.sum(degrees) / N
+  sum_degrees = np.sum(degrees)
+  #print("sup_degrees", sum_degrees)
+  D = sum_degrees / N
 
-  avg_R = beta*D/mu
-  #print("sir::b,m,D,avg_R1", beta, mu, D, avg_R)
+  #print("R0, b,m,D", beta*D/mu, beta, mu, D)
   avg_R = beta*D/(mu*num_susc[0])*(np.sum(num_susc))/len(prevalence)
-  #print("sir::avg_R2", np.sum(num_susc), len(prevalence), avg_R)
+  #print("num_su[0], np.sum(num_susc), len(prev), avg_R2", \
+  #  num_susc[0],np.sum(num_susc), len(prevalence), avg_R)
 
-  return avg_R, prevalence, recovered, cum_positives
+  return avg_R, prevalence, recovered, cum_prevalence
 
 def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_inf = 10,verbose = False):
   'def a function that iters numb_iter and make an avg of the trajectories'
@@ -192,7 +203,7 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
     avg_R, prev, rec, cum_prev = sir(G, beta = beta, mu = mu, start_inf = start_inf, mf = mf)
     tmp_traj = prev, rec, cum_prev
     #print("\n avg_R %s, ", avg_R)
-    itermean_R += avg_R / max(1,numb_iter)
+    itermean_R += (avg_R) / max(1,numb_iter)
     if i % 50 == 0: 
       time_1sir = dt.datetime.now()-sir_start_time
       print("The time for 1 sir is", time_1sir)
@@ -261,7 +272,8 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
   itermean_R_net, trajectories, avg = itermean_sir(G, mf = False, beta = beta, mu = mu, start_inf  = start_inf, numb_iter=numb_iter)
   print("\nMF-SIR loading...")
   itermean_R_mf, mf_trajectories, mf_avg = itermean_sir(G, mf = True, mu = mu, beta = beta, start_inf = start_inf, numb_iter = numb_iter)
-
+  print("itermean_R_net %s VS itermean_R_mf: %s" %(itermean_R_net, itermean_R_mf))
+  
   'plotting the many realisations'    
   colors = ["paleturquoise","wheat","lightgreen", "thistle"]
   
