@@ -95,6 +95,7 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
   inf_list = [] #infected node list @ each t
   prevalence = [] # = len(inf_list)/N, i.e. frac of daily infected for every t
   recovered = [] #recovered nodes for a fixed t
+  arr_daily_new_inf = [] #arr to computer SD(daily_new_inf(t)) for daily_new_inf(t)!=0
 
   'Initial Conditions'
   current_state = ['S' for i in node_labels] 
@@ -131,10 +132,14 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
             'If the contact is susceptible and not infected by another node in the future_state, try to infect it'
             if current_state[j] == 'S' and future_state[j] == 'S':
                 if random.random() < beta:
-                    future_state[j] = 'I'; daily_new_inf += 1
+                    future_state[j] = 'I'; daily_new_inf += 1     
                 else:
                     future_state[j] = 'S'
     
+    #print("dail_n_i", daily_new_inf)
+    if daily_new_inf != 0: arr_daily_new_inf.append(daily_new_inf)
+    #print("arr_ni", arr_daily_new_inf)
+
     'Recovery Phase: only the prev inf nodes (=inf_list) recovers with probability mu'
     'not the new infected'        
     for i in inf_list:
@@ -162,17 +167,30 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
     #print("\nnum_susc, prevalence, recovered",num_susc, prevalence, recovered, 
     #len(num_susc), len(prevalence), len(recovered))
   
-  degrees = [j for i,j in G.degree()]
-  sum_degrees = np.sum(degrees)
-  #print("sup_degrees", sum_degrees)
-  D = sum_degrees / N
+  if not mf:
+    ddof = 0
+    if len(arr_daily_new_inf) > 1: ddof = 1
+    if arr_daily_new_inf == []: arr_daily_new_inf = 0
+    avg_dn_inf = np.mean(arr_daily_new_inf)
+    std_dn_inf = np.std( arr_daily_new_inf, ddof = ddof )
+    #print("dni, arr_daily, std", daily_new_inf, arr_daily_new_inf, std_dn_inf)
 
-  #print("R0, b,m,D", beta*D/mu, beta, mu, D)
-  avg_R = beta*D/(mu*num_susc[0])*(np.sum(num_susc))/len(prevalence)
-  #print("num_su[0], np.sum(num_susc), len(prev), avg_R2", \
-  #  num_susc[0],np.sum(num_susc), len(prevalence), avg_R)
+    degrees = [j for i,j in G.degree()]
+    sum_degrees = np.sum(degrees)
+    #print("sum_degrees", sum_degrees)
+    D = sum_degrees / N
 
-  return avg_R, prevalence, recovered, cum_prevalence
+    #print("R0, b,m,D", beta*D/mu, beta, mu, D)
+    avg_R = beta*D/(mu*num_susc[0])*(np.sum(num_susc))/len(prevalence)
+    #print("num_su[0], np.sum(num_susc), len(prev), avg_R2", \
+    #  num_susc[0],np.sum(num_susc), len(prevalence), avg_R)
+
+    return avg_R, avg_dn_inf, std_dn_inf, prevalence, recovered, cum_prevalence
+  
+  return prevalence, recovered, cum_prevalence
+  
+  
+  #return avg_R, prevalence, recovered, cum_prevalence
 
 def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_inf = 10,verbose = False):
   'def a function that iters numb_iter and make an avg of the trajectories'
@@ -184,7 +202,7 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
   numb_idx_cl = 3
   trajectories = [[] for _ in range(numb_idx_cl)]
   avg = [[] for _ in range(numb_idx_cl)]
-  itermean_R = 0
+  itermean_R = 0; itermean_std_dn_inf = 0
   counts = [[],[],[]]
   max_len = 0
   start_time = dt.datetime.now()
@@ -192,24 +210,32 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
   'find the maximum time of 1 scenario among numb_iter ones'
   for i in range(numb_iter):
     sir_start_time = dt.datetime.now()
-    avg_R, prev, rec, cum_prev = sir(G, beta = beta, mu = mu, start_inf = start_inf, mf = mf)
+    if not mf:
+      avg_R, avg_dn_inf, std_dn_inf, prev, rec, cum_prev = sir(G, beta = beta, mu = mu, start_inf = start_inf, mf = mf)
+      #print("\n avg_R %s, ", avg_R)
+      itermean_R += avg_R / max(1,numb_iter)
+      itermean_std_dn_inf += std_dn_inf / max(1,numb_iter)
+    else: prev, rec, cum_prev = sir(G, beta = beta, mu = mu, start_inf = start_inf, mf = mf)
+    
     tmp_traj = prev, rec, cum_prev
-    #print("\n avg_R %s, ", avg_R)
-    itermean_R += avg_R / max(1,numb_iter)
-    if i % 50 == 0: 
+    if (i+1) % 50 == 0: 
       time_1sir = dt.datetime.now()-sir_start_time
-      print("The time for 1 sir is", time_1sir)
+      #print("The time for 1 sir is", time_1sir)
       time_50sir = dt.datetime.now()-start_time
-      print("time for %s its of max-for-loop %s" % (i+1, time_50sir))
+      print("Total time for %s its of max-for-loop %s. Time for 1 sir %s" % (i+1, time_50sir, time_1sir))
+      if not mf:
+        print("After %s its: avg_dn_inf, std_dn_inf, std_dn_inf / max(1,numb_iter), itermean_std:\n %s" %
+          (i+1, (avg_dn_inf, std_dn_inf, std_dn_inf / max(1,numb_iter), itermean_std_dn_inf)) 
+        )
       start_time = dt.datetime.now()
     for idx_cl in range(numb_idx_cl):
-        #if idx_cl == 0: print("\ntmp_traj", tmp_traj)
-        trajectories[idx_cl].append(tmp_traj[idx_cl])
-        tmp_max = len(max(tmp_traj, key = len))
-        if tmp_max > max_len: max_len = tmp_max
-        #print("\nIteration: %s, tmp_max: %s, len tmp_traj: %s, len tmp_traj %s, len traj[%s] %s" % 
-        #  (i, len(max(tmp_traj, key = len)), len(tmp_traj),  \
-        #    len(tmp_traj[idx_cl]), idx_cl, len(trajectories[idx_cl]) ))
+      #if idx_cl == 0: print("\ntmp_traj", tmp_traj)
+      trajectories[idx_cl].append(tmp_traj[idx_cl])
+      tmp_max = len(max(tmp_traj, key = len))
+      if tmp_max > max_len: max_len = tmp_max
+      #print("\nIteration: %s, tmp_max: %s, len tmp_traj: %s, len tmp_traj %s, len traj[%s] %s" % 
+      #  (i, len(max(tmp_traj, key = len)), len(tmp_traj),  \
+      #    len(tmp_traj[idx_cl]), idx_cl, len(trajectories[idx_cl]) ))
 
   #print("\nOverall max_len", max_len)
   #print("All traj", trajectories)
@@ -217,9 +243,11 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
   plot_trajectories = copy.deepcopy(trajectories)
 
   start_time = dt.datetime.now()
-
   for i in range(numb_iter):
-    if i % 50 == 0: print("time for %s for avg-for-loop %s" % (i, dt.datetime.now()-start_time))
+    if (i+1) % 50 == 0: 
+        time_50sir = dt.datetime.now()-start_time
+        print("Total time for %s its of avg-for-loop %s. Time for 1 sir %s" % (i+1, time_50sir, time_1sir))
+        start_time = dt.datetime.now()
     for idx_cl in range(numb_idx_cl):
       'create a list repeating the last element to reach a len of max_len'
       last_el_list = [trajectories[idx_cl][i][-1] for _ in range(max_len-len(trajectories[idx_cl][i]))]
@@ -248,7 +276,8 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
 
     if i == 199: print("End of avg on 200 scenarios")
 
-  return itermean_R, plot_trajectories, avg
+  if not mf: return itermean_R, itermean_std_dn_inf, plot_trajectories, avg
+  return plot_trajectories, avg
 
 def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter = 200):
 
@@ -261,10 +290,10 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
   'plot ratio of daily infected and daily cumulative recovered'
   'Inf and Cum_Infected from Net_Sir; Recovered from MF_SIR'
   print("\nNetwork-SIR loading...")
-  itermean_R_net, trajectories, avg = itermean_sir(G, mf = False, beta = beta, mu = mu, start_inf  = start_inf, numb_iter=numb_iter)
+  itermean_R_net, itermean_std_inf_net, trajectories, avg = itermean_sir(G, mf = False, beta = beta, mu = mu, start_inf  = start_inf, numb_iter=numb_iter)
+  print("Final itermean_std_inf_net", itermean_std_inf_net)
   print("\nMF-SIR loading...")
-  itermean_R_mf, mf_trajectories, mf_avg = itermean_sir(G, mf = True, mu = mu, beta = beta, start_inf = start_inf, numb_iter = numb_iter)
-
+  mf_trajectories, mf_avg = itermean_sir(G, mf = True, mu = mu, beta = beta, start_inf = start_inf, numb_iter = numb_iter)
   'plotting the many realisations'    
   colors = ["paleturquoise","wheat","lightgreen", "thistle"]
   
@@ -317,7 +346,7 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
     order = [2,3,0,1,4]
     ax.legend([handles[idx] for idx in order],[labels[idx] for idx in order],loc="best"); 'set legend in the "best" mat plot lib location'
 
-  return itermean_R_net, itermean_R_mf
+  return itermean_R_net, itermean_std_inf_net
 
 def rhu(n, decimals=0): #round_half_up
     import math
@@ -330,7 +359,6 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
   from functools import reduce
   import networkx as nx
   from scipy.stats import poisson
-  
   
   mode = "a"
   #if done_iterations == 1: mode = "w"
@@ -469,17 +497,18 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
     for line in sorted_lines:
       r.write(line)
 
-def plot_save_sir(G, folder, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 10, numb_iter = 200):
+def plot_save_sir(G, folder, std_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 10, numb_iter = 200):
   import os.path
   from definitions import my_dir, func_file_name
   import datetime as dt
+  import matplotlib.pylab as plt
   start_time = dt.datetime.now()
 
   mode = "a"
   if done_iterations == 1: mode = "w"
   my_dir = my_dir() #"/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/Tests/"
   N = G.number_of_nodes()
-  D = np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes()
+  D = np.sum([j for (i,j) in G.degree()]) / G.number_of_nodes()
   adj_or_sir = "SIR"
   'find the major hub and the "ousiders", i.e. highly connected nodes'
   infos = G.degree()
@@ -499,7 +528,8 @@ def plot_save_sir(G, folder, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16
   plot_params()
   intervals = [x for x in np.arange(R0_max+1)]
   N = G.number_of_nodes()
-  R0 = beta * D / mu 
+  R0 = beta * D / mu
+  dict_std_inf = {}
 
   for i in range(len(intervals)-1):
     if intervals[i] <= R0 < intervals[i+1]:
@@ -524,7 +554,7 @@ def plot_save_sir(G, folder, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16
       'plot always sir'
       rhuD2 = rhu(D,2)
       print("\nThe model has N: %s, D: %s, beta: %s, mu: %s, p: %s, R0: %s" % (N,rhuD2,rhu(beta,3),rhu(mu,3),rhu(p,3),rhu(R0,3)) )
-      itermean_R_net, itermean_R_mf = \
+      itermean_R_net, itermean_std_inf_net = \
         plot_sir(G, ax=ax, folder = folder, beta = beta, mu = mu, start_inf = start_inf, numb_iter = numb_iter)
       plt.subplots_adjust(
       top=0.920,
@@ -538,11 +568,43 @@ def plot_save_sir(G, folder, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16
       #plt.show()
       plt.savefig( file_path )
       print("time 1_plot_save_sir:", dt.datetime.now()-start_time) 
-      
+
       with open(log_path, mode) as text_file: #write only 1 time
-        text_file.write(file_name + "\n")
+              text_file.write(file_name + "\n")
+            
+      plt.close()
+
+
+      'overwrite overy update in std_inf to look @ it in run-time'
+      del my_dir
+      from definitions import my_dir; import json
+      std_pmbD_dic[p][mu][beta][D] = itermean_std_inf_net
+      
+      pp_std_pmbD_dic = json.dumps(std_pmbD_dic, sort_keys=False, indent=4)
+      print(pp_std_pmbD_dic)
+
+      fixed_std = std_pmbD_dic[p][mu][beta]
+      #print("std_pmbD_dic, p0, mu0, beta0, fixed_std", \
+      #  std_pmbD_dic, p, mu, beta, fixed_std)
+      x = sorted(fixed_std.keys())
+      #print("x", x)
+      y = [fixed_std[i] for i in x]
+      #print("y", y)
+      plt.plot(x,y,'-*')
+      #plt.show()
+      std_path = my_dir() + folder + "/Std/"
+      if not os.path.exists(std_path): os.makedirs(std_path)
+      plt.savefig("".join((std_path,"std_p%s_mu%s_beta%s.png" % (p,mu,beta))))
+
+      std_file = "".join((std_path,"saved_std_dicts.txt"))
+      with open(std_file, 'w') as file:
+        file.write(pp_std_pmbD_dic) # use `json.loads` to do the reverse
       
       plt.close()
+
+
+      
+
 
   if os.path.exists(log_path):
     'sort line to have the new ones at first'
@@ -567,8 +629,11 @@ def already_saved_list(folder, adj_or_sir, chr_min, my_print = True, done_iterat
   if my_print: print(f"\nThe already saved {adj_or_sir} are", saved_list)
   return saved_list
 
-def plot_save_nes(G, p, folder, adj_or_sir, R0_max = 12, m = 0, N0 = 0, beta = 0.3, \
-  mu = 0.3, my_print = True, pos = None, partition = None, dsc_sorted_nodes = False, done_iterations = 1, chr_min = 0): #save new_entrys
+def plot_save_nes(
+  G, p, folder, adj_or_sir, R0_max = 12, m = 0, N0 = 0, 
+  beta = 0.3, mu = 0.3, my_print = True, pos = None, 
+  partition = None, dsc_sorted_nodes = False, done_iterations = 1, 
+  chr_min = 0, std_pmbD_dic = 0): #save new_entrys
   'save net only if does not exist in the .txt. So, to overwrite all just delete .txt'
   from definitions import already_saved_list, func_file_name
   D =  np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes()
@@ -586,10 +651,12 @@ def plot_save_nes(G, p, folder, adj_or_sir, R0_max = 12, m = 0, N0 = 0, beta = 0
     print("I'm saving", file_name)
     infos_sorted_nodes(G, num_sorted_nodes = True)
     if adj_or_sir == "AdjMat": 
-      plot_save_net(G = G, pos = pos, partition = partition, m = m, N0 = N0, folder = folder, p = p, done_iterations = done_iterations)
+      plot_save_net(G = G, pos = pos, partition = partition, m = m, N0 = N0, 
+      folder = folder, p = p, done_iterations = done_iterations)
       infos_sorted_nodes(G, num_sorted_nodes = 0)
     if adj_or_sir == "SIR": 
-      plot_save_sir(G, folder = folder, beta = beta, mu = mu, p = p, R0_max = R0_max, done_iterations = done_iterations)
+      plot_save_sir(G, folder = folder, beta = beta, mu = mu, p = p, R0_max = R0_max, 
+      done_iterations = done_iterations, std_pmbD_dic = std_pmbD_dic)
 
 def save_log_params(folder, text, done_iterations = 1):
   import os
@@ -1140,3 +1207,10 @@ def bam(N,m,N0):
 
   return G
 
+'===STD_Infected'
+class NestedDict(dict):
+    def __missing__(self, key):
+        self[key] = NestedDict()
+        return self[key]
+
+'===main, i.e. automatize common part for different nets'
