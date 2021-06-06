@@ -9,6 +9,9 @@ import os #to create a folder
 
 #this has been saved in morning of the 3.6.2021
 
+def pos_deg_nodes(G): # G "real" nodes
+  return [i for i,j in G.degree() if j > 0]
+
 def my_dir():
   #return "/content/drive/MyDrive/Colab_Notebooks/Thesis/Complex_Plots/"
   #return "/content/"
@@ -19,7 +22,7 @@ def parameters_net_and_sir(folder = None, p_max = 0.1):
 
   'WARNING: put SAME beta, mu, D and p to compare at the end the different topologies'
   #B-A_Model parameters
-  k_prog = np.concatenate(([0,1,2],np.arange(3,40,2)))
+  k_prog = np.concatenate(([0.3,1,2],np.arange(3,40,2)))
   #In B-A model, these are the fully connected initial cliques
   p_prog = [rhu(x,1) for x in np.linspace(0,p_max,int(p_max*10)+1)]
   beta_prog = [0.05, 0.1, 0.2, 0.25]; mu_prog = beta_prog
@@ -105,7 +108,7 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
   if seed == True: random.seed(0)
 
   'Selects the seed of the disease'
-  seeds = random.sample(range(N), start_inf)  #without replacement, i.e. not duplicates
+  seeds = random.sample(node_labels, start_inf)  #without replacement, i.e. not duplicates
   for seed in seeds:
     current_state[seed] = 'I'
     future_state[seed] = 'I'
@@ -287,9 +290,8 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
     avg[idx_cl] = np.mean(trajectories[idx_cl], axis = 0) 
     std_traj[idx_cl] = np.std(trajectories[idx_cl], axis = 0)
     avg_std_traj[idx_cl] = np.mean(std_traj[idx_cl])
-    print("idx_cl %s, avg %s, std %s and avg_std %s" \
-      % (idx_cl, avg[idx_cl], std_traj[idx_cl], std_traj[idx_cl][-1]) )
-  
+    #print("idx_cl %s, avg %s, std %s and avg_std %s" \
+    #  % (idx_cl, avg[idx_cl], std_traj[idx_cl], std_traj[idx_cl][-1]) )
   print("End idx_cl %s round"%idx_cl)
   
   if not mf: return itermean_R, itermean_std_dn_inf, plot_trajectories, avg, std_traj
@@ -427,6 +429,7 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
     scaled_G = nx.connected_watts_strogatz_graph( n = N, k = 2, p = p, seed = 1 )
   '''
   
+  'start with degree distribution'
   'set edges width according to how many "long_range_edges'
   width = 0.8
   long_range_edges = list(filter( lambda x: x > 30, [np.min((np.abs(i-j),np.abs(j-i))) for i,j in G.edges()] )) #list( filter(lambda x: x > 0, )
@@ -497,8 +500,9 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
 
   'save not_connected_nets'
   if not nx.is_connected(G):
+    sorted_disc_components = sorted(nx.connected_components(G), key=len, reverse=True)
     with open(nc_path, mode) as nc_file:
-      nc_file.write("".join((file_name, "\n")))
+      nc_file.write("".join((file_name, " #disc_comp: %s" % len(sorted_disc_components), "\n")))
 
   with open(log_path, mode) as text_file: #write only 1 time
     print("file_name", file_name)
@@ -724,7 +728,14 @@ def ws_sir(G, folder, p, saved_nets, done_iterations, pruning = False, infos = F
 def pois_pos_degrees(D, N, L = int(2e3)):
   'Draw N degrees from a Poissonian sequence with lambda = D and length L'
   degs = np.random.poisson(lam = D, size = L)
-  pos_degrees = np.random.choice([x for x in degs if x != 0], N)
+  print(D)
+  if D < 1: 
+    print(degs)
+    custom_degs = list(map(lambda x: 0 if x == -1 else x, degs))
+    print("\n custom", custom_degs)
+    custom_degs = [x for x in degs if x >= 0]
+  else: custom_degs = [x for x in degs if x >= 0]
+  pos_degrees = np.random.choice(degs, N)
 
   #print("len(s) in deg", len([x for x in degs if x == 0]))
   #print("len(s) in pos_degrees", len([x for x in pos_degrees if x == 0]))
@@ -764,12 +775,12 @@ def long_range_edge_add(G, p = 0, time_int = False):
   
   if time_int: start_time = dt.datetime.now()
   
-  all_edges = [list(G.edges(node)) for node in G.nodes()]
+  all_edges = [list(G.edges(node)) for node in pos_deg_nodes(G)]
   all_edges = list(chain.from_iterable(all_edges))
   initial_length = len(all_edges)
   if p != 0:
-    for node in G.nodes():
-      left_nodes = list(G.nodes())
+    for node in pos_deg_nodes(G):
+      left_nodes = list(pos_deg_nodes(G))
       left_nodes.remove(node) 
       re_link = random.choice( left_nodes )
       if random.random() < p:
@@ -794,18 +805,20 @@ def NN_pois_net(N, ext_D, p = 0):
       None
 
   'for random rewiring with p'
-  l_nodes = [x for x in G.nodes()]
+  l_nodes = [x for x in pos_deg_nodes(G)]
 
   edges = set() #avoid to put same link twice (+ unordered)
   nodes_degree = {}
 
   'list of the nodes sorted by their degree'
-  for node in G.nodes():
+  for node in pos_deg_nodes(G):
     nodes_degree[node] = G.degree(node)
   sorted_nodes_degree = {k: v for k, v in sorted(nodes_degree.items(), key=lambda item: item[1])}
   sorted_nodes = [node for node in sorted_nodes_degree.keys()]
   verboseprint("There are the sorted_nodes", sorted_nodes) #, "\n", sorted_nodes_degree.values())
 
+  
+  
   'cancel all the edges'
   replace_edges_from(G)
 
@@ -875,6 +888,9 @@ def NN_pois_net(N, ext_D, p = 0):
   
   long_range_edge_add(G, p = p)
 
+  '''
+  CUT OFF THE DISC COMPONENT SINCE WE WANT TO PRESERVE SOLELY NODES
+
   'there is only a node with 2 degree left. So, if rewired correctly only a +1 in the ddistr'
   'So, connect all the disconnected components'
   its = 0
@@ -889,8 +905,10 @@ def NN_pois_net(N, ext_D, p = 0):
     its += 1
   #print("Total links to have", len(list(nx.connected_components(G))),"connected component are", its)
   if len(list(nx.connected_components(G)))>1: print("Disconnected net!")
-  
+  '''
+  print(f"There are {len([j for i,j in G.degree() if j == 0])} 0 degree node as")
   print("End of wiring")
+  
 
   return G
 
@@ -927,11 +945,11 @@ def NN_Overl_pois_net(N, ext_D, p, add_edges_only = False):
 
   else: #remove local edge and add long-range one
     start_time = dt.datetime.now()
-    all_edges = [list(G.edges(node)) for node in G.nodes()]
+    all_edges = [list(G.edges(node)) for node in pos_deg_nodes(G)]
     all_edges = list(chain.from_iterable(all_edges))
     initial_length = len(all_edges)
-    for node in G.nodes():
-      left_nodes = list(G.nodes())
+    for node in pos_deg_nodes(G):
+      left_nodes = list(pos_deg_nodes(G))
       left_nodes.remove(node) 
       #print("edges of the node %s: %s" % (node, edges_node(node)) ) 
       i_rmv, j_rmv = random.choice(edges_node(node))  
@@ -965,7 +983,7 @@ def check_loops_parallel_edges(G):
 def infos_sorted_nodes(G, num_sorted_nodes = False):
     import networkx as nx
     'sort nodes by key = degree. printing order: node, adjacent nodes, degree'
-    nodes = G.nodes()
+    nodes = pos_deg_nodes(G)
     print("<k>: ", np.sum([j for (i,j) in G.degree() ]) / len(nodes), 
           " and <k>/N ", np.sum([j for (i,j) in G.degree() ]) / len(nodes)**2, end="\n" )
     
@@ -976,7 +994,8 @@ def infos_sorted_nodes(G, num_sorted_nodes = False):
     infos = zip([x for x in nodes], [len(adj_dict[i]) for i in range(len(nodes))], [G.degree(x) for x in nodes])
     dsc_sorted_nodes = sorted( infos, key = lambda x: x[2], reverse=True)
 
-    cut_off = 4
+    cut_off = 0
+    if len(dsc_sorted_nodes) != 0: min(len(dsc_sorted_nodes),4)
     if num_sorted_nodes == True:  
       num_sorted_nodes = len(nodes) 
       for i in range(cut_off):
@@ -1171,7 +1190,7 @@ def caveman_defs():
           relink_rnd = clique_size
           first_cl_node = clique_size*clique
           nodes_inclique = np.arange(first_cl_node, first_cl_node + relink_rnd)
-          attached_nodes = npr.choice([x for x in G.nodes() if x not in nodes_inclique], 
+          attached_nodes = npr.choice([x for x in pos_deg_nodes(G) if x not in nodes_inclique], 
                                       size = len(nodes_inclique))
           for test, att_node in zip(nodes_inclique, attached_nodes):
             #print("relink", (test,att_node))
