@@ -16,31 +16,32 @@ def my_dir():
 
 def parameters_net_and_sir(folder = None, p_max = 0.1):
   'progression of net-parameters'
-  #B-A_Model parameters
-  k_prog = np.arange(2,18,2) #In B-A model, these are the fully connected initial cliques
-  p_prog = np.linspace(0,p_max,int(p_max*10)+1)
 
-  bar_beta_prog = np.linspace(0.01,1,14)
-  beta_prog = bar_beta_prog #np.concatenate(([0.001],bar_beta_prog))
-  mu_prog = beta_prog
-  R0_min = 0; R0_max = 6   
+  'WARNING: put SAME beta, mu, D and p to compare at the end the different topologies'
+  #B-A_Model parameters
+  k_prog = np.concatenate(([0,1,2],np.arange(3,40,2)))
+  #In B-A model, these are the fully connected initial cliques
+  p_prog = [rhu(x,1) for x in np.linspace(0,p_max,int(p_max*10)+1)]
+  beta_prog = [0.05, 0.1, 0.2, 0.25]; mu_prog = beta_prog
+  R0_min = 0; R0_max = 30   
+
+  'this should be deleted to have same params and make comparison more straight-forward'
   if folder == "WS_Epids": 
     beta_prog = np.linspace(0.01,1,7); mu_prog = beta_prog
   if folder == "B-A_Model": 
-    beta_prog = bar_beta_prog; mu_prog = beta_prog
+    beta_prog = np.linspace(0.01,1,14); mu_prog = beta_prog
     p_prog = [0]; R0_min = 0; R0_max = 6  
   if folder == "NN_Conf_Model": 
-    beta_prog = np.linspace(0.01,1,8); mu_prog = beta_prog
-    k_prog = np.arange(2,34,2)    
+    beta_prog = [0.05, 0.1, 0.2, 0.25]; mu_prog = beta_prog
+    # past parameters: beta_prog = np.linspace(0.01,1,8); mu_prog = beta_prog
+    #k_prog = np.arange(2,34,2)    
   if folder == "Caveman_Model": 
     k_prog = np.arange(1,11,2) #https://www.prb.org/about/ -> Europe householdsize = 3
     beta_prog = np.linspace(0.001,1,6); mu_prog = beta_prog
-  if folder[:5] == "Overl": beta_prog = np.linspace(0.01,1,10); mu_prog = beta_prog
+  if folder[:5] == "Overl": 
+    beta_prog = [0.05, 0.1, 0.2, 0.25]; mu_prog = beta_prog #np.linspace(0.01,1,4)
 
   return k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max 
-  '''useful ro copy/paste: 
-  k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max =  parameters_net_and_sir(folder = folder, p_max = p_max) 
-  '''
 
 'for now the difference in name are only for the net'
 def func_file_name(folder, adj_or_sir, N, D, p, R0 = -1, m = 0, N0 = 0, beta = 0.111, mu = 1.111):
@@ -111,7 +112,8 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
     inf_list.append(seed)
 
   'initilize prevalence and revocered list'
-  prevalence = [len(inf_list)/N]
+  'trying set prevalence as the daily_new_inf as in the article'
+  prevalence = [0] #[len(inf_list)/N] 
   recovered = [0]
   cum_prevalence = [start_inf/N]
   num_susc = [N-start_inf]
@@ -157,8 +159,9 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
     rec_list = [i for i, x in enumerate(current_state) if x == 'R']
 
     'Saves the fraction of infected and recovered in the current time-step'
-    prevalence.append(len(inf_list)/float(N))
-    recovered.append(len(rec_list)/float(N))
+    prevalence.append(daily_new_inf/float(N))
+    #prevalence.append(len(inf_list)/float(N))
+    #recovered.append(len(rec_list)/float(N))
     cum_prevalence.append(cum_prevalence[-1]+daily_new_inf/N)  
     #loop +=1;
     #print("loop:", loop, cum_total_inf, cum_total_inf[-1], daily_new_inf/N)
@@ -271,8 +274,7 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
         print("global sum indeces", it_sum)
         print("counts of made its", counts[idx_cl])
         print("avg", avg)
-      
-      if length != max_len: raise Exception("Error: %s not max_len" % length)
+      if length != max_len: raise Exception("Error: %s not max_len of %s-th it" % (length,i))
 
     if i == 199: print("End of avg on 200 scenarios")
 
@@ -309,13 +311,13 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
           np.max(trajectories[2][j]), mf_trajectories[2][j],
           np.max(trajectories[0][j]) ), axis = None ) )'''
 
-  ax.plot(mf_avg[0], label="MF::Infected/N ", \
+  ax.plot(mf_avg[0], label="MF::NDaily_Inf/N ", \
     color = "darkviolet") #prevalence
-  ax.plot(avg[0], label="Net::Infected/N ", \
+  ax.plot(avg[0], label="Net::NDayly_Inf/N ", \
     color = "tab:blue") #prevalence
-  ax.plot(mf_avg[2], label="MF::CD_Inf/N (%s%%)"% np.round(mf_avg[2][-1]*100,1), \
+  ax.plot(mf_avg[2], label="MF::Sum_NDI/N (%s%%)"% np.round(mf_avg[2][-1]*100,1), \
     color = "tab:orange" ) #mf::cd_inf
-  ax.plot(avg[2], label="Net::CD_Inf/N (%s%%)" % np.round(avg[2][-1]*100,1), \
+  ax.plot(avg[2], label="Net::Sum_NDI/N (%s%%)" % np.round(avg[2][-1]*100,1), \
     color = "tab:green") #net::cd_inf
 
   'plot horizontal line to highlight the initial infected'
@@ -505,7 +507,7 @@ def plot_save_sir(G, folder, std_pmbD_dic, done_iterations = 1, p = 0, beta = 0.
   start_time = dt.datetime.now()
 
   mode = "a"
-  if done_iterations == 1: mode = "w"
+  #if done_iterations == 1: mode = "w"
   my_dir = my_dir() #"/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/Tests/"
   N = G.number_of_nodes()
   D = np.sum([j for (i,j) in G.degree()]) / G.number_of_nodes()
@@ -563,8 +565,8 @@ def plot_save_sir(G, folder, std_pmbD_dic, done_iterations = 1, p = 0, beta = 0.
       right=0.992,
       hspace=0.2,
       wspace=0.2)
-      plt.suptitle(r"$R_0:%s, \bar{R}_{net}:%s, D_{1000}:%s, N_{3-out}: %s, p:%s, \beta:%s, \mu:%s$"
-      % (rhu(R0,3),rhu(itermean_R_net,3), rhuD2, count_outsiders, rhu(p,3), rhu(beta,3), rhu(mu,3), ))
+      plt.suptitle(r"$R_0:%s, \bar{R}_{net}:%s, D_{%s}:%s, N_{3-out}: %s, p:%s, \beta:%s, \mu:%s$"
+      % (rhu(R0,3),rhu(itermean_R_net,3), N, rhuD2, count_outsiders, rhu(p,3), rhu(beta,3), rhu(mu,3), ))
       #plt.show()
       plt.savefig( file_path )
       print("time 1_plot_save_sir:", dt.datetime.now()-start_time) 
@@ -577,9 +579,21 @@ def plot_save_sir(G, folder, std_pmbD_dic, done_iterations = 1, p = 0, beta = 0.
 
       'overwrite overy update in std_inf to look @ it in run-time'
       del my_dir
-      from definitions import my_dir; import json
-      std_pmbD_dic[p][mu][beta][D] = itermean_std_inf_net
+      from definitions import my_dir; import json; from definitions import NestedDict
+      std_pmbD_dic = NestedDict(std_pmbD_dic)
+      value = itermean_std_inf_net
+      print("\nTo be added pmbD itermean:", p, mu, beta, D, value)
       
+      d = std_pmbD_dic #rename std_pmbD_dic to have compact wrinting
+      if p in d.keys():
+        if mu in d[p].keys():
+            if beta in d[p][mu].keys():
+                d[p][mu][beta][D] = value
+            else: d[p][mu] = { **d[p][mu], **{beta: {D:value}} }
+        else: d[p] = {**d[p], **{mu:{beta:{D:value}}} }
+      else:
+        d[p][mu][beta][D] = value
+
       pp_std_pmbD_dic = json.dumps(std_pmbD_dic, sort_keys=False, indent=4)
       print(pp_std_pmbD_dic)
 
@@ -594,7 +608,7 @@ def plot_save_sir(G, folder, std_pmbD_dic, done_iterations = 1, p = 0, beta = 0.
       #plt.show()
       std_path = my_dir() + folder + "/Std/"
       if not os.path.exists(std_path): os.makedirs(std_path)
-      plt.savefig("".join((std_path,"std_p%s_mu%s_beta%s.png" % (p,mu,beta))))
+      plt.savefig("".join((std_path,"std_p%s_mu%s_beta%s.png" % (p,rhu(mu,3),rhu(beta,3)))))
 
       std_file = "".join((std_path,"saved_std_dicts.txt"))
       with open(std_file, 'w') as file:
