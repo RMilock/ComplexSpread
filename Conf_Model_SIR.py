@@ -1,13 +1,20 @@
 import numpy as np
 from itertools import product
 import networkx as nx
-from definitions import save_log_params, plot_save_nes, \
-config_pois_model, NN_pois_net, parameters_net_and_sir
+from definitions import *
+#from definitions import save_log_params, plot_save_nes, \
+#config_pois_model, NN_pois_net, parameters_net_and_sir, NestedDict, my_dir
+import os; import json
 
 'save scaled version for better visualization - not used'
 def scaled_conf_pois(G,D,cut_off=30):    
   scaled_N = int(G.number_of_nodes()/cut_off) # int(D/cut_off)
   return config_pois_model(scaled_N, D)
+
+def jsonKeys2int(x):
+    if isinstance(x, dict):
+        return {float(k):v for k,v in x.items()}
+    return x
 
 '''Configurational Model with poissonian degree:
 1) Question: 
@@ -19,7 +26,12 @@ def scaled_conf_pois(G,D,cut_off=30):
   <br>Ex., $D = 50 = N, <k> ~ 28$. For $N= 1000 \text{ and } D = 3 \textrm{ or } 8, 
   <k> \textrm{is acceptable.}$
 '''
-N = int(1e3); p_max = 0.1;  folder = "NN_Conf_Model"
+N = int(1e3);  folder = "NN_Conf_Model"
+std_pmbD_dic = NestedDict()
+std_path = "".join( (my_dir(),folder,"/Std/saved_std_dicts.txt") )
+if os.path.exists(std_path): 
+  with open(std_path,"r") as f:
+    std_pmbD_dic = json.loads(f.read(), object_hook=jsonKeys2int)
 
 'progression of net-parameters'
 '''
@@ -31,12 +43,12 @@ p_prog = [0]
 R0_min = 0.5; R0_max = 6
 '''
 
-k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max =  parameters_net_and_sir(folder = folder, p_max = p_max) 
-R0_max = 6
+k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max =  parameters_net_and_sir(folder = folder) 
+
 'try only with p = 0.1'
 total_iterations = 0
 for D,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog):  
-  if R0_min < beta*D/mu < R0_max:
+  if R0_min <= beta*D/mu <= R0_max:
     total_iterations+=1
 print("Total Iterations:", total_iterations)
 done_iterations = 0
@@ -50,14 +62,20 @@ save_log_params(folder = folder, text = text)
 
 saved_nets = []
 for D,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog):  
-  if R0_min < beta*D/mu < R0_max:
+  if R0_min <= beta*D/mu <= R0_max:
     done_iterations+=1
     print("\nIterations left: %s" % ( total_iterations - done_iterations ) )
+    if os.path.exists(std_path): 
+      with open(std_path,"r") as f:
+        std_pmbD_dic = json.loads(f.read(), object_hook=jsonKeys2int)
+
+
     G = NN_pois_net(N, ext_D = D, p = p)
     print("connected components", len(list(nx.connected_components(G))))
 
     plot_save_nes(G = G,
     p = p, folder = folder, adj_or_sir="AdjMat", done_iterations=done_iterations)
     plot_save_nes(G = G,
-    p = p, folder = folder, adj_or_sir="SIR", R0_max = R0_max, beta = beta, mu = mu, done_iterations=done_iterations)
+    p = p, folder = folder, adj_or_sir="SIR", R0_max = R0_max, beta = beta, mu = mu, 
+    std_pmbD_dic = std_pmbD_dic, done_iterations=done_iterations)
     print("---")
