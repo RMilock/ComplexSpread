@@ -204,6 +204,9 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
 
   numb_idx_cl = 3
   trajectories = [[] for _ in range(numb_idx_cl)]
+  std_traj = [[] for _ in range(numb_idx_cl)]
+  avg_std_traj = [[] for _ in range(numb_idx_cl)]
+  
   avg = [[] for _ in range(numb_idx_cl)]
   itermean_R = 0; itermean_std_dn_inf = 0
   counts = [[],[],[]]
@@ -215,7 +218,8 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
     sir_start_time = dt.datetime.now()
     if not mf:
       avg_R, avg_dn_inf, std_dn_inf, prev, rec, cum_prev = sir(G, beta = beta, mu = mu, start_inf = start_inf, mf = mf)
-      #print("\n avg_R %s, ", avg_R)
+      #avg_R, avg_dn_inf, std_dn_inf, prev, rec, cum_prev \
+      #  = 1,3,5,[1,2],[3,4,5],[6,7,8,9]
       itermean_R += avg_R / max(1,numb_iter)
       itermean_std_dn_inf += std_dn_inf / max(1,numb_iter)
     else: prev, rec, cum_prev = sir(G, beta = beta, mu = mu, start_inf = start_inf, mf = mf)
@@ -258,11 +262,12 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
       'add the last_el_list to the starting one'
       trajectories[idx_cl][i] += last_el_list
       length = len(trajectories[idx_cl][i]) #should be max_len
-      'make the sum of its respecting the index, e.g. all 0th'
-      it_sum = [sum(x) for x in zip_longest(*trajectories[idx_cl], fillvalue=0)]
-      'create counts'
-      counts = [[numb_iter],[numb_iter],[numb_iter]]
-      avg[idx_cl] = list(np.divide(it_sum,counts[idx_cl]))
+      'find the avg = mean of the trajectories for each class'
+      'sum all the value at the same position, e.g. all 0th'
+      #it_sum = [sum(x) for x in zip_longest(*trajectories[idx_cl], fillvalue=0)]
+      #'create counts'
+      #counts = [[numb_iter],[numb_iter],[numb_iter]]
+      #avg[idx_cl] = list(np.divide(it_sum,counts[idx_cl]))
       
       if verbose:
         print("\niteration(s):", i, "idx_cl ", idx_cl)
@@ -275,11 +280,20 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
         print("counts of made its", counts[idx_cl])
         print("avg", avg)
       if length != max_len: raise Exception("Error: %s not max_len of %s-th it" % (length,i))
-
     if i == 199: print("End of avg on 200 scenarios")
 
-  if not mf: return itermean_R, itermean_std_dn_inf, plot_trajectories, avg
-  return plot_trajectories, avg
+  print("\nNow compute the std of the avg")
+  for idx_cl in range(numb_idx_cl):    
+    avg[idx_cl] = np.mean(trajectories[idx_cl], axis = 0) 
+    std_traj[idx_cl] = np.std(trajectories[idx_cl], axis = 0)
+    avg_std_traj[idx_cl] = np.mean(std_traj[idx_cl])
+    print("idx_cl %s, avg %s, std %s and avg_std %s" \
+      % (idx_cl, avg[idx_cl], std_traj[idx_cl], std_traj[idx_cl][-1]) )
+  
+  print("End idx_cl %s round"%idx_cl)
+  
+  if not mf: return itermean_R, itermean_std_dn_inf, plot_trajectories, avg, std_traj
+  return plot_trajectories, avg, std_traj
 
 def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter = 200):
 
@@ -292,10 +306,10 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
   'plot ratio of daily infected and daily cumulative recovered'
   'Inf and Cum_Infected from Net_Sir; Recovered from MF_SIR'
   print("\nNetwork-SIR loading...")
-  itermean_R_net, itermean_std_inf_net, trajectories, avg = itermean_sir(G, mf = False, beta = beta, mu = mu, start_inf  = start_inf, numb_iter=numb_iter)
+  itermean_R_net, itermean_std_inf_net, trajectories, avg, std_traj = itermean_sir(G, mf = False, beta = beta, mu = mu, start_inf  = start_inf, numb_iter=numb_iter)
   print("Final itermean_std_inf_net", itermean_std_inf_net)
   print("\nMF-SIR loading...")
-  mf_trajectories, mf_avg = itermean_sir(G, mf = True, mu = mu, beta = beta, start_inf = start_inf, numb_iter = numb_iter)
+  mf_trajectories, mf_avg, mf_std_traj = itermean_sir(G, mf = True, mu = mu, beta = beta, start_inf = start_inf, numb_iter = numb_iter)
   'plotting the many realisations'    
   colors = ["paleturquoise","wheat","lightgreen", "thistle"]
   
@@ -315,9 +329,11 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
     color = "darkviolet") #prevalence
   ax.plot(avg[0], label="Net::NDayly_Inf/N ", \
     color = "tab:blue") #prevalence
-  ax.plot(mf_avg[2], label="MF::Sum_NDI/N (%s%%)"% np.round(mf_avg[2][-1]*100,1), \
+  ax.plot(mf_avg[2], label="MF::Sum_NDI/N (%s%%\pm%s%%)"\
+    % (np.round(mf_avg[2][-1]*100,1), np.round(mf_std_traj[2][-1]*100,1) ), \
     color = "tab:orange" ) #mf::cd_inf
-  ax.plot(avg[2], label="Net::Sum_NDI/N (%s%%)" % np.round(avg[2][-1]*100,1), \
+  ax.plot(avg[2], label="Net::Sum_NDI/N (%s%%\pm%s%%)" %
+    (np.round(avg[2][-1]*100,1), np.round(std_traj[2][-1]*100,1) ), \
     color = "tab:green") #net::cd_inf
 
   'plot horizontal line to highlight the initial infected'
