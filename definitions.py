@@ -12,6 +12,10 @@ import os #to create a folder
 def pos_deg_nodes(G): # G "real" nodes
   return [i for i,j in G.degree() if j > 0]
 
+def N_D_std_D(G):
+  degrees = [j for i,j in G.degree()]
+  return G.number_of_nodes(), np.mean(degrees), np.std(degrees, ddof = 1)
+
 def my_dir():
   #return "/content/drive/MyDrive/Colab_Notebooks/Thesis/Complex_Plots/"
   #return "/content/"
@@ -177,21 +181,19 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
     ddof = 0
     if len(arr_daily_new_inf) > 1: ddof = 1
     if arr_daily_new_inf == []: arr_daily_new_inf = 0
-    avg_dn_inf = np.mean(arr_daily_new_inf)
-    std_dn_inf = np.std( arr_daily_new_inf, ddof = ddof )
-    #print("dni, arr_daily, std", daily_new_inf, arr_daily_new_inf, std_dn_inf)
+    avg_dni = np.mean(arr_daily_new_inf)
+    std_dni = np.std( arr_daily_new_inf, ddof = ddof )
+    #print("dni, arr_daily, std", daily_new_inf, arr_daily_new_inf, std_dni)
 
     degrees = [j for i,j in G.degree()]
-    sum_degrees = np.sum(degrees)
-    #print("sum_degrees", sum_degrees)
-    D = sum_degrees / N
+    D = np.mean(degrees)
 
     #print("R0, b,m,D", beta*D/mu, beta, mu, D)
     avg_R = beta*D/(mu*num_susc[0])*(np.sum(num_susc))/len(prevalence)
     #print("num_su[0], np.sum(num_susc), len(prev), avg_R2", \
     #  num_susc[0],np.sum(num_susc), len(prevalence), avg_R)
 
-    return avg_R, avg_dn_inf, std_dn_inf, prevalence, recovered, cum_prevalence
+    return avg_R, avg_dni, std_dni, prevalence, recovered, cum_prevalence
   
   return prevalence, recovered, cum_prevalence
   
@@ -211,20 +213,22 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
   avg_std_traj = [[] for _ in range(numb_idx_cl)]
   
   avg = [[] for _ in range(numb_idx_cl)]
-  itermean_R = 0; itermean_std_dn_inf = 0
+  avg_R = 0; avg_std_ndi = 0
   counts = [[],[],[]]
   max_len = 0
+  list_avg_R = []; list_std_ndi = []
   start_time = dt.datetime.now()
 
   'find the maximum time of 1 scenario among numb_iter ones'
   for i in range(numb_iter):
     sir_start_time = dt.datetime.now()
     if not mf:
-      avg_R, avg_dn_inf, std_dn_inf, prev, rec, cum_prev = sir(G, beta = beta, mu = mu, start_inf = start_inf, mf = mf)
-      #avg_R, avg_dn_inf, std_dn_inf, prev, rec, cum_prev \
+      avg_R, avg_dni, std_dni, prev, rec, cum_prev = sir(G, beta = beta, mu = mu, start_inf = start_inf, mf = mf)
+      #avg_R, avg_dni, std_dni, prev, rec, cum_prev \
       #  = 1,3,5,[1,2],[3,4,5],[6,7,8,9]
-      itermean_R += avg_R / max(1,numb_iter)
-      itermean_std_dn_inf += std_dn_inf / max(1,numb_iter)
+      list_avg_R.append(avg_R)
+      #avg_std_ndi += std_dni / max(1,numb_iter)
+      list_std_ndi.append(std_dni)
     else: prev, rec, cum_prev = sir(G, beta = beta, mu = mu, start_inf = start_inf, mf = mf)
     
     tmp_traj = prev, rec, cum_prev
@@ -234,8 +238,8 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
       time_50sir = dt.datetime.now()-start_time
       print("Total time for %s its of max-for-loop %s. Time for 1 sir %s" % (i+1, time_50sir, time_1sir))
       if not mf:
-        print("After %s its: avg_dn_inf, std_dn_inf, std_dn_inf / max(1,numb_iter), itermean_std:\n %s" %
-          (i+1, (avg_dn_inf, std_dn_inf, std_dn_inf / max(1,numb_iter), itermean_std_dn_inf)) 
+        print("After %s its: avg_dni, std_dni, std_dni / max(1,numb_iter), itermean_std:\n %s" %
+          (i+1, (avg_dni, std_dni, std_dni / max(1,numb_iter), avg_std_ndi)) 
         )
       start_time = dt.datetime.now()
     for idx_cl in range(numb_idx_cl):
@@ -247,8 +251,17 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
       #  (i, len(max(tmp_traj, key = len)), len(tmp_traj),  \
       #    len(tmp_traj[idx_cl]), idx_cl, len(trajectories[idx_cl]) ))
 
-  #print("\nOverall max_len", max_len)
-  #print("All traj", trajectories)
+  'Only for nets: compute mean and std of avg_R and std_nd_inf'
+  if not mf:
+    avg_R = np.mean(list_avg_R)
+    std_avg_R = np.std(list_avg_R, ddof = 1)
+    print("avg_R", list_avg_R, avg_R, std_avg_R)
+
+    avg_std_ndi = np.mean(list_std_ndi)
+    std_avg_std_ndi = np.std(list_std_ndi, ddof = 1)
+    print("list, avg, std, itermean std_dni", list_std_ndi, avg_std_ndi, std_avg_std_ndi)
+    #print("\nOverall max_len", max_len)
+    #print("All traj", trajectories)
 
   plot_trajectories = copy.deepcopy(trajectories)
 
@@ -285,16 +298,17 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
       if length != max_len: raise Exception("Error: %s not max_len of %s-th it" % (length,i))
     if i == 199: print("End of avg on 200 scenarios")
 
-  print("\nNow compute the std of the avg")
+  'here std != order parameter but only to have in the legen mean+-std_mean'
+  print("\nNow compute the STD of the prevalence")
   for idx_cl in range(numb_idx_cl):    
     avg[idx_cl] = np.mean(trajectories[idx_cl], axis = 0) 
-    std_traj[idx_cl] = np.std(trajectories[idx_cl], axis = 0)
+    std_traj[idx_cl] = np.std(trajectories[idx_cl], axis = 0) #avg wrt index, e.g. all 0-indexes
     avg_std_traj[idx_cl] = np.mean(std_traj[idx_cl])
     #print("idx_cl %s, avg %s, std %s and avg_std %s" \
     #  % (idx_cl, avg[idx_cl], std_traj[idx_cl], std_traj[idx_cl][-1]) )
   print("End idx_cl %s round"%idx_cl)
   
-  if not mf: return itermean_R, itermean_std_dn_inf, plot_trajectories, avg, std_traj
+  if not mf: return avg_R, std_avg_R, avg_std_ndi, std_avg_std_ndi, plot_trajectories, avg, std_traj
   return plot_trajectories, avg, std_traj
 
 def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter = 200):
@@ -302,39 +316,46 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
   'D = numb acts only in mf_avg'
   import itertools
   # MF_SIR: beta = 1e-3, MF_SIR: mu = 0.05
-  D = int(rhu(np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes()))
-  N = G.number_of_nodes(); R0 = beta*D/mu
+  N = G.number_of_nodes()
 
   'plot ratio of daily infected and daily cumulative recovered'
   'Inf and Cum_Infected from Net_Sir; Recovered from MF_SIR'
   print("\nNetwork-SIR loading...")
-  itermean_R_net, itermean_std_inf_net, trajectories, avg, std_traj = itermean_sir(G, mf = False, beta = beta, mu = mu, start_inf  = start_inf, numb_iter=numb_iter)
-  print("Final itermean_std_inf_net", itermean_std_inf_net)
+  avg_R_net, std_avg_R_net, avg_std_ndi_net, std_avg_std_ndi_net, trajectories, avg, std_traj = itermean_sir(G, mf = False, beta = beta, mu = mu, start_inf  = start_inf, numb_iter=numb_iter)
+  print("Final avg_std_ndi_net", avg_std_ndi_net)
   print("\nMF-SIR loading...")
   mf_trajectories, mf_avg, mf_std_traj = itermean_sir(G, mf = True, mu = mu, beta = beta, start_inf = start_inf, numb_iter = numb_iter)
   'plotting the many realisations'    
   colors = ["paleturquoise","wheat","lightgreen", "thistle"]
   
   for j in range(numb_iter):
-    ax.plot(trajectories[0][j], color = colors[0])
+    ax.plot(trajectories[0][j], color = colors[0]) #net_New_Daily_Cases
     ax.plot(mf_trajectories[0][j], color = colors[3])
-    ax.plot(mf_trajectories[2][j], color = colors[1])
+    ax.plot(mf_trajectories[2][j], color = colors[1]) #mf_Sum_New_Daily_Cases
     ax.plot(trajectories[2][j], color = colors[2])
     
-    '''if R0 <= 2 and folder == "NNR_Conf_Model":
+    ''' mv legend above the over-all max of the plots
+    if R0 <= 2 and folder == "NNR_Conf_Model":
       'to set legend above the plot'
       y_max = np.max( np.concatenate((
           np.max(trajectories[2][j]), mf_trajectories[2][j],
           np.max(trajectories[0][j]) ), axis = None ) )'''
 
-  ax.plot(mf_avg[0], label="MF::NDaily_Inf/N ", \
+  ax.plot(mf_avg[0], label="MF::NDI", \
     color = "darkviolet") #prevalence
-  ax.plot(avg[0], label="Net::NDayly_Inf/N ", \
+  ax.plot(avg[0], label="Net::NDI", \
     color = "tab:blue") #prevalence
-  ax.plot(mf_avg[2], label="MF::Sum_NDI/N (%s%%\pm%s%%)"\
-    % (np.round(mf_avg[2][-1]*100,1), np.round(mf_std_traj[2][-1]*100,1) ), \
-    color = "tab:orange" ) #mf::cd_inf
-  ax.plot(avg[2], label="Net::Sum_NDI/N (%s%%\pm%s%%)" %
+
+  'define a string_format to choose the best way to format the std of the mean'
+  value = mf_std_traj[2][-1]
+  string_format = str(np.round(value*100,1))[:3]
+  if string_format == "0.0":
+    string_format = format(value, ".1e")
+
+  ax.plot(mf_avg[2], label=r"MF::Sum_NDI (%s%%$\pm$%s%%)"\
+    % (np.round(mf_avg[2][-1]*100,1), string_format ), \
+    color = "tab:orange" ) #mf::cd_inf, np.round(mf_std_traj[2][-1]*100,1)
+  ax.plot(avg[2], label=r"Net::Sum_NDI (%s%%$\pm$%s%%)" %
     (np.round(avg[2][-1]*100,1), np.round(std_traj[2][-1]*100,1) ), \
     color = "tab:green") #net::cd_inf
 
@@ -351,10 +372,14 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
   ax.set_ylabel('Indivs/N')
   
   'set legend above the plot if R_0 in [0,2] in the NNR_Config_Model'
-  folders = ["NNR_Conf_Model"] #"WS_Epids"]
+  folders = ["NoNR_Conf_Model"] #"WS_Epids"]
+  degrees = [j for i,j in G.degree()]
+  D = np.mean(degrees)
+  R0 = beta*D/mu
   if R0 <= 3 and folder in folders:
     ax_ymin, ax_ymax = ax.get_ylim()
-    set_ax_ymax = 1.5*ax_ymax
+    set_ax_ymin = 1.5*ax_ymin
+    set_ax_ymax = 2*ax_ymax
     ax.set_ylim(ax_ymin, set_ax_ymax)
 
     handles, labels = plt.gca().get_legend_handles_labels()
@@ -366,7 +391,7 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
     order = [2,3,0,1,4]
     ax.legend([handles[idx] for idx in order],[labels[idx] for idx in order],loc="best"); 'set legend in the "best" mat plot lib location'
 
-  return itermean_R_net, itermean_std_inf_net
+  return avg_R_net, std_avg_R_net, avg_std_ndi_net, std_avg_std_ndi_net
 
 def rhu(n, decimals=0): #round_half_up
     import math
@@ -384,7 +409,10 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
   #if done_iterations == 1: mode = "w"
   my_dir = my_dir() #"/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/Tests/"
   N = G.number_of_nodes()
-  D = rhu(np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes() , 2)
+  degrees = [j for i,j in G.degree()]
+  D = rhu( np.mean(degrees), 2)
+  std_D = rhu( np.std(degrees, ddof = 1), 2 )
+
   rhuD1 = rhu(D,1)
   rhuD = rhu(D)
   print("D%s VS rhuD1 %s" % (D,rhuD1))
@@ -489,10 +517,10 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
   '''
 
   if folder == "B-A_Model": 
-    plt.suptitle(r"$N:%s, D:%s, k_{max}: %s, N_{3-out}: %s, m: %s, N_0: %s, p:%s$" % (
-    N, D, max_degree, count_outsiders, m, N0, rhu(p,3),  ))
-  else: plt.suptitle(r"$N:%s, D:%s, N_{3-out}: %s, p:%s, SW_{coeff}:%s$"
-                    % (N,D, count_outsiders, rhu(p,3), rhu(avg_l / np.log(N)) ))
+    plt.suptitle(r"$N:%s, D:%s(%s), k_{max}: %s, N_{3-out}: %s, m: %s, N_0: %s, p:%s$" % (
+    N, D, std_D, max_degree, count_outsiders, m, N0, rhu(p,3),  ))
+  else: plt.suptitle(r"$N:%s, D:%s(%s), N_{3-out}: %s, p:%s, SW_{coeff}:%s$"
+                    % (N,D, std_D, count_outsiders, rhu(p,3), rhu(avg_l / np.log(N)) ))
 
   'TO SAVE PLOTS'
   if not os.path.exists(my_dir): os.makedirs(my_dir)
@@ -522,7 +550,7 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
 
 def plot_save_sir(G, folder, std_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 10, numb_iter = 200):
   import os.path
-  from definitions import my_dir, func_file_name
+  from definitions import my_dir, func_file_name, N_D_std_D
   import datetime as dt
   import matplotlib.pylab as plt
   start_time = dt.datetime.now()
@@ -530,8 +558,7 @@ def plot_save_sir(G, folder, std_pmbD_dic, done_iterations = 1, p = 0, beta = 0.
   mode = "a"
   #if done_iterations == 1: mode = "w"
   my_dir = my_dir() #"/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/Tests/"
-  N = G.number_of_nodes()
-  D = np.sum([j for (i,j) in G.degree()]) / G.number_of_nodes()
+  N, D, std_D = N_D_std_D(G)
   adj_or_sir = "SIR"
   'find the major hub and the "ousiders", i.e. highly connected nodes'
   infos = G.degree()
@@ -576,9 +603,11 @@ def plot_save_sir(G, folder, std_pmbD_dic, done_iterations = 1, p = 0, beta = 0.
 
       'plot always sir'
       rhuD2 = rhu(D,2)
-      print("\nThe model has N: %s, D: %s, beta: %s, mu: %s, p: %s, R0: %s" % (N,rhuD2,rhu(beta,3),rhu(mu,3),rhu(p,3),rhu(R0,3)) )
-      itermean_R_net, itermean_std_inf_net = \
-        plot_sir(G, ax=ax, folder = folder, beta = beta, mu = mu, start_inf = start_inf, numb_iter = numb_iter)
+      print("\nThe model has N: %s, D: %s(%s), beta: %s, mu: %s, p: %s, R0: %s" % 
+      (N,rhuD2,rhu(std_D,2),rhu(beta,3),rhu(mu,3),rhu(p,3),rhu(R0,3)) )
+      avg_R_net, std_avg_R_net, avg_std_ndi_net, std_avg_std_ndi_net = \
+        plot_sir(G, ax=ax, folder = folder, beta = beta, mu = mu, start_inf = start_inf, 
+                numb_iter = numb_iter)
       plt.subplots_adjust(
       top=0.920,
       bottom=0.151,
@@ -586,8 +615,9 @@ def plot_save_sir(G, folder, std_pmbD_dic, done_iterations = 1, p = 0, beta = 0.
       right=0.992,
       hspace=0.2,
       wspace=0.2)
-      plt.suptitle(r"$R_0:%s, \bar{R}_{net}:%s, D_{%s}:%s, N_{3-out}: %s, p:%s, \beta:%s, \mu:%s$"
-      % (rhu(R0,3),rhu(itermean_R_net,3), N, rhuD2, count_outsiders, rhu(p,3), rhu(beta,3), rhu(mu,3), ))
+      plt.suptitle(r"$R_0:%s, \bar{R}_{net}:%s(%s), D_{%s}:%s(%s), p:%s, \beta:%s, \mu:%s$"
+      % (rhu(R0,3),rhu(avg_R_net,3), format(std_avg_R_net, ".1e"), N, rhuD2, rhu(std_D,2),
+        rhu(p,3), rhu(beta,3), rhu(mu,3), ))
       #plt.show()
       plt.savefig( file_path )
       print("time 1_plot_save_sir:", dt.datetime.now()-start_time) 
@@ -609,18 +639,19 @@ def plot_save_sir(G, folder, std_pmbD_dic, done_iterations = 1, p = 0, beta = 0.
       del my_dir
       from definitions import my_dir; import json; from definitions import NestedDict
       std_pmbD_dic = NestedDict(std_pmbD_dic)
-      value = itermean_std_inf_net
+      value = avg_std_ndi_net
+      std = std_avg_std_ndi_net
       print("\nTo be added pmbD itermean:", p, mu, beta, D, value)
       
       d = std_pmbD_dic #rename std_pmbD_dic to have compact wrinting
       if p in d.keys():
         if mu in d[p].keys():
             if beta in d[p][mu].keys():
-                d[p][mu][beta][D] = value
-            else: d[p][mu] = { **d[p][mu], **{beta: {D:value}} }
-        else: d[p] = {**d[p], **{mu:{beta:{D:value}}} }
+                d[p][mu][beta][D] = [value,std]
+            else: d[p][mu] = { **d[p][mu], **{beta: {D:[value, std]}} }
+        else: d[p] = {**d[p], **{mu:{beta:{D:[value,std]}}} }
       else:
-        d[p][mu][beta][D] = value
+        d[p][mu][beta][D] = [value,std]
 
       pp_std_pmbD_dic = json.dumps(std_pmbD_dic, sort_keys=False, indent=4)
       print(pp_std_pmbD_dic)
@@ -635,10 +666,12 @@ def plot_save_sir(G, folder, std_pmbD_dic, done_iterations = 1, p = 0, beta = 0.
       #  std_pmbD_dic, p, mu, beta, fixed_std)
       x = sorted(fixed_std.keys())
       #print("x", x)
-      y = [fixed_std[i] for i in x]
+      y = [fixed_std[i][0] for i in x]
+      yerr = [fixed_std[i][1] for i in x]
+      xerr = 0
       #print("y", y)
-      ax.plot(x,y, 'b*-', markersize = 30, mfc = "red", mec = "black", \
-         linewidth = 10, label = "Avg_SD(NDI)")
+      ax.errorbar(x,y,xerr = xerr,yerr = yerr, fmt = 'b*-', markersize = 30, mfc = "red", mec = "black", \
+         linewidth = 5, label = "Avg_SD(NDI)")
       ax.legend(fontsize = 35)
 
       #plt.show()
@@ -652,10 +685,6 @@ def plot_save_sir(G, folder, std_pmbD_dic, done_iterations = 1, p = 0, beta = 0.
         file.write(pp_std_pmbD_dic) # use `json.loads` to do the reverse
       
       plt.close()
-
-
-      
-
 
   if os.path.exists(log_path):
     'sort line to have the new ones at first'
