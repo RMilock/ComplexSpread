@@ -9,6 +9,9 @@ import os #to create a folder
 
 #this has been saved in morning of the 3.6.2021
 
+def pos_deg_nodes(G): # G "real" nodes
+  return [i for i,j in G.degree() if j > 0]
+
 def my_dir():
   #return "/content/drive/MyDrive/Colab_Notebooks/Thesis/Complex_Plots/"
   #return "/content/"
@@ -19,8 +22,7 @@ def parameters_net_and_sir(folder = None, p_max = 0.1):
 
   'WARNING: put SAME beta, mu, D and p to compare at the end the different topologies'
   #B-A_Model parameters
-  k_prog = np.concatenate(([0.1,0.2,0.3,0.4,0.5,0.6,1,2],np.arange(3,15,2)))
-  #k_prog = np.concatenate(([0.3,1,2],np.arange(3,40,2)))
+  k_prog = np.concatenate(([0.3,1,2],np.arange(3,40,2)))
   #In B-A model, these are the fully connected initial cliques
   p_prog = [rhu(x,1) for x in np.linspace(0,p_max,int(p_max*10)+1)]
   beta_prog = [0.05, 0.1, 0.2, 0.25]; mu_prog = beta_prog
@@ -383,8 +385,9 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
   my_dir = my_dir() #"/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/Tests/"
   N = G.number_of_nodes()
   D = rhu(np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes() , 2)
+  rhuD1 = rhu(D,1)
   rhuD = rhu(D)
-  print("D%s VS rhuD %s" % (D,rhuD))
+  print("D%s VS rhuD1 %s" % (D,rhuD1))
   #D = rhu( D)
   adj_or_sir = "AdjMat"
   if nx.is_connected(G): avg_l = nx.average_shortest_path_length(G)
@@ -634,6 +637,10 @@ def plot_save_sir(G, folder, std_pmbD_dic, done_iterations = 1, p = 0, beta = 0.
       
       plt.close()
 
+
+      
+
+
   if os.path.exists(log_path):
     'sort line to have the new ones at first'
     sorted_lines = []
@@ -719,22 +726,13 @@ def ws_sir(G, folder, p, saved_nets, done_iterations, pruning = False, infos = F
   plot_save_sir(G = G, folder = folder, beta = beta, mu = mu, p = p, start_inf = start_inf, done_iterations = done_iterations )
 
 '===Configurational Model'
-def pos_deg_nodes(G): # G "real" nodes
-  return [i for i,j in G.degree() if j > 0]
-
 def pois_pos_degrees(D, N, L = int(2e3)):
   'Draw N degrees from a Poissonian sequence with lambda = D and length L'
   degs = np.random.poisson(lam = D, size = L)
-  print(D)
-  if D < 1: 
-    print(degs)
-    custom_degs = list(map(lambda x: 0 if x == -1 else x, degs))
-    #print("\n custom", custom_degs)
-    custom_degs = [x for x in degs if x >= 0]
-  else: custom_degs = [x for x in degs if x >= 0]
-  pos_degrees = np.random.choice(custom_degs, N)
+  print("NN_Starting D", D)
+  pos_degrees = np.random.choice(degs, N)
 
-  #print("len(s) in deg", len([x for x in degs if x <= 0]))
+  print("len(deg<0) in deg", len([x for x in degs if x < 0]))
   #print("len(s) in pos_degrees", len([x for x in pos_degrees if x == 0]))
   return pos_degrees
 
@@ -776,7 +774,7 @@ def long_range_edge_add(G, p = 0, time_int = False):
   all_edges = list(chain.from_iterable(all_edges))
   initial_length = len(all_edges)
   if p != 0:
-    for node in pos_deg_nodes(G): #pos nodes since I need to rewire to them
+    for node in pos_deg_nodes(G):
       left_nodes = list(pos_deg_nodes(G))
       left_nodes.remove(node) 
       re_link = random.choice( left_nodes )
@@ -787,8 +785,8 @@ def long_range_edge_add(G, p = 0, time_int = False):
   remove_loops_parallel_edges(G, False)
   if time_int: print(f"Time for add edges over ddistr:", dt.datetime.now()-start_time)
 
-def connect_net(G, connect_net): #set solo_nodes = False to have D < 1 nets
-  if connect_net:
+def connect_net(G, conn_flag): #set solo_nodes = False to have D < 1 nets
+  if conn_flag:
     import networkx as nx
     import numpy as np
     'there is only a node with 2 degree left. So, if rewired correctly only a +1 in the ddistr'
@@ -806,7 +804,7 @@ def connect_net(G, connect_net): #set solo_nodes = False to have D < 1 nets
     #print("Total links to have", len(list(nx.connected_components(G))),"connected component are", its)
     if len(list(nx.connected_components(G)))>1: print("Disconnected net!")
 
-def NN_pois_net(N, folder, ext_D, p = 0, connect_net = True):
+def NN_pois_net(N, folder, ext_D, p = 0, conn_flag = True):
   'p is not used right now'
   from definitions import config_pois_model, connect_net
   import numpy as np
@@ -833,6 +831,8 @@ def NN_pois_net(N, folder, ext_D, p = 0, connect_net = True):
   sorted_nodes = [node for node in sorted_nodes_degree.keys()]
   verboseprint("There are the sorted_nodes", sorted_nodes) #, "\n", sorted_nodes_degree.values())
 
+  
+  
   'cancel all the edges'
   replace_edges_from(G)
 
@@ -901,11 +901,30 @@ def NN_pois_net(N, folder, ext_D, p = 0, connect_net = True):
   infos_sorted_nodes(G, num_sorted_nodes=False)
   
   long_range_edge_add(G, p = p)
-  connect_net(G, connect_net = connect_net)
+  connect_net(G, conn_flag = conn_flag)
 
-  print(f"There are {len([j for i,j in G.degree() if j == 0])} 0_degree node as")
+  '''
+  CUT OFF THE DISC COMPONENT SINCE WE WANT TO PRESERVE SOLELY NODES
+
+  'there is only a node with 2 degree left. So, if rewired correctly only a +1 in the ddistr'
+  'So, connect all the disconnected components'
+  its = 0
+  sorted_disc_components = sorted(nx.connected_components(G), key=len, reverse=True)
+  for c in sorted_disc_components: #set of conn_comp
+    if its == 0: 
+      base_node = np.random.choice(([x for x in c])); 
+    else: 
+      linking_node = np.random.choice(([x for x in c]))
+      G.add_edge(linking_node,base_node)
+      base_node = linking_node
+    its += 1
+  #print("Total links to have", len(list(nx.connected_components(G))),"connected component are", its)
+  if len(list(nx.connected_components(G)))>1: print("Disconnected net!")
+  '''
+  print(f"There are {len([j for i,j in G.degree() if j == 0])} 0 degree node as")
   print("End of wiring")
   
+
   return G
 
 def NN_Overl_pois_net(N, ext_D, p, add_edges_only = False):
@@ -979,7 +998,7 @@ def check_loops_parallel_edges(G):
 def infos_sorted_nodes(G, num_sorted_nodes = False):
     import networkx as nx
     'sort nodes by key = degree. printing order: node, adjacent nodes, degree'
-    nodes = G.nodes() #pos_deg_nodes(G)
+    nodes = G.nodes()
     print("<k>: ", np.sum([j for (i,j) in G.degree() ]) / len(nodes), 
           " and <k>/N ", np.sum([j for (i,j) in G.degree() ]) / len(nodes)**2, end="\n" )
     
@@ -1259,3 +1278,4 @@ class NestedDict(dict):
         return self[key]
 
 '===main, i.e. automatize common part for different nets'
+
