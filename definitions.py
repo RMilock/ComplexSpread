@@ -599,6 +599,13 @@ def plot_save_sir(G, folder, std_pmbD_dic, done_iterations = 1, p = 0, beta = 0.
 
 
       'overwrite overy update in std_inf to look @ it in run-time'
+      '''plt.subplots_adjust(top=0.91,
+      bottom=0.182,
+      left=0.124,
+      right=0.93,
+      hspace=0.2,
+      wspace=0.2)'''
+
       del my_dir
       from definitions import my_dir; import json; from definitions import NestedDict
       std_pmbD_dic = NestedDict(std_pmbD_dic)
@@ -618,6 +625,11 @@ def plot_save_sir(G, folder, std_pmbD_dic, done_iterations = 1, p = 0, beta = 0.
       pp_std_pmbD_dic = json.dumps(std_pmbD_dic, sort_keys=False, indent=4)
       print(pp_std_pmbD_dic)
 
+      _, ax = plt.subplots(figsize = (20,14))
+      plt.suptitle(r"$Average Std(Daily New Infected) :: p%s,\mu:%s,\beta:%s$"%(p,mu,beta))
+      ax.set_xlabel("Avg_Degree [Indivs]")
+      ax.set_ylabel("Std(NDI)")
+      
       fixed_std = std_pmbD_dic[p][mu][beta]
       #print("std_pmbD_dic, p0, mu0, beta0, fixed_std", \
       #  std_pmbD_dic, p, mu, beta, fixed_std)
@@ -625,8 +637,12 @@ def plot_save_sir(G, folder, std_pmbD_dic, done_iterations = 1, p = 0, beta = 0.
       #print("x", x)
       y = [fixed_std[i] for i in x]
       #print("y", y)
-      plt.plot(x,y,'-*')
+      ax.plot(x,y, 'b*-', markersize = 30, mfc = "red", mec = "black", \
+         linewidth = 10, label = "Avg_SD(NDI)")
+      ax.legend(fontsize = 35)
+
       #plt.show()
+      
       std_path = my_dir() + folder + "/Std/"
       if not os.path.exists(std_path): os.makedirs(std_path)
       plt.savefig("".join((std_path,"std_p%s_mu%s_beta%s.png" % (p,rhu(mu,3),rhu(beta,3)))))
@@ -830,8 +846,6 @@ def NN_pois_net(N, folder, ext_D, p = 0, conn_flag = True):
   sorted_nodes_degree = {k: v for k, v in sorted(nodes_degree.items(), key=lambda item: item[1])}
   sorted_nodes = [node for node in sorted_nodes_degree.keys()]
   verboseprint("There are the sorted_nodes", sorted_nodes) #, "\n", sorted_nodes_degree.values())
-
-  
   
   'cancel all the edges'
   replace_edges_from(G)
@@ -903,24 +917,6 @@ def NN_pois_net(N, folder, ext_D, p = 0, conn_flag = True):
   long_range_edge_add(G, p = p)
   connect_net(G, conn_flag = conn_flag)
 
-  '''
-  CUT OFF THE DISC COMPONENT SINCE WE WANT TO PRESERVE SOLELY NODES
-
-  'there is only a node with 2 degree left. So, if rewired correctly only a +1 in the ddistr'
-  'So, connect all the disconnected components'
-  its = 0
-  sorted_disc_components = sorted(nx.connected_components(G), key=len, reverse=True)
-  for c in sorted_disc_components: #set of conn_comp
-    if its == 0: 
-      base_node = np.random.choice(([x for x in c])); 
-    else: 
-      linking_node = np.random.choice(([x for x in c]))
-      G.add_edge(linking_node,base_node)
-      base_node = linking_node
-    its += 1
-  #print("Total links to have", len(list(nx.connected_components(G))),"connected component are", its)
-  if len(list(nx.connected_components(G)))>1: print("Disconnected net!")
-  '''
   print(f"There are {len([j for i,j in G.degree() if j == 0])} 0 degree node as")
   print("End of wiring")
   
