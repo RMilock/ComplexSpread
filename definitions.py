@@ -21,12 +21,12 @@ def my_dir():
   #return "/content/"
   return "/home/hal21/MEGAsync/Tour_Physics2.0/Thesis/NetSciThesis/Project/Plots/Test/"
 
-def parameters_net_and_sir(folder = None, p_max = 0.1):
+def parameters_net_and_sir(folder = None, p_max = 0.3):
   'progression of net-parameters'
 
   'WARNING: put SAME beta, mu, D and p to compare at the end the different topologies'
   #B-A_Model parameters
-  k_prog = np.concatenate(([0.3,1,2],np.arange(3,40,2)))
+  k_prog = np.concatenate((np.linspace(0.1,1,5),np.arange(3,20,2)))
   #In B-A model, these are the fully connected initial cliques
   p_prog = [rhu(x,1) for x in np.linspace(0,p_max,int(p_max*10)+1)]
   beta_prog = [0.05, 0.1, 0.2, 0.25]; mu_prog = beta_prog
@@ -38,7 +38,7 @@ def parameters_net_and_sir(folder = None, p_max = 0.1):
   if folder == "B-A_Model": 
     beta_prog = np.linspace(0.01,1,14); mu_prog = beta_prog
     p_prog = [0]; R0_min = 0; R0_max = 6  
-  if folder == "NN_Conf_Model": 
+  if folder == "NN_Conf_Model_not_considered": 
     beta_prog = [0.05, 0.1, 0.2, 0.25]; mu_prog = beta_prog
     # past parameters: beta_prog = np.linspace(0.01,1,8); mu_prog = beta_prog
     #k_prog = np.arange(2,34,2)    
@@ -95,6 +95,7 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
   'Number of nodes in the graph'
   N = G.number_of_nodes()
   mean = int(rhu(np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes()))
+  #N, mean, _ = N_D_std_D(G)
 
   'Label the individual wrt to the # of the node'
   node_labels = G.nodes()
@@ -103,7 +104,7 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
   inf_list = [] #infected node list @ each t
   prevalence = [] # = len(inf_list)/N, i.e. frac of daily infected for every t
   recovered = [] #recovered nodes for a fixed t
-  arr_daily_new_inf = [] #arr to computer SD(daily_new_inf(t)) for daily_new_inf(t)!=0
+  arr_daily_new_inf = [] #arr to computer Std(daily_new_inf(t)) for daily_new_inf(t)!=0
 
   'Initial Conditions'
   current_state = ['S' for i in node_labels] 
@@ -341,9 +342,9 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
           np.max(trajectories[2][j]), mf_trajectories[2][j],
           np.max(trajectories[0][j]) ), axis = None ) )'''
 
-  ax.plot(mf_avg[0], label="MF::NDI", \
+  ax.plot(mf_avg[0], label="MF::NewDailyInf", \
     color = "darkviolet") #prevalence
-  ax.plot(avg[0], label="Net::NDI", \
+  ax.plot(avg[0], label="Net::NewDailyInf", \
     color = "tab:blue") #prevalence
 
   'define a string_format to choose the best way to format the std of the mean'
@@ -647,11 +648,11 @@ def plot_save_sir(G, folder, std_pmbD_dic, done_iterations = 1, p = 0, beta = 0.
       if p in d.keys():
         if mu in d[p].keys():
             if beta in d[p][mu].keys():
-                d[p][mu][beta][D] = [value,std]
-            else: d[p][mu] = { **d[p][mu], **{beta: {D:[value, std]}} }
-        else: d[p] = {**d[p], **{mu:{beta:{D:[value,std]}}} }
+                d[p][mu][beta][D] = [std_D,value,std]
+            else: d[p][mu] = { **d[p][mu], **{beta: {D:[std_D, value, std]}} }
+        else: d[p] = {**d[p], **{mu:{beta:{D:[std_D,value,std]}}} }
       else:
-        d[p][mu][beta][D] = [value,std]
+        d[p][mu][beta][D] = [std_D,value,std]
 
       pp_std_pmbD_dic = json.dumps(std_pmbD_dic, sort_keys=False, indent=4)
       print(pp_std_pmbD_dic)
@@ -665,20 +666,20 @@ def plot_save_sir(G, folder, std_pmbD_dic, done_iterations = 1, p = 0, beta = 0.
       #print("std_pmbD_dic, p0, mu0, beta0, fixed_std", \
       #  std_pmbD_dic, p, mu, beta, fixed_std)
       x = sorted(fixed_std.keys())
-      #print("x", x)
-      y = [fixed_std[i][0] for i in x]
-      yerr = [fixed_std[i][1] for i in x]
-      xerr = 0
+      xerr = [fixed_std[i][0] for i in x]
+      y = [fixed_std[i][1] for i in x]
+      yerr = [fixed_std[i][2] for i in x]
+
       #print("y", y)
-      ax.errorbar(x,y,xerr = xerr,yerr = yerr, fmt = 'b*-', markersize = 30, mfc = "red", mec = "black", \
-         linewidth = 5, label = "Avg_SD(NDI)")
+      ax.errorbar(x,y, xerr = 0, yerr = yerr, color = "tab:blue", marker = "*", linestyle = "-",
+         markersize = 30, mfc = "tab:red", mec = "black", linewidth = 5, label = "Avg_Std(NDI)")
       ax.legend(fontsize = 35)
 
       #plt.show()
       
       std_path = my_dir() + folder + "/Std/"
       if not os.path.exists(std_path): os.makedirs(std_path)
-      plt.savefig("".join((std_path,"std_p%s_mu%s_beta%s.png" % (p,rhu(mu,3),rhu(beta,3)))))
+      plt.savefig("".join((std_path,"std_p%s_beta%s_mu%s.png" % (p,rhu(beta,3),rhu(mu,3)))))
 
       std_file = "".join((std_path,"saved_std_dicts.txt"))
       with open(std_file, 'w') as file:
