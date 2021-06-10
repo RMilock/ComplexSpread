@@ -107,7 +107,7 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
   inf_list = [] #infected node list @ each t
   prevalence = [] # = len(inf_list)/N, i.e. frac of daily infected for every t
   recovered = [] #recovered nodes for a fixed t
-  arr_daily_new_inf = [] #arr to computer Std(daily_new_inf(t)) for daily_new_inf(t)!=0
+  arr_ndi = [] #arr to computer Std(daily_new_inf(t)) for daily_new_inf(t)!=0
 
   'Initial Conditions'
   current_state = ['S' for i in node_labels] 
@@ -150,8 +150,8 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
                     future_state[j] = 'S'
     
     #print("dail_n_i", daily_new_inf)
-    if daily_new_inf != 0: arr_daily_new_inf.append(daily_new_inf)
-    #print("arr_ni", arr_daily_new_inf)
+    if daily_new_inf != 0: arr_ndi.append(daily_new_inf)
+    #print("arr_ni", arr_ndi)
 
     'Recovery Phase: only the prev inf nodes (=inf_list) recovers with probability mu'
     'not the new infected'        
@@ -181,54 +181,53 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
     #print("\nnum_susc, prevalence, recovered",num_susc, prevalence, recovered, 
     #len(num_susc), len(prevalence), len(recovered))
   
-  'Order Parameter = Std(Avg_ndi(t)) s.t. ndi(t)!=0 as a func of D'
+  'Order Parameter (op) = Std(Avg_ndi(t)) s.t. ndi(t)!=0 as a func of D'
   if not mf:
     ddof = 0
-    if len(arr_daily_new_inf) > 1: ddof = 1
-    if arr_daily_new_inf == []: arr_daily_new_inf = 0
-    avg_dni = np.mean(arr_daily_new_inf)
-    std_dni = np.std( arr_daily_new_inf, ddof = ddof )
-    #print("dni, arr_daily, std", daily_new_inf, arr_daily_new_inf, std_dni)
+    if len(arr_ndi) > 1: ddof = 1
+    if arr_ndi == []: arr_ndi = [0]
+    oneit_avg_dni = np.mean(arr_ndi)
+    'op = std_dni'
+    op = np.std( arr_ndi, ddof = ddof )
+    if len(arr_ndi) > 1:
+      if len([x for x in arr_ndi if x == 0]) > 0: 
+        raise Exception("Error There's 0 ndi: dni, arr_daily, std", daily_new_inf, arr_ndi, op)
 
-    'avg_R is the mean over the time of 1 sir. Then, avg over-all sir'
+    'oneit_avg_R is the mean over the time of 1 sir. Then, avg over-all iterations'
     'Then, compute std_avg_R'
     degrees = [j for i,j in G.degree()]
     D = np.mean(degrees)
     #print("R0, b,m,D", beta*D/mu, beta, mu, D)
     c = beta*D/(mu*num_susc[0])
-    avg_R = c*np.mean(num_susc)
+    oneit_avg_R = c*np.mean(num_susc)
     ddof = 0
     if len(num_susc) > 1: ddof = 1
-    std_avg_R = c*np.std(num_susc, ddof = 1)
-    #print("num_su[0], np.sum(num_susc), len(prev), avg_R2", \
-    #  num_susc[0],np.sum(num_susc), len(prevalence), avg_R)
+    std_oneit_avg_R = c*np.std(num_susc, ddof = 1)
+    #print("num_su[0], np.sum(num_susc), len(prev), oneit_avg_R2", \
+    #  num_susc[0],np.sum(num_susc), len(prevalence), oneit_avg_R)
 
-    return avg_R, std_avg_R, avg_dni, std_dni, prevalence, cum_prevalence
+    return oneit_avg_R, std_oneit_avg_R, oneit_avg_dni, op, prevalence, cum_prevalence
   
   return prevalence, cum_prevalence
-  
-  
-  #return avg_R, prevalence, cum_prevalence
 
 def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_inf = 10,verbose = False):
-  'def a function that iters numb_iter and make an avg of the trajectories'
+  'def a function that iters numb_iter and make an avg of all the trajectories'
   from itertools import zip_longest
   import numpy as np
   import datetime as dt
   import copy
 
-  numb_idx_cl = 2
-  trajectories = [[] for _ in range(numb_idx_cl)]
-  std_traj = [[] for _ in range(numb_idx_cl)]
-  avg_std_traj = [[] for _ in range(numb_idx_cl)]
-  
-  avg_traj= [[] for _ in range(numb_idx_cl)]
-  avg_R = 0; std_avg_R = 0; avg_std_ndi = 0
-  counts = [[],[]]
-  max_len = 0
-  list_avg_R = []; list_std_ndi = []
-  start_time = dt.datetime.now()
+  numb_idx_cl = 2; counts = [[],[]]; max_len = 0 
 
+  'here avg are "means" among all the iterations'
+  'So, better avg <-> itavg'
+  trajectories = [[] for _ in range(numb_idx_cl)]
+  avg_traj= [[] for _ in range(numb_idx_cl)]
+  std_avg_traj = [[] for _ in range(numb_idx_cl)]
+  
+  avg_R = 0; std_avg_R = 0; list_avg_R = []; 
+  avg_ordp = 0; list_ordp = [] #ordp = std(ndi s.t. ndi!=0)
+  start_time = dt.datetime.now()
 
   'find the maximum time of 1 scenario among numb_iter ones'
   for i in range(numb_iter):
@@ -236,11 +235,11 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
     if not mf:
       avg_R, std_avg_R, _, std_dni, prev, cum_prev \
         = sir(G, beta = beta, mu = mu, start_inf = start_inf, mf = mf)
-      #avg_R, avg_dni, std_dni, prev, rec, cum_prev \
+      #avg_R, oneit_avg_dni, std_dni, prev, rec, cum_prev \
       #  = 1,3,5,[1,2],[3,4,5],[6,7,8,9]
       list_avg_R.append(avg_R)
-      std_avg_R += std_avg_R**2 / max(1,numb_iter) #using error propagation
-      list_std_ndi.append(std_dni)
+      std_avg_R += std_avg_R**2 / max(1,numb_iter) #using error propagation for the mean
+      list_ordp.append(std_dni)
     else: prev, cum_prev = sir(G, beta = beta, mu = mu, start_inf = start_inf, mf = mf)
     
     tmp_traj = prev, cum_prev
@@ -261,14 +260,14 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
       tmp_max = len(tmp_traj[0])
       if tmp_max > max_len: max_len = tmp_max
     
-  'Only for nets: compute mean and std of avg_R and std_nd_inf'
+  'Only for nets: compute mean and std of avg_R and std_ndi'
   if not mf:
     avg_R = np.mean(list_avg_R)
     std_avg_R = np.sqrt(std_avg_R)
 
-    'order parameter complete'
-    avg_std_ndi = np.mean(list_std_ndi)
-    std_avg_std_ndi = np.std(list_std_ndi, ddof = 1)
+    'order parameter with std'
+    avg_ordp = np.mean(list_ordp)
+    std_avg_ordp = np.std(list_ordp, ddof = 1)
 
   plot_trajectories = copy.deepcopy(trajectories)
 
@@ -279,11 +278,12 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
         print("Total time for %s its of avg-for-loop %s. Time for 1 sir %s" % (i+1, time_50sir, time_1sir))
         start_time = dt.datetime.now()
     for idx_cl in range(numb_idx_cl):
-      'create a list repeating the last element to reach a len of max_len'
-      'Varying idx_cl, traj[idx][i] has the != len wrt trj[0][i] since its increasing with +=last_el_list'
+      'create a max-len list repeating the last element'
+      'Varying idx_cl, traj[idx][i] has the != len wrt trj[0][i] since its increasing, fel, with +=last_el_list'
+      'traj[classes to be considered, e.g. infected = 0][precise iteration we want, e.g. "-1"]'
+      
       last_el_list = [trajectories[idx_cl][i][-1] for _ in range(max_len-len(trajectories[idx_cl][i]))]
       #print("max_len", max_len, len(trajectories[idx_cl][i]), len(last_el_list), len(trajectories[0][i]) )
-      'traj[classes to be considered, e.g. infected = 0][precise iteration we want, e.g. "-1"]'
       trajectories[idx_cl][i] += last_el_list
       
       if verbose:
@@ -299,18 +299,17 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
 
       length = len(trajectories[idx_cl][i]) #should be max_len
       if length != max_len: raise Exception("Error: %s not max_len %s of %s-th it" % (length,max_len,i))
-    if i == 199: print("End of avg_trajon 200 scenarios")
+    if i == 199: print("End of avg_traj on 200 scenarios")
 
-  'std_traj != order_param (std(arr_ndi)) since prevalence(ndi/N) and ndi = 0 are allowed'  
+  'std_avg_traj != order_param (std(arr_ndi)) since prevalence(ndi/N) and ndi = 0 are allowed'  
   print("\nNow compute the Std of the prevalence")
   for idx_cl in range(numb_idx_cl):    
     avg_traj[idx_cl] = np.mean(trajectories[idx_cl], axis = 0) #avg wrt index, e.g. all 0-indexes
-    std_traj[idx_cl] = np.std(trajectories[idx_cl], axis = 0, ddof = 1)
-    #avg_std_traj[idx_cl] = np.mean(std_traj[idx_cl])
+    std_avg_traj[idx_cl] = np.std(trajectories[idx_cl], axis = 0, ddof = 1)
   print("End idx_cl %s round"%idx_cl)
   
-  if not mf: return avg_R, std_avg_R, avg_std_ndi, std_avg_std_ndi, plot_trajectories, avg_traj, std_traj
-  return plot_trajectories, avg_traj, std_traj
+  if not mf: return avg_R, std_avg_R, avg_ordp, std_avg_ordp, plot_trajectories, avg_traj, std_avg_traj
+  return plot_trajectories, avg_traj, std_avg_traj
 
 def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter = 200):
 
@@ -322,19 +321,19 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
   'plot ratio of daily infected and daily cumulative recovered'
   'Inf and Cum_Infected from Net_Sir; Recovered from MF_SIR'
   print("\nNetwork-SIR loading...")
-  avg_R_net, std_avg_R_net, avg_std_ndi_net, std_avg_std_ndi_net, trajectories, avg_traj, std_traj \
+  avg_R_net, std_avg_R_net, avg_ordp_net, std_avg_ordp_net, trajectories, avg_traj, std_avg_traj \
   = itermean_sir(G, mf = False, beta = beta, mu = mu, start_inf  = start_inf, numb_iter=numb_iter)
-  print("Final avg_std_ndi_net", avg_std_ndi_net)
+  print("Final avg_ordp_net", avg_ordp_net)
   print("\nMF-SIR loading...")
-  mf_trajectories, mf_avg_traj, mf_std_traj = itermean_sir(G, mf = True, mu = mu, beta = beta, start_inf = start_inf, numb_iter = numb_iter)
+  mf_trajectories, mf_avg_traj, mf_std_avg_traj = itermean_sir(G, mf = True, mu = mu, beta = beta, start_inf = start_inf, numb_iter = numb_iter)
   'plotting the many realisations'    
   colors = ["paleturquoise","wheat","lightgreen", "thistle"]
   
   for j in range(numb_iter):
     ax.plot(trajectories[0][j], color = colors[0]) #net_New_Daily_Cases
-    ax.plot(mf_trajectories[0][j], color = colors[3])
+    ax.plot(mf_trajectories[0][j], color = colors[3]) #net_cum_ndi
     ax.plot(mf_trajectories[1][j], color = colors[1]) #mf_Sum_New_Daily_Cases
-    ax.plot(trajectories[1][j], color = colors[2])
+    ax.plot(trajectories[1][j], color = colors[2]) #mf_cum_ndi
     
     ''' mv legend above the over-all max of the plots
     if R0 <= 2 and folder == "NNR_Conf_Model":
@@ -349,16 +348,16 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
     color = "tab:blue") #prevalence
 
   'define a string_format to choose the best way to format the std of the mean'
-  value = mf_std_traj[1][-1]
+  value = mf_std_avg_traj[1][-1]
   string_format = str(np.round(value*100,1))[:3]
   if string_format == "0.0":
     string_format = format(value, ".1e")
 
   ax.plot(mf_avg_traj[1], label=r"MF::Sum_NDI (%s%%$\pm$%s%%)"\
     % (np.round(mf_avg_traj[1][-1]*100,1), string_format ), \
-    color = "tab:orange" ) #mf::cd_inf, np.round(mf_std_traj[1][-1]*100,1)
+    color = "tab:orange" ) #mf::cd_inf, np.round(mf_std_avg_traj[1][-1]*100,1)
   ax.plot(avg_traj[1], label=r"Net::Sum_NDI (%s%%$\pm$%s%%)" %
-    (np.round(avg_traj[1][-1]*100,1), np.round(std_traj[1][-1]*100,1) ), \
+    (np.round(avg_traj[1][-1]*100,1), np.round(std_avg_traj[1][-1]*100,1) ), \
     color = "tab:green") #net::cd_inf
 
   'plot horizontal line to highlight the initial infected'
@@ -393,7 +392,7 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
     order = [2,3,0,1,4]
     ax.legend([handles[idx] for idx in order],[labels[idx] for idx in order],loc="best"); 'set legend in the "best" mat plot lib location'
 
-  return avg_R_net, std_avg_R_net, avg_std_ndi_net, std_avg_std_ndi_net
+  return avg_R_net, std_avg_R_net, avg_ordp_net, std_avg_ordp_net
 
 def rhu(n, decimals=0): #round_half_up
     import math
@@ -412,12 +411,11 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
   my_dir = my_dir() #"/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/Tests/"
   N = G.number_of_nodes()
   degrees = [j for i,j in G.degree()]
-  D = rhu( np.mean(degrees), 2)
+  D = rhu( np.mean(degrees), 2) #used for suptitle, outsider, hist
   std_D = rhu( np.std(degrees, ddof = 1), 2 )
 
-  rhuD1 = rhu(D,1)
-  rhuD = rhu(D)
-  print("D%s VS rhuD1 %s" % (D,rhuD1))
+  rhuD = rhu(D) #used for func_file_name, mean in hist, 
+  print("D%s" % (D))
   #D = rhu( D)
   adj_or_sir = "AdjMat"
   if nx.is_connected(G): avg_l = nx.average_shortest_path_length(G)
@@ -437,11 +435,7 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
   my_dir+=folder+"/p%s/"%rhu(p,3)+adj_or_sir+"/" #"../Plots/Tests/WS_Epids/p0.001/AdjMat/"
   file_name = func_file_name(folder = folder, adj_or_sir = adj_or_sir, \
     N = N, D = rhuD, p = p, m = m, N0 = N0)
-  '''
-  folder + "_N%s_D%s_k_{max}%s_m%s_N0_%s_p%s" % (
-    N, D, max_degree, m, N0, rhu(p,3) ) + \
-      ".png"
-  '''
+
   file_path = my_dir + file_name #../Plot/Test/AdjMat/AdjMat_N1000_D500_p0.001.png
   log_path = log_upper_path + folder + f"_log_saved_{adj_or_sir}.txt" #"../Plots/Tests/WS_Epids/WS_Epids_log_saved_nets.txt"
   nc_path = log_upper_path + folder + "_not_connected_nets.txt"
@@ -494,8 +488,6 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
                                         lw=1, align="left", label = "Degrees Distr")
   #hist_mean = n[np.where(hist_bins == mean)]; pois_mean = poisson.pmf(rhuD, D)
   hist_mean = max(n); pois_mean = max(poisson.pmf(bins,D))
-  print("n, pois, max_n, max_pois", n, poisson.pmf(bins,D), hist_mean, pois_mean)
-  'useful but deletable print'
   axs.plot(bins, y * hist_mean / pois_mean, "bo--", lw = 2, label = "Poissonian Distr")
   axs.set_xlabel('Degree', )
   axs.set_ylabel('Counts', )
@@ -562,7 +554,7 @@ def plot_save_sir(G, folder, std_pmbD_dic, done_iterations = 1, p = 0, beta = 0.
   mode = "a"
   #if done_iterations == 1: mode = "w"
   my_dir = my_dir() #"/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/Tests/"
-  N, D, std_D = N_D_std_D(G)
+  N, D, std_D = N_D_std_D(G) #D used in std_pmbD, outsiders, R0
   adj_or_sir = "SIR"
   'find the major hub and the "ousiders", i.e. highly connected nodes'
   infos = G.degree()
@@ -582,6 +574,8 @@ def plot_save_sir(G, folder, std_pmbD_dic, done_iterations = 1, p = 0, beta = 0.
   plot_params()
   intervals = [x for x in np.arange(R0_max+1)]
   N = G.number_of_nodes()
+  rhuD2 = rhu(D,2) #use in suptitle, to print "The model...", 
+  #rhuD1 in file_name_save
   R0 = beta * D / mu
   dict_std_inf = {}
 
@@ -595,21 +589,16 @@ def plot_save_sir(G, folder, std_pmbD_dic, done_iterations = 1, p = 0, beta = 0.
       if not os.path.exists(my_dir + r0_folder + "/Sel_R0/"): os.makedirs(my_dir + r0_folder + "/Sel_R0/")
       file_name = func_file_name(folder = folder, adj_or_sir = adj_or_sir, \
         N = N, D = rhu(D,1), R0 = rhu(R0,3), p = p, beta = beta, mu = mu)
-      '''
-      file_name = folder + "_%s_R0_%s_N%s_rhuD%s_p%s_beta%s_mu%s"% (
-            adj_or_sir, '{:.3f}'.format(rhu(beta/mu*rhuD,3)),
-            N,rhuD, rhu(p,3), rhu(beta,3), rhu(mu,3) ) + ".png"
-      '''
+      
       file_path = my_dir + r0_folder + file_name
       
       'plot all'
       _, ax = plt.subplots(figsize = (20,12))
 
-      'plot always sir'
-      rhuD2 = rhu(D,2)
+      'plot sir'
       print("\nThe model has N: %s, D: %s(%s), beta: %s, mu: %s, p: %s, R0: %s" % 
       (N,rhuD2,rhu(std_D,2),rhu(beta,3),rhu(mu,3),rhu(p,3),rhu(R0,3)) )
-      avg_R_net, std_avg_R_net, avg_std_ndi_net, std_avg_std_ndi_net = \
+      avg_R_net, std_avg_R_net, avg_ordp_net, std_avg_ordp_net = \
         plot_sir(G, ax=ax, folder = folder, beta = beta, mu = mu, start_inf = start_inf, 
                 numb_iter = numb_iter)
       plt.subplots_adjust(
@@ -643,8 +632,8 @@ def plot_save_sir(G, folder, std_pmbD_dic, done_iterations = 1, p = 0, beta = 0.
       del my_dir
       from definitions import my_dir; import json; from definitions import NestedDict
       std_pmbD_dic = NestedDict(std_pmbD_dic)
-      value = avg_std_ndi_net
-      std = std_avg_std_ndi_net
+      value = avg_ordp_net
+      std = std_avg_ordp_net
       print("\nTo be added pmbD itermean:", p, mu, beta, D, value)
       
       d = std_pmbD_dic #rename std_pmbD_dic to have compact wrinting
@@ -719,9 +708,8 @@ def plot_save_nes(
   partition = None, dsc_sorted_nodes = False, done_iterations = 1, 
   chr_min = 0, std_pmbD_dic = 0): #save new_entrys
   'save net only if does not exist in the .txt. So, to overwrite all just delete .txt'
-  from definitions import already_saved_list, func_file_name
-  D =  np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes()
-  N = G.number_of_nodes()
+  from definitions import already_saved_list, func_file_name, N_D_std_D
+  N,D,std_D = N_D_std_D(G)
   R0 = rhu( beta*D/mu, 3)
   if adj_or_sir == "AdjMat": 
     saved_files = already_saved_list(folder, adj_or_sir, chr_min = chr_min, my_print= my_print, done_iterations= done_iterations)
