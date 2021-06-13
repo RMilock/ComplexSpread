@@ -26,48 +26,21 @@ def jsonKeys2int(x):
         return {float(k):v for k,v in x.items()}
     return x
 
-def parameters_net_and_sir(folder = None, p_max = 0.3):
-  'progression of net-parameters'
-
-  'WARNING: put SAME beta, mu, D and p to compare at the end the different topologies'
-  k_prog = np.concatenate((np.linspace(0.1,1,5),np.arange(3,20,2)))
-  p_prog = [rhu(x,1) for x in np.linspace(0,p_max,int(p_max*10)+1)]
-  beta_prog = [0.05, 0.1, 0.2, 0.25]; mu_prog = beta_prog
-  R0_min = 0; R0_max = 30   
-
-  'this should be deleted to have same params and make comparison more straight-forward'
-  if folder == "WS_Epids": 
-    'beta_prog = np.linspace(0.01,1,7); mu_prog = beta_prog'
-  if folder == "B-A_Model": 
-    'beta_prog = np.linspace(0.01,1,14); mu_prog = beta_prog'
-    p_prog = [0]; R0_min = 0; R0_max = 6  
-  if folder == "NN_Conf_Model_not_considered": 
-    'beta_prog = [0.05, 0.1, 0.2, 0.25]; mu_prog = beta_prog'
-    # past parameters: beta_prog = np.linspace(0.01,1,8); mu_prog = beta_prog
-    #k_prog = np.arange(2,34,2)    
-  if folder == "Caveman_Model": 
-    k_prog = np.arange(1,11,2) #https://www.prb.org/about/ -> Europe householdsize = 3
-    #beta_prog = np.linspace(0.001,1,6); mu_prog = beta_prog
-  if folder[:5] == "Overl": 
-    'beta_prog = [0.05, 0.1, 0.2, 0.25]; mu_prog = beta_prog #np.linspace(0.01,1,4)'
-
-  return k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max 
-
 'for now the difference in name are only for the net'
 def func_file_name(folder, adj_or_sir, N, D, p, R0 = -1, m = 0, N0 = 0, beta = 0.111, mu = 1.111):
   from definitions import rhu
   if adj_or_sir == "AdjMat":
     if folder == "B-A_Model": 
       name = folder + "_%s_N%s_D%s_p%s_m%s_N0_%s" % (
-      adj_or_sir, N, D, rhu(p,3), m, N0) + \
+      adj_or_sir, N, rhu(D), rhu(p,3), m, N0) + \
         ".png"  
       return name
-    else: return folder + "_%s_N%s_D%s_p%s.png" % (adj_or_sir, N,D,rhu(p,3)) 
+    else: return folder + "_%s_N%s_D%s_p%s.png" % (adj_or_sir, N,rhu(D),rhu(p,3)) 
 
   if adj_or_sir == "SIR":
     return folder + "_%s_R0_%s_N%s_D%s_p%s_beta%s_mu%s"% (
-            adj_or_sir, '{:.3f}'.format(R0),
-            N,D, rhu(p,3), rhu(beta,3), rhu(mu,3) ) + ".png"
+            adj_or_sir, '{:.1f}'.format(R0),
+            N,rhu(D,1), rhu(p,3), rhu(beta,3), rhu(mu,3) ) + ".png"
 
 '===Plot and Save SIR + Net'
 def plot_params():
@@ -152,7 +125,8 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
     #print("arr_ni", arr_ndi)
 
     'Recovery Phase: only the prev inf nodes (=inf_list) recovers with probability mu'
-    'not the new infected'        
+    'not the new infected'    
+    'This part is important in the OrderPar since diminishes the inf_list # that is in the "while-loop"'    
     for i in inf_list:
       if random.random() < mu:
           future_state[i] = 'R'
@@ -291,9 +265,8 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
         print( "--> trajectories[%s][%s]: %s" % (idx_cl, i, trajectories[idx_cl][i]), 
         "len:", length)
         print("zip_longest same index" , list(zip_longest(*trajectories[idx_cl], fillvalue=0)))#"and traj_idx_cl", trajectories[idx_cl])
-        print("global sum indeces", it_sum)
         print("counts of made its", counts[idx_cl])
-        print("avg", avg)
+        print("avg", avg_traj)
 
       length = len(trajectories[idx_cl][i]) #should be max_len
       if length != max_len: raise Exception("Error: %s not max_len %s of %s-th it" % (length,max_len,i))
@@ -421,18 +394,23 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
 
   'find the major hub and the "ousiders", i.e. highly connected nodes'
   infos = G.degree()
-  dsc_sorted_nodes = sorted( infos, key = lambda x: x[1], reverse=True)
+  dsc_sorted_nodes = sorted( infos, key = lambda x: x[1], reverse=True) # List w/ elements (node, deg)
   _, max_degree = dsc_sorted_nodes[0]
-  i,count_outsiders, threshold = 0,0,3*D
-  while( list(map(lambda x: x[1], dsc_sorted_nodes))[i] >  threshold):
-    count_outsiders += 1
-    i+=1
-  print("Outsiders", count_outsiders)
+  count_outsiders, threshold = 0,3*D
+
+  deg_dsc_nodes = list(map(lambda x: x[1], dsc_sorted_nodes) )
+  for i in range(len(deg_dsc_nodes)):
+    tmp_count = 0
+    if deg_dsc_nodes[i] >=  threshold:  tmp_count += 1
+    if -deg_dsc_nodes[-i] >=  threshold: tmp_count += 1
+    
+    if tmp_count == 0: break
+    count_outsiders += tmp_count
 
   log_upper_path = my_dir + folder + "/" #"../Plots/Tests/WS_Epids/"
   my_dir+=folder+"/p%s/"%rhu(p,3)+adj_or_sir+"/" #"../Plots/Tests/WS_Epids/p0.001/AdjMat/"
   file_name = func_file_name(folder = folder, adj_or_sir = adj_or_sir, \
-    N = N, D = rhuD, p = p, m = m, N0 = N0)
+    N = N, D = D, p = p, m = m, N0 = N0)
 
   file_path = my_dir + file_name #../Plot/Test/AdjMat/AdjMat_N1000_D500_p0.001.png
   log_path = log_upper_path + folder + f"_log_saved_{adj_or_sir}.txt" #"../Plots/Tests/WS_Epids/WS_Epids_log_saved_nets.txt"
@@ -587,12 +565,12 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
       if not os.path.exists(my_dir + r0_folder): os.makedirs(my_dir + r0_folder)
       if not os.path.exists(my_dir + r0_folder + "/Sel_R0/"): os.makedirs(my_dir + r0_folder + "/Sel_R0/")
       file_name = func_file_name(folder = folder, adj_or_sir = adj_or_sir, \
-        N = N, D = rhu(D,1), R0 = rhu(R0,3), p = p, beta = beta, mu = mu)
+        N = N, D = D, R0 = R0, p = p, beta = beta, mu = mu)
       
       file_path = my_dir + r0_folder + file_name
       
       'plot all'
-      _, ax = plt.subplots(figsize = (20,12))
+      _, ax = plt.subplots(figsize = (24,14))
 
       'plot sir'
       print("\nThe model has N: %s, D: %s(%s), beta: %s, mu: %s, p: %s, R0: %s" % 
@@ -603,26 +581,24 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
       plt.subplots_adjust(
       top=0.920,
       bottom=0.151,
-      left=0.106,
-      right=0.972,
+      left=0.126,
+      right=0.962,
       hspace=0.2,
       wspace=0.2)
 
-      string_format = str(np.round(std_avg_R_net,3))[:5]
+      string_format = str(np.round(std_avg_ordp_net,3))[:5]
       if string_format == "0.000":
-        string_format = format(std_avg_R_net, ".1e")
-      plt.suptitle(r"$R_0:%s, \bar{R}_{net}:%s(%s), D_{%s}:%s(%s), p:%s, \beta:%s, \mu:%s$"
-      % (rhu(R0,3),rhu(avg_R_net,3), string_format, N, rhuD2, rhu(std_D,2),
+        string_format = format(std_avg_ordp_net, ".1e")
+      plt.suptitle(r"$R_0:%s, OrdPar:%s(%s), D_{%s}:%s(%s), p:%s, \beta:%s, \mu:%s$"
+      % (rhu(R0,3),rhu(avg_ordp_net,3), string_format, N, rhuD2, rhu(std_D,2),
         rhu(p,3), rhu(beta,3), rhu(mu,3), ))
       #plt.show()
       plt.savefig( file_path )
       print("time 1_plot_save_sir:", dt.datetime.now()-start_time) 
 
       with open(log_path, mode) as text_file: #write only 1 time
-              text_file.write(file_name + "\n")
-            
+        text_file.write(file_name + "\n")            
       plt.close()
-
 
       'overwrite overy update in std_inf to look @ it in run-time'
       '''plt.subplots_adjust(top=0.91,
@@ -649,11 +625,11 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
       else:
         d[p][mu][beta][D] = [std_D,value,std]
 
-      pp_ordp_pmbD_dic = json.dumps(ordp_pmbD_dic, sort_keys=False, indent=4)
-      print(pp_ordp_pmbD_dic)
-
       _, ax = plt.subplots(figsize = (20,14))
-      plt.suptitle(r"$Average Std(Daily New Infected) :: p%s,\mu:%s,\beta:%s$"%(p,mu,beta))
+
+      'WARNING: here suptitle has beta // mu but the dict is ordp[p][mu][beta][D] = [std_D, ordp, std_ordp]'
+      'since in the article p and mu are fixed!'
+      plt.suptitle(r"$Average Std(Daily New Infected) :: p%s,\beta:%s,\mu:%s$"%(p,beta,mu))
       ax.set_xlabel("Avg_Degree [Indivs]")
       ax.set_ylabel("Std(NDI)")
       
@@ -666,18 +642,21 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
       yerr = [fix_pmb[i][2] for i in x]
 
       #print("y", y)
-      ax.errorbar(x,y, xerr = 0, yerr = yerr, color = "tab:blue", marker = "*", linestyle = "-",
-         markersize = 30, mfc = "tab:red", mec = "black", linewidth = 5, label = "Avg_Std(NDI)")
+      ax.errorbar(x,y, xerr = xerr, yerr = yerr, color = "tab:blue", marker = "*", linestyle = "-",
+         markersize = 30, mfc = "tab:red", mec = "black", linewidth = 3, label = "Avg_Std(NDI)")
       ax.legend(fontsize = 35)
 
       #plt.show()
       
-      std_path = my_dir() + folder + "/Std/"
-      if not os.path.exists(std_path): os.makedirs(std_path)
-      plt.savefig("".join((std_path,"std_p%s_beta%s_mu%s.png" % (p,rhu(beta,3),rhu(mu,3)))))
+      ordp_path = my_dir() + folder + "/OrdParam/p%s/beta_%s/" % (rhu(p,3),rhu(beta,3))
+      if not os.path.exists(ordp_path): os.makedirs(ordp_path)
+      plt.savefig("".join((ordp_path,"%s_ordp_p%s_beta%s_mu%s.png" % (folder, rhu(p,3),rhu(beta,3),rhu(mu,3)))))
 
-      std_file = "".join((std_path,"saved_std_dicts.txt"))
-      with open(std_file, 'w') as file:
+      'pretty print the dictionary of the ordp'
+      pp_ordp_pmbD_dic = json.dumps(ordp_pmbD_dic, sort_keys=False, indent=4)
+      #print(pp_ordp_pmbD_dic)
+      ordp_file = "".join((ordp_path,"saved_ordp_dict.txt"))
+      with open(ordp_file, 'w') as file:
         file.write(pp_ordp_pmbD_dic) # use `json.loads` to do the reverse
       
       plt.close()
@@ -695,7 +674,7 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
 
 def already_saved_list(folder, adj_or_sir, chr_min, my_print = True, done_iterations = 1):
   from definitions import my_dir
-  log_upper_path = "".join((my_dir(),folder,"/")) #../Plots/Test/Overlapping.../
+  log_upper_path = "".join((my_dir(),folder,"/")) #../Plots/Test/NNO_Conf_Model.../
   log_path = "".join((log_upper_path, folder, f"_log_saved_{adj_or_sir}.txt"))
 
   saved_list = []
@@ -712,7 +691,7 @@ def plot_save_nes(
   chr_min = 0, ordp_pmbD_dic = 0): #save new_entrys
   'save net only if does not exist in the .txt. So, to overwrite all just delete .txt'
   from definitions import already_saved_list, func_file_name, N_D_std_D
-  N,D,std_D = N_D_std_D(G)
+  N,D,_ = N_D_std_D(G)
   R0 = rhu( beta*D/mu, 3)
   if adj_or_sir == "AdjMat": 
     saved_files = already_saved_list(folder, adj_or_sir, chr_min = chr_min, my_print= my_print, done_iterations= done_iterations)
@@ -724,7 +703,7 @@ def plot_save_nes(
     N = N, D = rhu(D,1), R0 = R0, p = p, m = m, N0 = N0, beta = beta, mu = mu)
   if file_name not in saved_files: 
     print("I'm saving", file_name)
-    infos_sorted_nodes(G, num_sorted_nodes = True)
+    #infos_sorted_nodes(G, num_sorted_nodes = True)
     if adj_or_sir == "AdjMat": 
       plot_save_net(G = G, pos = pos, partition = partition, m = m, N0 = N0, 
       folder = folder, p = p, done_iterations = done_iterations)
@@ -947,7 +926,8 @@ def NN_pois_net(N, folder, ext_D, p = 0, conn_flag = True):
 
   return G
 
-def NN_Overl_pois_net(N, ext_D, p, add_edges_only = False):
+def NNOverl_pois_net(N, ext_D, p, add_edges_only = False):
+  #Nearest Neighbors Overlapping
   from itertools import chain
   from definitions import replace_edges_from, remove_loops_parallel_edges
   import datetime as dt
@@ -1206,30 +1186,33 @@ def caveman_defs():
       'decide how many nodes are going to relink to the neighbor "cave" (cfr numb_link_inring'
       total_nodes = clique_size*cliques
       #if numb_link_inring != 0: 
-      for clique in range(cliques):
-        if numb_link_inring != 0:
-          first_cl_node = clique_size*clique
-          nodes_inclique = np.arange(first_cl_node, first_cl_node+numb_link_inring)
-          attached_nodes = npr.choice( np.arange(clique_size*(1+clique), 
-                                      clique_size*(2+clique)), 
-                                      size = len(nodes_inclique) )
-          attached_nodes = attached_nodes % np.max((total_nodes,1))
-          for test, att_node in zip(nodes_inclique, attached_nodes):
-              #print("NN - clique add:", (test,att_node))
-              G.add_edge(test,att_node)
-          
-        'add a new edge by relinking one of the existing node'
-        'decide how many nodes in the clique would go into rnd relink via relink_rnd'
-        'In the last way, avg_degree is preserved'
-        if p != 0:
-          relink_rnd = clique_size
-          first_cl_node = clique_size*clique
-          nodes_inclique = np.arange(first_cl_node, first_cl_node + relink_rnd)
-          attached_nodes = npr.choice([x for x in pos_deg_nodes(G) if x not in nodes_inclique], 
-                                      size = len(nodes_inclique))
-          for test, att_node in zip(nodes_inclique, attached_nodes):
-            #print("relink", (test,att_node))
-            if npr.uniform() < p: G.add_edge(test,att_node)
+      
+      'clique size = D. So, if D < 1 dont relink since we need a disconnected net'
+      if clique_size > 1:
+        for clique in range(cliques):
+          if numb_link_inring != 0:
+            first_cl_node = clique_size*clique
+            nodes_inclique = np.arange(first_cl_node, first_cl_node+numb_link_inring)
+            attached_nodes = npr.choice( np.arange(clique_size*(1+clique), 
+                                        clique_size*(2+clique)), 
+                                        size = len(nodes_inclique) )
+            attached_nodes = attached_nodes % np.max((total_nodes,1))
+            for test, att_node in zip(nodes_inclique, attached_nodes):
+                #print("NN - clique add:", (test,att_node))
+                G.add_edge(test,att_node)
+            
+          'add a new edge by relinking one of the existing node'
+          'decide how many nodes in the clique would go into rnd relink via relink_rnd'
+          'In the last way, avg_degree is preserved'
+          if p != 0:
+            relink_rnd = clique_size
+            first_cl_node = clique_size*clique
+            nodes_inclique = np.arange(first_cl_node, first_cl_node + relink_rnd)
+            attached_nodes = npr.choice([x for x in pos_deg_nodes(G) if x not in nodes_inclique], 
+                                        size = len(nodes_inclique))
+            for test, att_node in zip(nodes_inclique, attached_nodes):
+              #print("relink", (test,att_node))
+              if npr.uniform() < p: G.add_edge(test,att_node)
 
       #check_loops_parallel_edges(G)
       remove_loops_parallel_edges(G)
@@ -1256,14 +1239,19 @@ def bam(N,m,N0):
   G = nx.Graph()
   
   'adds the N0 initial nodes'
-  G.add_nodes_from(range(N0))
+  G.add_nodes_from(range(N0)) #[0,1]
   edges = []
   
   'creates the initial clique connecting all the N0 nodes'
   edges = [(i,j) for i in range(N0) for j in range(i,N0) if i!=j]
-  
+  print("Initial clique edges", m, edges)
+
   'adds the initial clique to the network'
   G.add_edges_from(edges)
+
+  import matplotlib.pylab as plt
+  nx.draw_circular(G)
+  plt.show()
 
   'list to store the nodes to be selected for the preferential attachment.'
   'instead of calculating the probability of being selected a trick is used: if a node has degree k, it will appear'
@@ -1271,22 +1259,24 @@ def bam(N,m,N0):
   prob = []
   
   'runs over all the reamining nodes'
+  print("Creating a B-A Model")
   for i in range(N0,N):
-      G.add_node(i)
-      'for each new node, creates m new links'
-      for j in range(m):
-          'creates the list of nodes'
-          for k in list(G.nodes):
-              'add to prob a node as many time as its degree'
-              for _ in range(G.degree(k)):
-                  prob.append(k)
-          'picks up a random node, so nodes will be selected proportionally to their degree'
-          node = random.choice(prob)
-          
-          G.add_edge(node,i)
+    if i % 300 == 0: print("I am in the %s-th it" % i)
+    G.add_node(i)
+    'for each new node, creates m new links'
+    for j in range(m):
+      'creates the list of nodes'
+      for k in list(G.nodes()):
+          'add to prob a node as many time as its degree'
+          for _ in range(G.degree(k)):
+              prob.append(k)
+      'picks up a random node, so nodes will be selected proportionally to their degree'
+      node = random.choice(prob)
       
-          'the list must be created from 0 for every link since with every new link probabilities change'
-          prob.clear()
+      G.add_edge(node,i)
+  
+      'the list must be created from 0 for every link since with every new link probabilities change'
+      prob.clear()
   'returns the graph'
 
   return G
@@ -1297,6 +1287,35 @@ class NestedDict(dict):
         self[key] = NestedDict()
         return self[key]
 
+def parameters_net_and_sir(folder = None, p_max = 0.3):
+  'progression of net-parameters'
+
+  'WARNING: put SAME beta, mu, D and p to compare at the end the different topologies'
+  #old:: k_prog = np.concatenate((np.linspace(0.1,1,5),np.arange(3,20,2)))
+  k_prog = list(range(1,16,2))
+  p_prog = [rhu(x,1) for x in np.linspace(0,p_max,int(p_max*10)+1)]
+  beta_prog = [0.01, 0.05, 0.2, 0.25]; mu_prog = [0.05, 0.2, 0.25]
+  R0_min = 0; R0_max = 30
+   
+
+  'this should be deleted to have same params and make comparison more straight-forward'
+  if folder == "WS_Epids": 
+    'beta_prog = np.linspace(0.01,1,7); mu_prog = beta_prog'
+  if folder == "B-A_Model": 
+    'beta_prog = np.linspace(0.01,1,14); mu_prog = beta_prog'
+    p_prog = [0]; R0_min = 0; R0_max = 6  
+  if folder == "NN_Conf_Model_not_considered": 
+    'beta_prog = [0.05, 0.1, 0.2, 0.25]; mu_prog = beta_prog'
+    # past parameters: beta_prog = np.linspace(0.01,1,8); mu_prog = beta_prog
+    #k_prog = np.arange(2,34,2)    
+  if folder == "Caveman_Model": 
+    'k_prog = np.arange(1,11,2)' #https://www.prb.org/about/ -> Europe householdsize = 3
+    #beta_prog = np.linspace(0.001,1,6); mu_prog = beta_prog
+  if folder[:5] == "NNO_C": 
+    'beta_prog = [0.05, 0.1, 0.2, 0.25]; mu_prog = beta_prog #np.linspace(0.01,1,4)'
+
+  return k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max
+
 '===main, i.e. automatize common part for different nets'
 def main(folder, N, k_prog, p_prog, beta_prog, mu_prog, 
   R0_min, R0_max):
@@ -1306,64 +1325,93 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
   import networkx as nx
   import json
 
-  'def a dic to save D-order parameter'
+  'load a dic to save D-order parameter'
   ordp_pmbD_dic = NestedDict()
-  std_path = "".join( (my_dir(),folder,"/Std/saved_std_dicts.txt") )
-  if os.path.exists(std_path): 
-    with open(std_path,"r") as f:
-      ordp_pmbD_dic = json.loads(f.read(), object_hook=jsonKeys2int)
   
   'unique try of saving both, but generalize to all other nets'
   'try only with p = 0.1'
-  total_iterations = 0
-  for D,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog):  
-    if R0_min < beta*D/mu < R0_max:
-      total_iterations+=1
+  total_iterations, done_iterations = 0,0
+  CM_range = [1]
+  print("k_prog", k_prog)
+  for D in k_prog:
+    if folder == "Caveman_Model": CM_range = [rhu(x) for x in np.arange(1,D+1) ] #[rhu(x) for x in np.linspace(1,D,3) ]
+    for mu,p,beta, n_rl_ring in product(mu_prog, p_prog, beta_prog, CM_range): 
+      if R0_min <= beta*D/mu <= R0_max:
+        total_iterations+=1
   print("Total Iterations:", total_iterations)
-  done_iterations = 0
-
+  
   text = "N %s;\nk_prog %s, len: %s;\np_prog %s, len: %s;\nbeta_prog %s, len: %s;\nmu_prog %s, \
         len: %s;\nR0_min %s, R0_max %s; \nTotal Iterations: %s;\n---\n" \
         % (N, k_prog, len(k_prog), p_prog, len(p_prog), beta_prog, len(beta_prog), \
         mu_prog, len(mu_prog),  R0_min, R0_max, total_iterations)
   save_log_params(folder = folder, text = text)
 
-  
-  saved_nets = []
-  for D,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog):  
-    'since D_real ~ 2*D (D here is fixing only the m and N0), R0_max-folder ~ 2*R0_max'
-    if R0_min <= beta*D/mu <= R0_max:
-      done_iterations+=1
-      print("\nIterations left: %s" % ( total_iterations - done_iterations ) )
-      if os.path.exists(std_path): 
-        with open(std_path,"r") as f:
-          ordp_pmbD_dic = json.loads(f.read(), object_hook=jsonKeys2int)
-      
-      m, N0 = 0,0
-      if folder == "B-A_Model":
-        from definitions import bam
-        m, N0 = D,D; G = bam(N, m = int(m), N0 = int(N0))
-      done_iterations+=1
+  #saved_nets = []
+  CM_range = [1]
+  for D in k_prog:
+    if folder == "Caveman_Model": CM_range = [rhu(x) for x in np.arange(1,D+1) ]
+    for mu,p,beta, n_rl_ring in product(mu_prog, p_prog, beta_prog, CM_range): 
+      'since D_real ~ 2*D (D here is fixing only the m and N0), R0_max-folder ~ 2*R0_max'
+      if R0_min <= beta*D/mu <= R0_max:
+        done_iterations+=1
+        print("\nIterations left: %s" % ( total_iterations - done_iterations ) )
 
-      if folder == "Complete":
-        G = nx.connected_watts_strogatz_graph(100, D, p)
+        ordp_path = "".join((my_dir(), folder, "/OrdParam/p%s/beta_%s/" % (rhu(p,3),rhu(beta,3)) ))
+        ordp_path = "".join( (ordp_path, "saved_ordp_dict.txt"))
+        if os.path.exists(ordp_path): 
+          with open(ordp_path,"r") as f:
+            ordp_pmbD_dic = json.loads(f.read(), object_hook=jsonKeys2int)
 
-      if folder == "NN_Conf_Model":
-        from definitions import NN_pois_net
-        '''
-        if np.any([x<1. for x in k_prog]):
+        pp_ordp_pmbD_dic = json.dumps(ordp_pmbD_dic, sort_keys=False, indent=4)
+        if done_iterations == 1: print(pp_ordp_pmbD_dic)
+        
+        m, N0 = 0,0
+        pos, partition = None, None
+        if folder == "B-A_Model":
+          from definitions import bam
+          m, N0 = D,D; 
+          G = nx.barabasi_albert_graph #bam(N, m = int(m), N0 = int(N0))
+
+        if folder == "Complete":
+          G = nx.connected_watts_strogatz_graph(100, D, p)
+
+        if folder == "NN_Conf_Model":
+          from definitions import NN_pois_net
+          '''
+          if np.any([x<1. for x in k_prog]):
+            conn_flag = False
+          else: conn_flag = True'''
           conn_flag = False
-        else: conn_flag = True'''
-        conn_flag = False
-        G = NN_pois_net(N, folder = folder, ext_D = D, p = p, conn_flag = conn_flag)
-        print("connected components", len(list(nx.connected_components(G))))
-        if len(list(nx.connected_components(G))) != 0 and conn_flag:
-          raise Exception("Error: it should be connected")
-      
-      print("\nIterations left: %s" % ( total_iterations - done_iterations ) )
+          G = NN_pois_net(N, folder = folder, ext_D = D, p = p, conn_flag = conn_flag)
+          print("connected components", len(list(nx.connected_components(G))))
+          if len(list(nx.connected_components(G))) != 0 and conn_flag:
+            raise Exception("Error: it should be connected")
+        
+        add_edges_only = True
+        if folder == f"NNO_Conf_Model_addE_{add_edges_only}": #add edges instead of rew
+          from definitions import NNOverl_pois_net
+          G = NNOverl_pois_net(N, D, p = p, add_edges_only = add_edges_only)
+        
+        if folder == "Caveman_Model":
+          from definitions import caveman_defs
+          partition_layout, comm_caveman_relink = caveman_defs()
+          clique_size = D; cliques = int(N/D)
+          G = comm_caveman_relink(cliques=cliques, clique_size = D, 
+                                  p = p, relink_rnd = D, numb_link_inring = 1)
+          
+          partition = {node : np.int(node/clique_size) for node in range(cliques * clique_size)}
+          pos = partition_layout(G, partition, ratio=clique_size/cliques*0.1)
 
-      plot_save_nes(G, m = m, N0 = N0,
-      p = p, folder = folder, adj_or_sir="AdjMat", done_iterations=done_iterations)
-      plot_save_nes(G, m = m, N0 = N0,
-      p = p, folder = folder, adj_or_sir="SIR", R0_max = R0_max, beta = beta, mu = mu, 
-      ordp_pmbD_dic = ordp_pmbD_dic, done_iterations=done_iterations)
+        print("\nIterations left: %s" % ( total_iterations - done_iterations ) )
+
+        import datetime as dt
+        start_time = dt.datetime.now()       
+        plot_save_nes(G, m = m, N0 = N0, pos = pos, partition = partition,
+        p = p, folder = folder, adj_or_sir="AdjMat", done_iterations=done_iterations)
+        print("\nThe end-time of generation of one AdjMat is", dt.datetime.now()-start_time)
+
+        start_time = dt.datetime.now()       
+        plot_save_nes(G, m = m, N0 = N0,
+        p = p, folder = folder, adj_or_sir="SIR", R0_max = R0_max, beta = beta, mu = mu, 
+        ordp_pmbD_dic = ordp_pmbD_dic, done_iterations=done_iterations)
+        print("\nThe end-time of generation of one SIR is", dt.datetime.now()-start_time)
