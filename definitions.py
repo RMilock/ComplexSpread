@@ -648,9 +648,11 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
 
       #plt.show()
       
-      ordp_path = my_dir() + folder + "/OrdParam/p%s/beta_%s/" % (rhu(p,3),rhu(beta,3))
-      if not os.path.exists(ordp_path): os.makedirs(ordp_path)
-      plt.savefig("".join((ordp_path,"%s_ordp_p%s_beta%s_mu%s.png" % (folder, rhu(p,3),rhu(beta,3),rhu(mu,3)))))
+      ordp_path = my_dir() + folder + "/OrdParam/"
+      ordp_path_fig = my_dir() + folder + "/OrdParam/p%s/beta_%s/" % (rhu(p,3),rhu(beta,3))
+      if not os.path.exists(ordp_path): os.makedirs(ordp_path_fig)
+      plt.savefig("".join((ordp_path,"%s_ordp_p%s_beta%s_mu%s.png" \
+        % (folder, rhu(p,3),rhu(beta,3),rhu(mu,3)))))
 
       'pretty print the dictionary of the ordp'
       pp_ordp_pmbD_dic = json.dumps(ordp_pmbD_dic, sort_keys=False, indent=4)
@@ -1177,7 +1179,7 @@ def caveman_defs():
       y = y0 + radius * np.sin(random_angle)
       return np.array([x, y])
 
-  def comm_caveman_relink(cliques = 8, clique_size = 7, p = 0,  relink_rnd = 0, numb_link_inring = 0):
+  def comm_caveman_relink(cliques = 8, clique_size = 7, p = 0,  relink_rnd = 0, numb_link_inring = 1):
       import numpy as np
       import numpy.random as npr
       'caveman_graph'
@@ -1185,7 +1187,6 @@ def caveman_defs():
 
       'decide how many nodes are going to relink to the neighbor "cave" (cfr numb_link_inring'
       total_nodes = clique_size*cliques
-      #if numb_link_inring != 0: 
       
       'clique size = D. So, if D < 1 dont relink since we need a disconnected net'
       if clique_size > 1:
@@ -1205,7 +1206,7 @@ def caveman_defs():
           'decide how many nodes in the clique would go into rnd relink via relink_rnd'
           'In the last way, avg_degree is preserved'
           if p != 0:
-            relink_rnd = clique_size
+            relink_rnd = clique_size #all nodes in the clique are tried to be relinked
             first_cl_node = clique_size*clique
             nodes_inclique = np.arange(first_cl_node, first_cl_node + relink_rnd)
             attached_nodes = npr.choice([x for x in pos_deg_nodes(G) if x not in nodes_inclique], 
@@ -1225,7 +1226,8 @@ def caveman_defs():
   
   return partition_layout, comm_caveman_relink
 
-'===Barabasi-Albert Model'
+'===Barabasi-Albert Model -- this is too slow for N = int(1e4)'
+'Anyway, I am using nx.barabasi_albert_graph'
 def bam(N,m,N0):
   import random
   '''    
@@ -1239,19 +1241,19 @@ def bam(N,m,N0):
   G = nx.Graph()
   
   'adds the N0 initial nodes'
-  G.add_nodes_from(range(N0)) #[0,1]
+  G.add_nodes_from(range(N0)) #[0],[0,1],[0,1,2]
   edges = []
   
   'creates the initial clique connecting all the N0 nodes'
-  edges = [(i,j) for i in range(N0) for j in range(i,N0) if i!=j]
+  edges = [(i,j) for i in range(N0) for j in range(i,N0+1) if i!=j]
   print("Initial clique edges", m, edges)
 
   'adds the initial clique to the network'
   G.add_edges_from(edges)
 
-  import matplotlib.pylab as plt
-  nx.draw_circular(G)
-  plt.show()
+  #import matplotlib.pylab as plt
+  #nx.draw_circular(G)
+  #plt.show()
 
   'list to store the nodes to be selected for the preferential attachment.'
   'instead of calculating the probability of being selected a trick is used: if a node has degree k, it will appear'
@@ -1260,21 +1262,19 @@ def bam(N,m,N0):
   
   'runs over all the reamining nodes'
   print("Creating a B-A Model")
-  for i in range(N0,N):
+  for i in range(N0+1,N):
     if i % 300 == 0: print("I am in the %s-th it" % i)
     G.add_node(i)
     'for each new node, creates m new links'
     for j in range(m):
       'creates the list of nodes'
-      for k in list(G.nodes()):
-          'add to prob a node as many time as its degree'
-          for _ in range(G.degree(k)):
-              prob.append(k)
+      for k in np.delete(G.nodes(), np.where(G.nodes() == i)):
+        'add to prob a node as many time as its degree'
+        for _ in range(G.degree(k)):
+          prob.append(k)
       'picks up a random node, so nodes will be selected proportionally to their degree'
       node = random.choice(prob)
-      
       G.add_edge(node,i)
-  
       'the list must be created from 0 for every link since with every new link probabilities change'
       prob.clear()
   'returns the graph'
@@ -1286,35 +1286,6 @@ class NestedDict(dict):
     def __missing__(self, key):
         self[key] = NestedDict()
         return self[key]
-
-def parameters_net_and_sir(folder = None, p_max = 0.3):
-  'progression of net-parameters'
-
-  'WARNING: put SAME beta, mu, D and p to compare at the end the different topologies'
-  #old:: k_prog = np.concatenate((np.linspace(0.1,1,5),np.arange(3,20,2)))
-  k_prog = list(range(1,16,2))
-  p_prog = [rhu(x,1) for x in np.linspace(0,p_max,int(p_max*10)+1)]
-  beta_prog = [0.01, 0.05, 0.2, 0.25]; mu_prog = [0.05, 0.2, 0.25]
-  R0_min = 0; R0_max = 30
-   
-
-  'this should be deleted to have same params and make comparison more straight-forward'
-  if folder == "WS_Epids": 
-    'beta_prog = np.linspace(0.01,1,7); mu_prog = beta_prog'
-  if folder == "B-A_Model": 
-    'beta_prog = np.linspace(0.01,1,14); mu_prog = beta_prog'
-    p_prog = [0]; R0_min = 0; R0_max = 6  
-  if folder == "NN_Conf_Model_not_considered": 
-    'beta_prog = [0.05, 0.1, 0.2, 0.25]; mu_prog = beta_prog'
-    # past parameters: beta_prog = np.linspace(0.01,1,8); mu_prog = beta_prog
-    #k_prog = np.arange(2,34,2)    
-  if folder == "Caveman_Model": 
-    'k_prog = np.arange(1,11,2)' #https://www.prb.org/about/ -> Europe householdsize = 3
-    #beta_prog = np.linspace(0.001,1,6); mu_prog = beta_prog
-  if folder[:5] == "NNO_C": 
-    'beta_prog = [0.05, 0.1, 0.2, 0.25]; mu_prog = beta_prog #np.linspace(0.01,1,4)'
-
-  return k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max
 
 '===main, i.e. automatize common part for different nets'
 def main(folder, N, k_prog, p_prog, beta_prog, mu_prog, 
@@ -1335,7 +1306,7 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
   print("k_prog", k_prog)
   for D in k_prog:
     if folder == "Caveman_Model": CM_range = [rhu(x) for x in np.arange(1,D+1) ] #[rhu(x) for x in np.linspace(1,D,3) ]
-    for mu,p,beta, n_rl_ring in product(mu_prog, p_prog, beta_prog, CM_range): 
+    for mu,p,beta in product(mu_prog, p_prog, beta_prog): 
       if R0_min <= beta*D/mu <= R0_max:
         total_iterations+=1
   print("Total Iterations:", total_iterations)
@@ -1350,13 +1321,13 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
   CM_range = [1]
   for D in k_prog:
     if folder == "Caveman_Model": CM_range = [rhu(x) for x in np.arange(1,D+1) ]
-    for mu,p,beta, n_rl_ring in product(mu_prog, p_prog, beta_prog, CM_range): 
+    for mu,p,beta in product(mu_prog, p_prog, beta_prog): 
       'since D_real ~ 2*D (D here is fixing only the m and N0), R0_max-folder ~ 2*R0_max'
       if R0_min <= beta*D/mu <= R0_max:
         done_iterations+=1
         print("\nIterations left: %s" % ( total_iterations - done_iterations ) )
 
-        ordp_path = "".join((my_dir(), folder, "/OrdParam/p%s/beta_%s/" % (rhu(p,3),rhu(beta,3)) ))
+        ordp_path = "".join((my_dir(), folder, "/OrdParam/"))#p%s/beta_%s/" % (rhu(p,3),rhu(beta,3)) ))
         ordp_path = "".join( (ordp_path, "saved_ordp_dict.txt"))
         if os.path.exists(ordp_path): 
           with open(ordp_path,"r") as f:
@@ -1370,7 +1341,10 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
         if folder == "B-A_Model":
           from definitions import bam
           m, N0 = D,D; 
-          G = nx.barabasi_albert_graph #bam(N, m = int(m), N0 = int(N0))
+          G = nx.barabasi_albert_graph(N, m = D) #bam(N, m = int(m), N0 = int(N0))
+          #nx.draw_circular(G)
+          #import matplotlib.pylab as plt
+          #plt.show()
 
         if folder == "Complete":
           G = nx.connected_watts_strogatz_graph(100, D, p)
@@ -1408,10 +1382,41 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
         start_time = dt.datetime.now()       
         plot_save_nes(G, m = m, N0 = N0, pos = pos, partition = partition,
         p = p, folder = folder, adj_or_sir="AdjMat", done_iterations=done_iterations)
-        print("\nThe end-time of generation of one AdjMat is", dt.datetime.now()-start_time)
+        print("\nThe end-time of 1 generation of one AdjMat is", dt.datetime.now()-start_time)
 
         start_time = dt.datetime.now()       
         plot_save_nes(G, m = m, N0 = N0,
         p = p, folder = folder, adj_or_sir="SIR", R0_max = R0_max, beta = beta, mu = mu, 
         ordp_pmbD_dic = ordp_pmbD_dic, done_iterations=done_iterations)
-        print("\nThe end-time of generation of one SIR is", dt.datetime.now()-start_time)
+        print("\nThe end-time of 1 generation of one SIR is", dt.datetime.now()-start_time)
+
+def parameters_net_and_sir(folder = None, p_max = 0.3):
+  'progression of net-parameters'
+  import numpy as np
+  'WARNING: put SAME beta, mu, D and p to compare at the end the different topologies'
+  #old: k_prog = np.concatenate((np.linspace(0.1,1,5),np.arange(3,20,2)))
+  k_prog = np.arange(2,20,2)
+  p_prog = [rhu(x,1) for x in np.linspace(0,p_max,int(p_max*10)+1)]
+  beta_prog = [0.01, 0.05, 0.2, 0.25]; mu_prog = [0.05, 0.2, 0.25]
+  R0_min = 0; R0_max = 30
+   
+
+  'this should be deleted to have same params and make comparison more straight-forward'
+  if folder == "WS_Epids": 
+    'beta_prog = np.linspace(0.01,1,7); mu_prog = beta_prog'
+  if folder == "B-A_Model": 
+    'beta_prog = np.linspace(0.01,1,14); mu_prog = beta_prog'
+    k_prog = np.arange(1,11,1)
+    p_prog = [0]; R0_min = 0; R0_max = 30  
+  if folder == "NN_Conf_Model_not_considered": 
+    'beta_prog = [0.05, 0.1, 0.2, 0.25]; mu_prog = beta_prog'
+    # past parameters: beta_prog = np.linspace(0.01,1,8); mu_prog = beta_prog
+    #k_prog = np.arange(2,34,2)    
+  if folder == "Caveman_Model": 
+    'k_prog = np.arange(1,11,2)' #https://www.prb.org/about/ -> Europe householdsize = 3
+    #beta_prog = np.linspace(0.001,1,6); mu_prog = beta_prog
+  if folder[:5] == "NNO_C": 
+    'beta_prog = [0.05, 0.1, 0.2, 0.25]; mu_prog = beta_prog #np.linspace(0.01,1,4)'
+
+  return k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max
+
