@@ -648,11 +648,17 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
 
       #plt.show()
       
+      '''
       ordp_path = my_dir() + folder + "/OrdParam/"
       ordp_path_fig = my_dir() + folder + "/OrdParam/p%s/beta_%s/" % (rhu(p,3),rhu(beta,3))
       if not os.path.exists(ordp_path): os.makedirs(ordp_path_fig)
       plt.savefig("".join((ordp_path,"%s_ordp_p%s_beta%s_mu%s.png" \
         % (folder, rhu(p,3),rhu(beta,3),rhu(mu,3)))))
+      '''
+
+      ordp_path = my_dir() + folder + "/OrdParam/p%s/beta_%s/" % (rhu(p,3),rhu(beta,3))
+      if not os.path.exists(ordp_path): os.makedirs(ordp_path)
+      plt.savefig("".join((ordp_path,"%s_ordp_p%s_beta%s_mu%s.png" % (folder, rhu(p,3),rhu(beta,3),rhu(mu,3)))))
 
       'pretty print the dictionary of the ordp'
       pp_ordp_pmbD_dic = json.dumps(ordp_pmbD_dic, sort_keys=False, indent=4)
@@ -1179,50 +1185,65 @@ def caveman_defs():
       y = y0 + radius * np.sin(random_angle)
       return np.array([x, y])
 
-  def comm_caveman_relink(cliques = 8, clique_size = 7, p = 0,  relink_rnd = 0, numb_link_inring = 1):
-      import numpy as np
-      import numpy.random as npr
-      'caveman_graph'
-      G = nx.caveman_graph(l = cliques, k = clique_size)
+  def comm_caveman_relink(cliques = 8, clique_size = 7, p = 0,  relink_rnd = 0, numb_link_inring = 1, deg_for_ordp = False):
+    import numpy as np
+    import numpy.random as npr
 
-      'decide how many nodes are going to relink to the neighbor "cave" (cfr numb_link_inring'
-      total_nodes = clique_size*cliques
+    'caveman_graph'
+    G = nx.caveman_graph(l = cliques, k = clique_size)
+    print("G.nodes are", len(G.nodes()))
+
+    'decide how many nodes are going to relink to the neighbor "cave" (cfr numb_link_inring'
+    total_nodes = clique_size*cliques
+    
+    'clique size = D. So, if D < 1 dont relink since we need a disconnected net'
+    for clique in range(cliques):
+      if numb_link_inring != 0:
+        first_cl_node = clique_size*clique
+        nodes_inclique = np.arange(first_cl_node, first_cl_node+numb_link_inring)
+        attached_nodes = npr.choice( np.arange(clique_size*(1+clique), 
+                                    clique_size*(2+clique)), 
+                                    size = len(nodes_inclique) )
+        attached_nodes = attached_nodes % np.max((total_nodes,1))
+        for test, att_node in zip(nodes_inclique, attached_nodes):
+            #print("NN - clique add:", (test,att_node))
+            G.add_edge(test,att_node)
+        
+      'add a new edge by relinking one of the existing node'
+      'decide how many nodes in the clique would go into rnd relink via relink_rnd'
+      'In the last way, avg_degree is preserved'
+      if p != 0:
+        relink_rnd = clique_size #all nodes in the clique are tried to be relinked
+        first_cl_node = clique_size*clique
+        nodes_inclique = np.arange(first_cl_node, first_cl_node + relink_rnd)
+        attached_nodes = npr.choice([x for x in pos_deg_nodes(G) if x not in nodes_inclique], 
+                                    size = len(nodes_inclique))
+        for test, att_node in zip(nodes_inclique, attached_nodes):
+          #print("relink", (test,att_node))
+          if npr.uniform() < p: G.add_edge(test,att_node)
+
+    #check_loops_parallel_edges(G)
+    remove_loops_parallel_edges(G)
+    #check_loops_parallel_edges(G)
+
+    print("size/cliq: %s, cliq/size: %s" % (clique_size/cliques, cliques/clique_size) )
+
+    if deg_for_ordp != False:
+      i = 1
+      print("cliquesize VS wanna-have average", clique_size, deg_for_ordp)
+      while(deg_for_ordp <= np.mean([j for _,j in G.degree()])):
+        choosen_nodes = np.random.choice(G.nodes(), 50, replace = False)
+        for node in choosen_nodes:
+          G.remove_edges_from([(i,j) for i,j in G.edges() if i == node or j == node])
+          #new_edges = list(filter(lambda x: x[0]!=node or x[1]!=node, G.edges()))
+        #print("Removed nodes", node, np.mean([j for _,j in G.degree()]))
+        i+=1
+
+      print("The Caveman_Model has %s left_nodes with avg %s" 
+      % (i,np.mean([j for _,j in G.degree()])))
+
       
-      'clique size = D. So, if D < 1 dont relink since we need a disconnected net'
-      if clique_size > 1:
-        for clique in range(cliques):
-          if numb_link_inring != 0:
-            first_cl_node = clique_size*clique
-            nodes_inclique = np.arange(first_cl_node, first_cl_node+numb_link_inring)
-            attached_nodes = npr.choice( np.arange(clique_size*(1+clique), 
-                                        clique_size*(2+clique)), 
-                                        size = len(nodes_inclique) )
-            attached_nodes = attached_nodes % np.max((total_nodes,1))
-            for test, att_node in zip(nodes_inclique, attached_nodes):
-                #print("NN - clique add:", (test,att_node))
-                G.add_edge(test,att_node)
-            
-          'add a new edge by relinking one of the existing node'
-          'decide how many nodes in the clique would go into rnd relink via relink_rnd'
-          'In the last way, avg_degree is preserved'
-          if p != 0:
-            relink_rnd = clique_size #all nodes in the clique are tried to be relinked
-            first_cl_node = clique_size*clique
-            nodes_inclique = np.arange(first_cl_node, first_cl_node + relink_rnd)
-            attached_nodes = npr.choice([x for x in pos_deg_nodes(G) if x not in nodes_inclique], 
-                                        size = len(nodes_inclique))
-            for test, att_node in zip(nodes_inclique, attached_nodes):
-              #print("relink", (test,att_node))
-              if npr.uniform() < p: G.add_edge(test,att_node)
-
-      #check_loops_parallel_edges(G)
-      remove_loops_parallel_edges(G)
-      #check_loops_parallel_edges(G)
-
-      print("size/cliq: %s, cliq/size: %s" % (clique_size/cliques, cliques/clique_size) )
-
-      
-      return G
+    return G
   
   return partition_layout, comm_caveman_relink
 
@@ -1302,10 +1323,10 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
   'unique try of saving both, but generalize to all other nets'
   'try only with p = 0.1'
   total_iterations, done_iterations = 0,0
-  CM_range = [1]
+  #CM_range = [1]
   print("k_prog", k_prog)
   for D in k_prog:
-    if folder == "Caveman_Model": CM_range = [rhu(x) for x in np.arange(1,D+1) ] #[rhu(x) for x in np.linspace(1,D,3) ]
+    #if folder == "Caveman_Model": CM_range = [rhu(x) for x in np.arange(1,D+1) ] #[rhu(x) for x in np.linspace(1,D,3) ]
     for mu,p,beta in product(mu_prog, p_prog, beta_prog): 
       if R0_min <= beta*D/mu <= R0_max:
         total_iterations+=1
@@ -1318,16 +1339,17 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
   save_log_params(folder = folder, text = text)
 
   #saved_nets = []
-  CM_range = [1]
+  #CM_range = [1]
   for D in k_prog:
-    if folder == "Caveman_Model": CM_range = [rhu(x) for x in np.arange(1,D+1) ]
+    #if folder == "Caveman_Model": CM_range = [rhu(x) for x in np.arange(1,D+1) ]
     for mu,p,beta in product(mu_prog, p_prog, beta_prog): 
       'since D_real ~ 2*D (D here is fixing only the m and N0), R0_max-folder ~ 2*R0_max'
       if R0_min <= beta*D/mu <= R0_max:
         done_iterations+=1
         print("\nIterations left: %s" % ( total_iterations - done_iterations ) )
 
-        ordp_path = "".join((my_dir(), folder, "/OrdParam/"))#p%s/beta_%s/" % (rhu(p,3),rhu(beta,3)) ))
+        ordp_path = "".join((my_dir(), folder, "/OrdParam/p%s/beta_%s/" % (rhu(p,3),rhu(beta,3)) ))
+        #ordp_path = "".join((my_dir(), folder, "/OrdParam/"))#p%s/beta_%s/" % (rhu(p,3),rhu(beta,3)) ))
         ordp_path = "".join( (ordp_path, "saved_ordp_dict.txt"))
         if os.path.exists(ordp_path): 
           with open(ordp_path,"r") as f:
@@ -1369,11 +1391,16 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
         if folder == "Caveman_Model":
           from definitions import caveman_defs
           partition_layout, comm_caveman_relink = caveman_defs()
-          clique_size = D; cliques = int(N/D)
-          G = comm_caveman_relink(cliques=cliques, clique_size = D, 
-                                  p = p, relink_rnd = D, numb_link_inring = 1)
+          clique_size = D
+          if clique_size - 1 <= 0: 
+            deg_for_ordp = clique_size; clique_size = 2#; cliques = int(cliques*deg_for_ordp/clique_size)
+          else: deg_for_ordp = False #so, D+0.2 !< D
+          #if clique_size - 1 <= 0: clique_size = 2
+          cliques = int(N/clique_size)
+          G = comm_caveman_relink(cliques=cliques, clique_size = clique_size, 
+                                  p = p, relink_rnd = clique_size, numb_link_inring = 1, deg_for_ordp=deg_for_ordp)
           
-          partition = {node : np.int(node/clique_size) for node in range(cliques * clique_size)}
+          partition = {node : int(node/clique_size) for node in range(cliques * clique_size)}
           pos = partition_layout(G, partition, ratio=clique_size/cliques*0.1)
 
         print("\nIterations left: %s" % ( total_iterations - done_iterations ) )
@@ -1395,7 +1422,8 @@ def parameters_net_and_sir(folder = None, p_max = 0.3):
   import numpy as np
   'WARNING: put SAME beta, mu, D and p to compare at the end the different topologies'
   #old: k_prog = np.concatenate((np.linspace(0.1,1,5),np.arange(3,20,2)))
-  k_prog = np.arange(2,20,2)
+  k_prog = np.concatenate(([0.2,0.4,0.6,0.8,1.0],np.arange(2,20,2)))
+  #k_prog = np.arange(2,20,2)
   p_prog = [rhu(x,1) for x in np.linspace(0,p_max,int(p_max*10)+1)]
   beta_prog = [0.01, 0.05, 0.2, 0.25]; mu_prog = [0.05, 0.2, 0.25]
   R0_min = 0; R0_max = 30
