@@ -1,4 +1,6 @@
 import networkx as nx
+from networkx.algorithms import clique
+from networkx.generators.community import caveman_graph
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm 
@@ -1188,9 +1190,15 @@ def caveman_defs():
   def comm_caveman_relink(cliques = 8, clique_size = 7, p = 0,  relink_rnd = 0, numb_link_inring = 1, deg_for_ordp = False):
     import numpy as np
     import numpy.random as npr
+    from definitions import my_dir
 
     'caveman_graph'
     G = nx.caveman_graph(l = cliques, k = clique_size)
+    '''except: 
+      G = nx.caveman_graph(l = int(cliques), k = int(clique_size))
+      with open(my_dir()+"Caveman_Model/"+"CaveClClSProblems.txt","a") as f:
+        f.write("".join((str(cliques), str(clique_size), "\n")))'''
+
     print("G.nodes are", len(G.nodes()))
 
     'decide how many nodes are going to relink to the neighbor "cave" (cfr numb_link_inring'
@@ -1238,11 +1246,9 @@ def caveman_defs():
           #new_edges = list(filter(lambda x: x[0]!=node or x[1]!=node, G.edges()))
         #print("Removed nodes", node, np.mean([j for _,j in G.degree()]))
         i+=1
-
       print("The Caveman_Model has %s left_nodes with avg %s" 
       % (i,np.mean([j for _,j in G.degree()])))
 
-      
     return G
   
   return partition_layout, comm_caveman_relink
@@ -1323,7 +1329,6 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
   'unique try of saving both, but generalize to all other nets'
   'try only with p = 0.1'
   total_iterations, done_iterations = 0,0
-  #CM_range = [1]
   print("k_prog", k_prog)
   for D in k_prog:
     #if folder == "Caveman_Model": CM_range = [rhu(x) for x in np.arange(1,D+1) ] #[rhu(x) for x in np.linspace(1,D,3) ]
@@ -1339,9 +1344,9 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
   save_log_params(folder = folder, text = text)
 
   #saved_nets = []
-  #CM_range = [1]
-  for D in k_prog:
-    #if folder == "Caveman_Model": CM_range = [rhu(x) for x in np.arange(1,D+1) ]
+  for D in k_prog:    
+    deg_for_ordp = D; 
+    print("1st: D %s, deg_ordp %s" % (D, deg_for_ordp))
     for mu,p,beta in product(mu_prog, p_prog, beta_prog): 
       'since D_real ~ 2*D (D here is fixing only the m and N0), R0_max-folder ~ 2*R0_max'
       if R0_min <= beta*D/mu <= R0_max:
@@ -1360,6 +1365,19 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
         
         m, N0 = 0,0
         pos, partition = None, None
+
+        'snippet to save a D < 1, make it int and create a network'
+        'Then, solo nodes for the desired mean, e.g. 0.2'
+        #print("2.1nd: D %s, deg_ordp %s" % (D, deg_for_ordp))     
+        if deg_for_ordp <= 1.1 and deg_for_ordp != False: D = deg_for_ordp
+        #print("2nd: D %s, deg_ordp %s" % (D, deg_for_ordp))
+        
+        if D <= 1.1: 
+          if folder == "Caveman_Model": D = 2
+          else: D = 1
+        #else: deg_for_ordp = False
+        print("3nd: D %s, deg_ordp %s" % (D, deg_for_ordp))
+        D = int(D)
         if folder == "B-A_Model":
           from definitions import bam
           m, N0 = D,D; 
@@ -1392,16 +1410,40 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
           from definitions import caveman_defs
           partition_layout, comm_caveman_relink = caveman_defs()
           clique_size = D
-          if clique_size - 1 <= 0: 
-            deg_for_ordp = clique_size; clique_size = 2#; cliques = int(cliques*deg_for_ordp/clique_size)
-          else: deg_for_ordp = False #so, D+0.2 !< D
-          #if clique_size - 1 <= 0: clique_size = 2
+          #if clique_size <= 1.1: 
+          #  deg_for_ordp = clique_size; clique_size = 2#; cliques = int(cliques*deg_for_ordp/clique_size)
+          #  else: deg_for_ordp = False #so, D+0.2 !< D
           cliques = int(N/clique_size)
+          clique_size = int(clique_size) #clique_size is a np.float64!
           G = comm_caveman_relink(cliques=cliques, clique_size = clique_size, 
                                   p = p, relink_rnd = clique_size, numb_link_inring = 1, deg_for_ordp=deg_for_ordp)
           
+          for node in range(clique_size*cliques):
+            if node == 0: print("node", node, type(node), 
+                      "int(n/cl_s)", int(cliques/clique_size), 
+                      "cliques", cliques, type(cliques), "clique_size", clique_size, type(clique_size), 
+                  )
+
           partition = {node : int(node/clique_size) for node in range(cliques * clique_size)}
+          '''print("partition", partition, type(partition), "node", partition.keys(), type(partition.keys()), 
+          "int(n/cl_s)", partition.values(), type(partition.values()), "cliques", cliques, type(cliques),
+          "clique_size", clique_size, type(clique_size), 
+           )'''
           pos = partition_layout(G, partition, ratio=clique_size/cliques*0.1)
+
+        'generate solo nodes to reduce <k>'
+        #if deg_for_ordp != False:
+        i = 1
+        print("D VS wanna-have average", D, deg_for_ordp)
+        while(deg_for_ordp <= np.mean([j for _,j in G.degree()])):
+          choosen_nodes = np.random.choice(G.nodes(), 25, replace = False)
+          for node in choosen_nodes:
+            G.remove_edges_from([(i,j) for i,j in G.edges() if i == node or j == node])
+            #new_edges = list(filter(lambda x: x[0]!=node or x[1]!=node, G.edges()))
+          #print("Removed nodes", node, np.mean([j for _,j in G.degree()]))
+          i+=1
+        print("The %s has %s left_nodes with avg %s" 
+        % (folder, len(G.nodes())-25*i,np.mean([j for _,j in G.degree()])))
 
         print("\nIterations left: %s" % ( total_iterations - done_iterations ) )
 
@@ -1421,21 +1463,21 @@ def parameters_net_and_sir(folder = None, p_max = 0.3):
   'progression of net-parameters'
   import numpy as np
   'WARNING: put SAME beta, mu, D and p to compare at the end the different topologies'
-  #old: k_prog = np.concatenate((np.linspace(0.1,1,5),np.arange(3,20,2)))
-  k_prog = np.concatenate(([0.2,0.4,0.6,0.8,1.0],np.arange(2,20,2)))
+  k_prog = np.concatenate(([0.2,0.4,0.6,0.8],np.arange(2,20,2)))
+  #k_prog = np.concatenate(([1.0],np.arange(2,20,2)))
   #k_prog = np.arange(2,20,2)
   p_prog = [rhu(x,1) for x in np.linspace(0,p_max,int(p_max*10)+1)]
   beta_prog = [0.01, 0.05, 0.2, 0.25]; mu_prog = [0.05, 0.2, 0.25]
   R0_min = 0; R0_max = 30
-   
+
 
   'this should be deleted to have same params and make comparison more straight-forward'
   if folder == "WS_Epids": 
     'beta_prog = np.linspace(0.01,1,7); mu_prog = beta_prog'
   if folder == "B-A_Model": 
     'beta_prog = np.linspace(0.01,1,14); mu_prog = beta_prog'
-    k_prog = np.arange(1,11,1)
-    p_prog = [0]; R0_min = 0; R0_max = 30  
+    #k_prog = np.arange(1,11,1)
+    p_prog = [0]; R0_min = 0; R0_max = 60  
   if folder == "NN_Conf_Model_not_considered": 
     'beta_prog = [0.05, 0.1, 0.2, 0.25]; mu_prog = beta_prog'
     # past parameters: beta_prog = np.linspace(0.01,1,8); mu_prog = beta_prog
