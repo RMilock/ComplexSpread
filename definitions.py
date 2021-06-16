@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm 
 import os #to create a folder
+from numba import jit
 
 #Thurner pmts: beta = 0.1, mu = 0.16; D = 3 vel 8
 #MF def: beta, mu = 0.001/cf, 0.05/cf or 0.16/cf ; cf = 1
@@ -187,6 +188,7 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
 def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_inf = 10,verbose = False):
   'def a function that iters numb_iter and make an avg of all the trajectories'
   from itertools import zip_longest
+  from definitions import sir
   import numpy as np
   import datetime as dt
   import copy
@@ -440,7 +442,7 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
   if length_long_range < 10: print("\nLong_range_edges", long_range_edges, length_long_range)
   else: print("len(long_range_edges)", length_long_range)
   folders = ["WS_Pruned"]
-  if folder in folders > 0: width = 0.2*N/max(1,len(long_range_edges))
+  if folder in folders: width = 0.2*N/max(1,len(long_range_edges))
   if folder == "B-A_Model": 
     width = 0.2*N/max(1,len(long_range_edges))
     print("The edge width is", int(width*10)/10)
@@ -561,8 +563,8 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
   for i in range(len(intervals)-1):
     if intervals[i] <= R0 < intervals[i+1]:
       'Intro R0-subfolder since R0 det epids behaviour on a fixed net'
-      r0_folder = "beta_%s/mu%s/" % (rhu(beta,3),rhu(mu,3)) #"R0_%s-%s/" % (intervals[i], intervals[i+1])
-      if folder == "WS_Pruned": r0_folder += "mu%s/" % (rhu(mu,3)) #"R0_1-2/mu0.16/"
+      if folder == "WS_Pruned": r0_folder = "R0_%s-%s/R0_%s/" % (intervals[i], intervals[i+1], rhu(beta*D/mu,3)) #"R0_1-2/mu0.16/"
+      else: r0_folder = "beta%s/mu%s/" % (rhu(beta,3),rhu(mu,3)) #"R0_%s-%s/" % (intervals[i], intervals[i+1])
       #if folder == "WS_Epids": r0_folder += "D%s/" % rhuD  #"R0_1-2/mu0.16/D6/"
       if not os.path.exists(my_dir + r0_folder): os.makedirs(my_dir + r0_folder)
       if not os.path.exists(my_dir + r0_folder + "/Sel_R0/"): os.makedirs(my_dir + r0_folder + "/Sel_R0/")
@@ -1187,7 +1189,7 @@ def caveman_defs():
       y = y0 + radius * np.sin(random_angle)
       return np.array([x, y])
 
-  def comm_caveman_relink(cliques = 8, clique_size = 7, p = 0,  relink_rnd = 0, numb_link_inring = 1, deg_for_ordp = False):
+  def comm_caveman_relink(cliques = 8, clique_size = 7, p = 0,  relink_rnd = 0, numb_link_inring = 1):
     import numpy as np
     import numpy.random as npr
     from definitions import my_dir
@@ -1236,6 +1238,7 @@ def caveman_defs():
 
     print("size/cliq: %s, cliq/size: %s" % (clique_size/cliques, cliques/clique_size) )
 
+    '''
     if deg_for_ordp != False:
       i = 1
       print("cliquesize VS wanna-have average", clique_size, deg_for_ordp)
@@ -1248,6 +1251,7 @@ def caveman_defs():
         i+=1
       print("The Caveman_Model has %s left_nodes with avg %s" 
       % (i,np.mean([j for _,j in G.degree()])))
+    '''
 
     return G
   
@@ -1316,7 +1320,7 @@ class NestedDict(dict):
 
 '===main, i.e. automatize common part for different nets'
 def main(folder, N, k_prog, p_prog, beta_prog, mu_prog, 
-  R0_min, R0_max):
+  R0_min, R0_max, prune_needed = True):
   from definitions import save_log_params, plot_save_nes, \
     NestedDict, jsonKeys2int, my_dir
   from itertools import product
@@ -1330,9 +1334,7 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
   'try only with p = 0.1'
   total_iterations, done_iterations = 0,0
   print("k_prog", k_prog)
-  for D in k_prog:
-    #if folder == "Caveman_Model": CM_range = [rhu(x) for x in np.arange(1,D+1) ] #[rhu(x) for x in np.linspace(1,D,3) ]
-    for mu,p,beta in product(mu_prog, p_prog, beta_prog): 
+  for D, mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog): 
       if R0_min <= beta*D/mu <= R0_max:
         total_iterations+=1
   print("Total Iterations:", total_iterations)
@@ -1344,10 +1346,7 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
   save_log_params(folder = folder, text = text)
 
   #saved_nets = []
-  for D in k_prog:    
-    deg_for_ordp = D; 
-    print("1st: D %s, deg_ordp %s" % (D, deg_for_ordp))
-    for mu,p,beta in product(mu_prog, p_prog, beta_prog): 
+  for D, mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog): 
       'since D_real ~ 2*D (D here is fixing only the m and N0), R0_max-folder ~ 2*R0_max'
       if R0_min <= beta*D/mu <= R0_max:
         done_iterations+=1
@@ -1369,25 +1368,26 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
         'snippet to save a D < 1, make it int and create a network'
         'Then, solo nodes for the desired mean, e.g. 0.2'
         #print("2.1nd: D %s, deg_ordp %s" % (D, deg_for_ordp))     
-        if deg_for_ordp <= 1.1 and deg_for_ordp != False: D = deg_for_ordp
         #print("2nd: D %s, deg_ordp %s" % (D, deg_for_ordp))
         
+        'intro regD has the "regularized D" even for D < 1'
         if D <= 1.1: 
-          if folder == "Caveman_Model": D = 2
-          else: D = 1
-        #else: deg_for_ordp = False
-        print("3nd: D %s, deg_ordp %s" % (D, deg_for_ordp))
-        D = int(D)
+          if folder == "Caveman_Model": regD = 2
+          else: regD = 1
+        else: regD = D
+
+        print("3nd: D %s, regD %s" % (D, regD))
+        regD = int(regD)
         if folder == "B-A_Model":
           from definitions import bam
-          m, N0 = D,D; 
-          G = nx.barabasi_albert_graph(N, m = D) #bam(N, m = int(m), N0 = int(N0))
+          m, N0 = regD,regD; 
+          G = nx.barabasi_albert_graph(N, m = regD) #bam(N, m = int(m), N0 = int(N0))
           #nx.draw_circular(G)
           #import matplotlib.pylab as plt
           #plt.show()
 
         if folder == "Complete":
-          G = nx.connected_watts_strogatz_graph(100, D, p)
+          G = nx.connected_watts_strogatz_graph(100, regD, p)
 
         if folder == "NN_Conf_Model":
           from definitions import NN_pois_net
@@ -1396,7 +1396,7 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
             conn_flag = False
           else: conn_flag = True'''
           conn_flag = False
-          G = NN_pois_net(N, folder = folder, ext_D = D, p = p, conn_flag = conn_flag)
+          G = NN_pois_net(N, folder = folder, ext_D = regD, p = p, conn_flag = conn_flag)
           print("connected components", len(list(nx.connected_components(G))))
           if len(list(nx.connected_components(G))) != 0 and conn_flag:
             raise Exception("Error: it should be connected")
@@ -1404,19 +1404,16 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
         add_edges_only = True
         if folder == f"NNO_Conf_Model_addE_{add_edges_only}": #add edges instead of rew
           from definitions import NNOverl_pois_net
-          G = NNOverl_pois_net(N, D, p = p, add_edges_only = add_edges_only)
+          G = NNOverl_pois_net(N, regD, p = p, add_edges_only = add_edges_only)
         
         if folder == "Caveman_Model":
           from definitions import caveman_defs
           partition_layout, comm_caveman_relink = caveman_defs()
-          clique_size = D
-          #if clique_size <= 1.1: 
-          #  deg_for_ordp = clique_size; clique_size = 2#; cliques = int(cliques*deg_for_ordp/clique_size)
-          #  else: deg_for_ordp = False #so, D+0.2 !< D
+          clique_size = regD
           cliques = int(N/clique_size)
           clique_size = int(clique_size) #clique_size is a np.float64!
           G = comm_caveman_relink(cliques=cliques, clique_size = clique_size, 
-                                  p = p, relink_rnd = clique_size, numb_link_inring = 1, deg_for_ordp=deg_for_ordp)
+                                  p = p, relink_rnd = clique_size, numb_link_inring = 1)
           
           for node in range(clique_size*cliques):
             if node == 0: print("node", node, type(node), 
@@ -1432,18 +1429,18 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
           pos = partition_layout(G, partition, ratio=clique_size/cliques*0.1)
 
         'generate solo nodes to reduce <k>'
-        #if deg_for_ordp != False:
-        i = 1
-        print("D VS wanna-have average", D, deg_for_ordp)
-        while(deg_for_ordp <= np.mean([j for _,j in G.degree()])):
-          choosen_nodes = np.random.choice(G.nodes(), 25, replace = False)
-          for node in choosen_nodes:
-            G.remove_edges_from([(i,j) for i,j in G.edges() if i == node or j == node])
-            #new_edges = list(filter(lambda x: x[0]!=node or x[1]!=node, G.edges()))
-          #print("Removed nodes", node, np.mean([j for _,j in G.degree()]))
-          i+=1
-        print("The %s has %s left_nodes with avg %s" 
-        % (folder, len(G.nodes())-25*i,np.mean([j for _,j in G.degree()])))
+        if prune_needed:
+          i = 1
+          print("regD VS wanna-have average (D)", regD, D)
+          while(D <= np.mean([j for _,j in G.degree()])):
+            choosen_nodes = np.random.choice(G.nodes(), 25, replace = False)
+            for node in choosen_nodes:
+              G.remove_edges_from([(i,j) for i,j in G.edges() if i == node or j == node])
+              #new_edges = list(filter(lambda x: x[0]!=node or x[1]!=node, G.edges()))
+            #print("Removed nodes", node, np.mean([j for _,j in G.degree()]))
+            i+=1
+          print("The %s has %s left_nodes with avg %s" 
+          % (folder, len(G.nodes())-25*i,np.mean([j for _,j in G.degree()])))
 
         print("\nIterations left: %s" % ( total_iterations - done_iterations ) )
 
@@ -1463,9 +1460,9 @@ def parameters_net_and_sir(folder = None, p_max = 0.3):
   'progression of net-parameters'
   import numpy as np
   'WARNING: put SAME beta, mu, D and p to compare at the end the different topologies'
-  k_prog = np.concatenate(([0.2,0.4,0.6,0.8],np.arange(2,20,2)))
+  #k_prog = np.concatenate(([0.2,0.4,0.6,0.8],np.arange(2,20,2)))
   #k_prog = np.concatenate(([1.0],np.arange(2,20,2)))
-  #k_prog = np.arange(2,20,2)
+  k_prog = np.arange(1,20,2)
   p_prog = [rhu(x,1) for x in np.linspace(0,p_max,int(p_max*10)+1)]
   beta_prog = [0.01, 0.05, 0.2, 0.25]; mu_prog = [0.05, 0.2, 0.25]
   R0_min = 0; R0_max = 30
