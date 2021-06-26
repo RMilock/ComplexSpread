@@ -2,10 +2,13 @@ import networkx as nx
 from networkx.algorithms import clique
 from networkx.generators.community import caveman_graph
 import numpy as np
+import numpy.random as npr
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm 
 import os #to create a folder
-from numba import jit
+from numba import jit, config
+from numba import jit_module
+config.THREADING_LAYER = "default"
 
 #Thurner pmts: beta = 0.1, mu = 0.16; D = 3 vel 8
 #MF def: beta, mu = 0.001/cf, 0.05/cf or 0.16/cf ; cf = 1
@@ -18,10 +21,10 @@ def my_dir():
   return "/home/hal21/MEGAsync/Tour_Physics2.0/Thesis/NetSciThesis/Project/Plots/Test/"
 
 def pos_deg_nodes(G): # G "real" nodes
-  return [i for i,j in G.degree() if j > 0]
+  return np.asarray([i for i,j in G.degree() if j > 0])
 
 def N_D_std_D(G):
-  degrees = [j for i,j in G.degree()]
+  degrees = np.asarray([j for i,j in G.degree()])
   return G.number_of_nodes(), np.mean(degrees), np.std(degrees, ddof = 1)
 
 def jsonKeys2int(x):
@@ -33,12 +36,13 @@ def jsonKeys2int(x):
 def func_file_name(folder, adj_or_sir, N, D, p, R0 = -1, m = 0, N0 = 0, beta = 0.111, mu = 1.111):
   from definitions import rhu
   if adj_or_sir == "AdjMat":
-    if folder == "B-A_Model": 
-      name = folder + "_%s_N%s_D%s_p%s_m%s_N0_%s" % (
-      adj_or_sir, N, rhu(D), rhu(p,3), m, N0) + \
-        ".png"  
+    if folder == "B-A_Model":
+      name = f'{folder}_{adj_or_sir}_{N}_{rhu(D)}_{rhu(p,3)}_{m}_{N0}.png'
+      #name = "".join(folder, "_%s_N%s_D%s_p%s_m%s_N0_%s" % (
+      #adj_or_sir, N, rhu(D), rhu(p,3), m, N0),".png")  
       return name
-    else: return folder + "_%s_N%s_D%s_p%s.png" % (adj_or_sir, N,rhu(D),rhu(p,3)) 
+    else: return f'{folder}_{adj_or_sir}_{N}_{rhu(D)}_{rhu(p,3)}.png' #folder + "_%s_N%s_D%s_p%s.png" % (adj_or_sir, N,rhu(D),rhu(p,3)) 
+    
 
   if adj_or_sir == "SIR":
     return folder + "_%s_R0_%s_N%s_D%s_p%s_beta%s_mu%s"% (
@@ -65,13 +69,19 @@ def plot_params():
   plt.rc('xtick.major', pad = 16)
   #plt.rcParams['xtick.major.pad']='16'
 
-'''
+
+@jit(nopython = True, parallel = True)
+def filter_out_k(arr, k = 0):
+  filtered = np.array([np.float64(x) for x in np.arange(0)])
+  for i in np.arange(arr.size):
+      if arr[i] == k:
+          filtered = np.append(filtered, arr[i])
+  return filtered
+
 def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
   'If mf == False, the neighbors are not fixed;' 
   'If mf == True, std mf by choosing @ rnd the num of neighbors'
-  import numpy.random as npr
-  from definitions import N_D_std_D
-  
+
   #here's the modifications of the "test_ver1"
   'Number of nodes in the graph'
   N, mean, _ = N_D_std_D(G)
@@ -80,240 +90,117 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
   node_labels = G.nodes()
   
   'Currently infected individuals and the future infected and recovered' 
-  inf_list = [] #infected node list @ each t
-  prevalence = [] # = len(inf_list)/N, i.e. frac of daily infected for every t
-  recovered = [] #recovered nodes for a fixed t
-  arr_ndi = [0] #arr to computer Std(daily_new_inf(t)) for daily_new_inf(t)!=0
+  inf_list = np.array([], dtype = int) #infected node list @ each t
+  rec_list = np.asarray([]) #recovered nodes for a fixed t
+  arr_ndi = np.asarray([]) #arr to computer Std(daily_new_inf(t)) for daily_new_inf(t)!=0
 
   'Initial Conditions'
-  current_state = ['S' for i in node_labels] 
-  future_state = ['S' for i in node_labels]
+  current_state = np.asarray(['S' for i in node_labels])
+  future_state = np.asarray(['S' for i in node_labels])
   
-  if seed == True: npr.seed(0)
+  if seed: npr.seed(0)
 
   'Selects the seed of the disease'
-  seeds = npr.choice(a = node_labels, size = start_inf, replace = False)  #without replacement, i.e. not duplicates
+  seeds = npr.choice(node_labels, start_inf, replace = False)  #without replacement, i.e. not duplicates
   for seed in seeds:
     current_state[seed] = 'I'
     future_state[seed] = 'I'
-    inf_list.append(seed)
+    inf_list = np.append(inf_list,seed)
+
+  #print("inf_lsit", inf_list, type(inf_list[0]))
 
   'initilize prevalence (new daily infected) and recovered list'
   'we dont track infected'
-  prevalence = [0] #[len(inf_list)/N] 
-  recovered = [0]
-  cum_prevalence = [start_inf/N]
-  num_susc = [N-start_inf]
-
-  @jit(nopython = True, parallel = True)
-  def whilefunc(G, mf, arr_ndi, inf_list, prevalence, cum_prevalence, current_state, future_state):
-    'start and continue whenever there s 1 infected'
-    N = G.number_of_nodes()
-    while(len(inf_list)>0):        
-      daily_new_inf = 0
-      'Infection Phase: inf_list = prev_time infecteds'
-      'each infected tries to infect all of the neighbors'
-      for i in inf_list:
-        'Select the neighbors of the infected node'
-        if not mf: tests = G.neighbors(i) #only != wrt to the SIS: contact are taken from G.neighbors            
-        if mf: 
-            ls = list(range(N)); ls.remove(i)
-            tests = npr.choice(ls, size = int(mean)) #spread very fast since multiple infected center
-        tests = [int(x) for x in tests] #convert 35.0 into int
-        for j in tests:
-          'If the contact is susceptible and not infected by another node in the future_state, try to infect it'
-          if current_state[j] == 'S' and future_state[j] == 'S':
-            if npr.random_sample() < beta:
-                future_state[j] = 'I'; daily_new_inf += 1     
-            else:
-                future_state[j] = 'S'
-  
-      #print("dail_n_i", daily_new_inf)
-      if daily_new_inf != 0: arr_ndi.append(daily_new_inf)
-      #print("arr_ni", arr_ndi)
-
-      'Recovery Phase: only the prev inf nodes (=inf_list) recovers with probability mu'
-      'not the new infected'    
-      'This part is important in the OrderPar since diminishes the inf_list # that is in the "while-loop"'    
-      for i in inf_list:
-        if npr.random_sample() < mu:
-            future_state[i] = 'R'
-        else:
-            future_state[i] = 'I'
-      
-      'Time update: once infections and recovery ended, we move to the next time-step'
-      'The future state becomes the current one'
-      current_state = future_state.copy() #w/o .copy() it's a mofiable-"view"
-      
-      'Updates inf_list with the currently fraction of inf/rec and save lenS to avg_R' 
-      inf_list = [i for i, x in enumerate(current_state) if x == 'I']
-      rec_list = [i for i, x in enumerate(current_state) if x == 'R']
-
-      'Saves the fraction of new daily infected (ndi) and recovered in the current time-step'
-      prevalence.append(daily_new_inf/float(N))
-      #prevalence.append(len(inf_list)/float(N))
-      #recovered.append(len(rec_list)/float(N))
-      cum_prevalence.append(cum_prevalence[-1]+daily_new_inf/N)  
-      #loop +=1;
-      #print("loop:", loop, cum_total_inf, cum_total_inf[-1], daily_new_inf/N)
-
-      num_susc.append(N*(1 - cum_prevalence[-1]))
-      #print("\nnum_susc, prevalence, recovered",num_susc, prevalence, recovered, 
-      #len(num_susc), len(prevalence), len(recovered))
-
-    'Order Parameter (op) = Std(Avg_ndi(t)) s.t. ndi(t)!=0 as a func of D'
-    if not mf:
-      ddof = 0
-      if len(arr_ndi) > 1: ddof = 1
-      if arr_ndi == []: arr_ndi = [0]
-      oneit_avg_dni = np.mean(arr_ndi)
-      'op = std_dni'
-      op = np.std( arr_ndi, ddof = ddof )
-      if len(arr_ndi) > 1:
-          if len([x for x in arr_ndi if x == 0]) > 0: 
-              raise Exception("Error There's 0 ndi: dni, arr_daily, std", daily_new_inf, arr_ndi, op)
-
-      'oneit_avg_R is the mean over the time of 1 sir. Then, avg over-all iterations'
-      'Then, compute std_avg_R'
-      degrees = [j for i,j in G.degree()]
-      D = np.mean(degrees)
-      #print("R0, b,m,D", beta*D/mu, beta, mu, D)
-      c = beta*D/(mu*num_susc[0])
-      oneit_avg_R = c*np.mean(num_susc)
-      ddof = 0
-      if len(num_susc) > 1: ddof = 1
-      std_oneit_avg_R = c*np.std(num_susc, ddof = 1)
-      print("num_su[0], np.sum(num_susc), len(prev), oneit_avg_R2", \
-        num_susc[0],np.sum(num_susc), len(prevalence), oneit_avg_R)
-
-      return oneit_avg_R, std_oneit_avg_R, oneit_avg_dni, op, prevalence, cum_prevalence
-    return prevalence, cum_prevalence
-
-  print(whilefunc(G, mf, arr_ndi, inf_list, prevalence, cum_prevalence, current_state, future_state))  
-
-  return whilefunc(G, mf, arr_ndi,inf_list, prevalence, cum_prevalence)
-
-'''
-def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
-  'If mf == False, the neighbors are not fixed;' 
-  'If mf == True, std mf by choosing @ rnd the num of neighbors'
-
-  import random
-  #here's the modifications of the "test_ver1"
-  'Number of nodes in the graph'
-  N, mean, _ = N_D_std_D(G)
-
-  'Label the individual wrt to the # of the node'
-  node_labels = G.nodes()
-  
-  'Currently infected individuals and the future infected and recovered' 
-  inf_list = [] #infected node list @ each t
-  prevalence = [] # = len(inf_list)/N, i.e. frac of daily infected for every t
-  recovered = [] #recovered nodes for a fixed t
-  arr_ndi = [] #arr to computer Std(daily_new_inf(t)) for daily_new_inf(t)!=0
-
-  'Initial Conditions'
-  current_state = ['S' for i in node_labels] 
-  future_state = ['S' for i in node_labels]
-  
-  if seed == True: random.seed(0)
-
-  'Selects the seed of the disease'
-  seeds = random.sample(node_labels, start_inf)  #without replacement, i.e. not duplicates
-  for seed in seeds:
-    current_state[seed] = 'I'
-    future_state[seed] = 'I'
-    inf_list.append(seed)
-
-  'initilize prevalence (new daily infected) and recovered list'
-  'we dont track infected'
-  prevalence = [0] #[len(inf_list)/N] 
-  recovered = [0]
-  cum_prevalence = [start_inf/N]
-  num_susc = [N-start_inf]
+  prevalence = np.asarray([start_inf/N]) #[len(inf_list)/N] 
+  rec_list = np.asarray([0])
+  cum_prevalence = np.asarray([start_inf/N])
+  num_susc = np.asarray([N-start_inf])
 
   'start and continue whenever there s 1 infected'
-  while(len(inf_list)>0):        
+  while(len(inf_list)>0):     
     daily_new_inf = 0
-    'Infection Phase: inf_list = prev_time infecteds'
+    'Infection Phase: inf_list = current_time infected'
     'each infected tries to infect all of the neighbors'
     for i in inf_list:
-        'Select the neighbors of the infected node'
-        if not mf: tests = G.neighbors(i) #only != wrt to the SIS: contact are taken from G.neighbors            
-        if mf: 
-          ls = list(range(N)); ls.remove(i)
-          tests = random.choices(ls, k = int(mean)) #spread very fast since multiple infected center
-        tests = [int(x) for x in tests] #convert 35.0 into int
-        for j in tests:
-            'If the contact is susceptible and not infected by another node in the future_state, try to infect it'
-            if current_state[j] == 'S' and future_state[j] == 'S':
-                if random.random() < beta:
-                    future_state[j] = 'I'; daily_new_inf += 1     
-                else:
-                    future_state[j] = 'S'
+      'Select the neighbors from the net of the infected node'
+      if not mf: tests = np.asarray(list(G.neighbors(i))) 
+      'Select the neighbors at random as in a mean-field theory'
+      if mf: 
+        ls = np.concatenate((np.arange(i), np.arange(i+1,N)))
+        tests = npr.choice(ls, size = int(mean)) #spread very fast since multiple infected center
+      tests = np.asarray([int(x) for x in tests]) #convert 35.0 into int
+      for j in tests:
+        'If the contact is susceptible and not infected by another node in the future_state, try to infect it'
+        if current_state[j] == 'S' and future_state[j] == 'S':
+          if npr.random_sample() < beta:
+            future_state[j] = 'I'; daily_new_inf += 1     
+          else:
+            future_state[j] = 'S'
     
     #print("dail_n_i", daily_new_inf)
-    if daily_new_inf != 0: arr_ndi.append(daily_new_inf)
+    if daily_new_inf != 0: arr_ndi = np.append(arr_ndi,daily_new_inf)
     #print("arr_ni", arr_ndi)
 
     'Recovery Phase: only the prev inf nodes (=inf_list) recovers with probability mu'
     'not the new infected'    
     'This part is important in the OrderPar since diminishes the inf_list # that is in the "while-loop"'    
     for i in inf_list:
-      if random.random() < mu:
-          future_state[i] = 'R'
+      if npr.random_sample() < mu:
+        future_state[i] = 'R'
       else:
-          future_state[i] = 'I'
+        future_state[i] = 'I'
     
     'Time update: once infections and recovery ended, we move to the next time-step'
     'The future state becomes the current one'
     current_state = future_state.copy() #w/o .copy() it's a mofiable-"view"
     
     'Updates inf_list with the currently fraction of inf/rec and save lenS to avg_R' 
-    inf_list = [i for i, x in enumerate(current_state) if x == 'I']
-    rec_list = [i for i, x in enumerate(current_state) if x == 'R']
+    inf_list = np.asarray([i for i, x in enumerate(current_state) if x == 'I'])
+    rec_list = np.asarray([i for i, x in enumerate(current_state) if x == 'R'])
 
     'Saves the fraction of new daily infected (ndi) and recovered in the current time-step'
-    prevalence.append(daily_new_inf/float(N))
+    prevalence = np.append(prevalence,daily_new_inf/float(N))
     #prevalence.append(len(inf_list)/float(N))
     #recovered.append(len(rec_list)/float(N))
-    cum_prevalence.append(cum_prevalence[-1]+daily_new_inf/N)  
+    cum_prevalence = np.append(cum_prevalence, cum_prevalence[-1]+daily_new_inf/N)  
     #loop +=1;
     #print("loop:", loop, cum_total_inf, cum_total_inf[-1], daily_new_inf/N)
 
-    num_susc.append(N*(1 - cum_prevalence[-1]))
+    np.append(num_susc, N*(1 - cum_prevalence[-1]))
     #print("\nnum_susc, prevalence, recovered",num_susc, prevalence, recovered, 
     #len(num_susc), len(prevalence), len(recovered))
-  
+
+  #print("inf, rec", inf_list, rec_list)
   'Order Parameter (op) = Std(Avg_ndi(t)) s.t. ndi(t)!=0 as a func of D'
   if not mf:
     ddof = 0
     if len(arr_ndi) > 1: ddof = 1
-    if arr_ndi == []: arr_ndi = [0]
+    if not arr_ndi.size: arr_ndi = np.asarray([0])
     oneit_avg_dni = np.mean(arr_ndi)
+    #print(ddof)
     'op = std_dni'
     op = np.std( arr_ndi, ddof = ddof )
     if len(arr_ndi) > 1:
-      if len([x for x in arr_ndi if x == 0]) > 0: 
+      #filtered = np.array([])
+      if len(filter_out_k(arr_ndi, k=0)) > 0: #[x for x in arr_ndi if x == 0])
         raise Exception("Error There's 0 ndi: dni, arr_daily, std", daily_new_inf, arr_ndi, op)
 
     'oneit_avg_R is the mean over the time of 1 sir. Then, avg over-all iterations'
     'Then, compute std_avg_R'
-    degrees = [j for i,j in G.degree()]
+    degrees = np.asarray([j for i,j in G.degree()])
     D = np.mean(degrees)
     #print("R0, b,m,D", beta*D/mu, beta, mu, D)
     c = beta*D/(mu*num_susc[0])
     oneit_avg_R = c*np.mean(num_susc)
     ddof = 0
     if len(num_susc) > 1: ddof = 1
-    std_oneit_avg_R = c*np.std(num_susc, ddof = 1)
+    std_oneit_avg_R = c*np.std(num_susc, ddof = ddof)
     #print("num_su[0], np.sum(num_susc), len(prev), oneit_avg_R2", \
     #  num_susc[0],np.sum(num_susc), len(prevalence), oneit_avg_R)
 
     return oneit_avg_R, std_oneit_avg_R, oneit_avg_dni, op, prevalence, cum_prevalence
   
   return prevalence, cum_prevalence
-
 
 def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_inf = 10,verbose = False):
   'def a function that iters numb_iter and make an avg of all the trajectories'
@@ -339,8 +226,11 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
   for i in range(numb_iter):
     sir_start_time = dt.datetime.now()
     if not mf:
+      #print("Start sir", i)
+      #start = dt.datetime.now()
       avg_R, std_avg_R, _, std_dni, prev, cum_prev \
         = sir(G, beta = beta, mu = mu, start_inf = start_inf, mf = mf)
+      #print("End sir in time", dt.datetime.now()-start)
       #avg_R, oneit_avg_dni, std_dni, prev, rec, cum_prev \
       #  = 1,3,5,[1,2],[3,4,5],[6,7,8,9]
       list_avg_R.append(avg_R)
@@ -390,7 +280,10 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
       
       last_el_list = [trajectories[idx_cl][i][-1] for _ in range(max_len-len(trajectories[idx_cl][i]))]
       #print("max_len", max_len, len(trajectories[idx_cl][i]), len(last_el_list), len(trajectories[0][i]) )
-      trajectories[idx_cl][i] += last_el_list
+      #print(last_el_list, type(last_el_list[0]),type(trajectories[idx_cl][i][0]))
+      trajectories[idx_cl][i] = np.append(trajectories[idx_cl][i], last_el_list)
+      #print(trajectories[idx_cl][i][4:-1], last_el_list)
+      
       
       if verbose:
         print("\niteration(s):", i, "idx_cl ", idx_cl)
@@ -420,7 +313,7 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
 
   'D = numb acts only in mf_avg_traj'
   import itertools
-  # MF_SIR: beta = 1e-3, MF_SIR: mu = 0.05
+  # MF_SIR: beta = 1300e-3, MF_SIR: mu = 0.05
   N = G.number_of_nodes()
 
   'plot ratio of daily infected and daily cumulative recovered'
@@ -688,7 +581,6 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
   rhuD2 = rhu(D,2) #use in suptitle, to print "The model...", 
   #rhuD1 in file_name_save
   R0 = beta * D / mu
-  dict_std_inf = {}
 
   for i in range(len(intervals)-1):
     if intervals[i] <= R0 < intervals[i+1]:
@@ -747,27 +639,46 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
       ordp_pmbD_dic = NestedDict(ordp_pmbD_dic)
       value = avg_ordp_net
       std = std_avg_ordp_net
+
+      pp_ordp_pmbD_dic = json.dumps(ordp_pmbD_dic, sort_keys=False, indent=4)
+      print("Start dic", pp_ordp_pmbD_dic)
+
       print("\nTo be added pmbD itermean:", p, mu, beta, D, value)
       
-      d = ordp_pmbD_dic #rename ordp_pmbD_dic to have compact wrinting
-      if p in d.keys():
-        if mu in d[p].keys():
-            if beta in d[p][mu].keys():
-                d[p][mu][beta][D] = [std_D,value,std]
-            else: d[p][mu] = { **d[p][mu], **{beta: {D:[std_D, value, std]}} }
-        else: d[p] = {**d[p], **{mu:{beta:{D:[std_D,value,std]}}} }
+      if folder == "WS_Pruned":
+        d = ordp_pmbD_dic #rename ordp_pmbD_dic to have compact wrinting
+        if p in d.keys():
+          if mu in d[p].keys():
+              d[p][mu] = { **d[p][mu], **{D:[std_D, value, std]} }
+          else: d[p] = {**d[p], **{mu:{D:[std_D,value,std]}}}
+        else:
+          d[p][mu][D] = [std_D,value,std]
+
       else:
-        d[p][mu][beta][D] = [std_D,value,std]
+        d = ordp_pmbD_dic #rename ordp_pmbD_dic to have compact wrinting
+        if p in d.keys():
+          if mu in d[p].keys():
+              if beta in d[p][mu].keys():
+                  d[p][mu][beta][D] = [std_D,value,std]
+              else: d[p][mu] = { **d[p][mu], **{beta: {D:[std_D, value, std]}} }
+          else: d[p] = {**d[p], **{mu:{beta:{D:[std_D,value,std]}}} }
+        else:
+          d[p][mu][beta][D] = [std_D,value,std]
 
       _, ax = plt.subplots(figsize = (20,14))
 
       'WARNING: here suptitle has beta // mu but the dict is ordp[p][mu][beta][D] = [std_D, ordp, std_ordp]'
       'since in the article p and mu are fixed!'
-      plt.suptitle(r"$Average Std(Daily New Infected) :: p%s,\beta:%s,\mu:%s$"%(p,beta,mu))
+      if folder == "WS_Pruned":
+        plt.suptitle(r"$Average Std(Daily New Infected) :: p%s,\beta:%s,\mu:%s$"%(rhu(p,3),rhu(beta,3),rhu(mu,3))) 
+        #plt.suptitle(f"$Average Std(Daily New Infected) :: p:{rhu(p,3)},\beta{beta,3}:,\mu:{rhu(mu,3)}")
+      else: plt.suptitle(r"$Average Std(Daily New Infected) :: p%s,\beta:%s,\mu:%s$"%(rhu(p,3),rhu(beta,3),rhu(mu,3)))
       ax.set_xlabel("Avg_Degree [Indivs]")
       ax.set_ylabel("Std(NDI)")
       
-      fix_pmb = ordp_pmbD_dic[p][mu][beta]
+      if folder == "WS_Pruned":
+        fix_pmb = ordp_pmbD_dic[p][mu]
+      else: fix_pmb = ordp_pmbD_dic[p][mu][beta]
       #print("ordp_pmbD_dic, p0, mu0, beta0, fix_pmb", \
       #  ordp_pmbD_dic, p, mu, beta, fix_pmb)
       x = sorted(fix_pmb.keys())
@@ -789,14 +700,18 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
       plt.savefig("".join((ordp_path,"%s_ordp_p%s_beta%s_mu%s.png" \
         % (folder, rhu(p,3),rhu(beta,3),rhu(mu,3)))))
       '''
-
-      ordp_path = my_dir() + folder + "/OrdParam/p%s/beta_%s/" % (rhu(p,3),rhu(beta,3))
-      if not os.path.exists(ordp_path): os.makedirs(ordp_path)
-      plt.savefig("".join((ordp_path,"%s_ordp_p%s_beta%s_mu%s.png" % (folder, rhu(p,3),rhu(beta,3),rhu(mu,3)))))
+      if folder == "WS_Pruned":
+        ordp_path = f"{my_dir()}{folder}/OrdParam/p{rhu(p,3)}/mu{rhu(mu,3)}/"
+        if not os.path.exists(ordp_path): os.makedirs(ordp_path)
+        plt.savefig("".join((ordp_path,"%s_ordp_p%s_mu%s.png" % (folder, rhu(p,3),rhu(mu,3)))))
+      else: 
+        ordp_path = my_dir() + folder + "/OrdParam/p%s/beta%s/" % (rhu(p,3),rhu(beta,3))
+        if not os.path.exists(ordp_path): os.makedirs(ordp_path)
+        plt.savefig("".join((ordp_path,"%s_ordp_p%s_beta%s_mu%s.png" % (folder, rhu(p,3),rhu(beta,3),rhu(mu,3)))))
 
       'pretty print the dictionary of the ordp'
       pp_ordp_pmbD_dic = json.dumps(ordp_pmbD_dic, sort_keys=False, indent=4)
-      #print(pp_ordp_pmbD_dic)
+      print("Final dic to be saved", pp_ordp_pmbD_dic)
       ordp_file = "".join((ordp_path,"saved_ordp_dict.txt"))
       with open(ordp_file, 'w') as file:
         file.write(pp_ordp_pmbD_dic) # use `json.loads` to do the reverse
@@ -1476,13 +1391,13 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
   save_log_params(folder = folder, text = text)
 
   #saved_nets = []
-  for D, mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog): 
+  for D,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog): 
       'since D_real ~ 2*D (D here is fixing only the m and N0), R0_max-folder ~ 2*R0_max'
       if R0_min <= beta*D/mu <= R0_max:
         done_iterations+=1
         print("\nIterations left: %s" % ( total_iterations - done_iterations ) )
-
-        ordp_path = "".join((my_dir(), folder, "/OrdParam/p%s/beta_%s/" % (rhu(p,3),rhu(beta,3)) ))
+        
+        ordp_path = "".join((my_dir(), folder, "/OrdParam/p%s/beta%s/" % (rhu(p,3),rhu(beta,3)) ))
         #ordp_path = "".join((my_dir(), folder, "/OrdParam/"))#p%s/beta_%s/" % (rhu(p,3),rhu(beta,3)) ))
         ordp_path = "".join( (ordp_path, "saved_ordp_dict.txt"))
         if os.path.exists(ordp_path): 
@@ -1597,7 +1512,6 @@ def parameters_net_and_sir(folder = None, p_max = 0.3):
   beta_prog = [0.01, 0.05, 0.2, 0.25]; mu_prog = [0.05, 0.2, 0.25]
   R0_min = 0; R0_max = 30
 
-
   'this should be deleted to have same params and make comparison more straight-forward'
   if folder == "WS_Epids": 
     'beta_prog = np.linspace(0.01,1,7); mu_prog = beta_prog'
@@ -1615,5 +1529,4 @@ def parameters_net_and_sir(folder = None, p_max = 0.3):
   if folder[:5] == "NNO_C": 
     'beta_prog = [0.05, 0.1, 0.2, 0.25]; mu_prog = beta_prog #np.linspace(0.01,1,4)'
 
-  return k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max
-
+  return k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max 
