@@ -6,7 +6,7 @@ import numpy.random as npr
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm 
 import os #to create a folder
-from numba import jit, config
+from numba import njit, config
 from numba import jit_module
 config.THREADING_LAYER = "default"
 
@@ -70,13 +70,37 @@ def plot_params():
   #plt.rcParams['xtick.major.pad']='16'
 
 
-@jit(nopython = True, parallel = True)
+@njit(parallel = True)
 def filter_out_k(arr, k = 0):
   filtered = np.array([np.float64(x) for x in np.arange(0)])
   for i in np.arange(arr.size):
       if arr[i] == k:
           filtered = np.append(filtered, arr[i])
   return filtered
+
+from numba import prange
+@njit(parallel = True)
+def pinff(tests,daily_new_inf,current_state,future_state,beta):
+  'If the contact is susceptible and not infected by another node in the future_state, try to infect it'
+  #print("I'm in pinff")
+  for j in prange(len(tests)):
+    if current_state[tests[j]] == 'S' and future_state[tests[j]] == 'S':  
+      if npr.random_sample() < beta:
+        future_state[tests[j]] = 'I'; daily_new_inf += 1   
+        #print("Ive infected", tests[j], " ", future_state[tests[j]], " ", daily_new_inf)
+      else:
+          future_state[tests[j]] = 'S'
+  #print("future_state", future_state)
+  return current_state, future_state, daily_new_inf
+
+@njit(parallel = True)
+def preclist(future_state, inf_list,mu): 
+  for i in prange(len(inf_list)):
+    if npr.random_sample() < mu:
+      future_state[inf_list[i]] = 'R'
+    else:
+      future_state[inf_list[i]] = 'I'
+  return future_state
 
 def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
   'If mf == False, the neighbors are not fixed;' 
@@ -85,6 +109,8 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
   #here's the modifications of the "test_ver1"
   'Number of nodes in the graph'
   N, mean, _ = N_D_std_D(G)
+
+  beta, mu = 1,1
 
   'Label the individual wrt to the # of the node'
   node_labels = G.nodes()
@@ -127,8 +153,13 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
       'Select the neighbors at random as in a mean-field theory'
       if mf: 
         ls = np.concatenate((np.arange(i), np.arange(i+1,N)))
-        tests = npr.choice(ls, size = int(mean)) #spread very fast since multiple infected center
-      tests = np.asarray([int(x) for x in tests]) #convert 35.0 into int
+        tests = npr.choice(ls, size = rhu(mean, integer = True)) #spread very fast since multiple infected center
+      tests = tests.astype(int) #convert 35.0 into int
+      #print(tests, type(tests))
+      pinff(tests, daily_new_inf, current_state, future_state,beta)
+      #print("current_state, future_state", current_state, future_state)
+      #print("breakpoint")
+      '''
       for j in tests:
         'If the contact is susceptible and not infected by another node in the future_state, try to infect it'
         if current_state[j] == 'S' and future_state[j] == 'S':
@@ -136,6 +167,7 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
             future_state[j] = 'I'; daily_new_inf += 1     
           else:
             future_state[j] = 'S'
+      '''
     
     #print("dail_n_i", daily_new_inf)
     if daily_new_inf != 0: arr_ndi = np.append(arr_ndi,daily_new_inf)
@@ -144,12 +176,9 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
     'Recovery Phase: only the prev inf nodes (=inf_list) recovers with probability mu'
     'not the new infected'    
     'This part is important in the OrderPar since diminishes the inf_list # that is in the "while-loop"'    
-    for i in inf_list:
-      if npr.random_sample() < mu:
-        future_state[i] = 'R'
-      else:
-        future_state[i] = 'I'
     
+    preclist(future_state,inf_list, mu)
+
     'Time update: once infections and recovery ended, we move to the next time-step'
     'The future state becomes the current one'
     current_state = future_state.copy() #w/o .copy() it's a mofiable-"view"
@@ -224,7 +253,7 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
 
   'find the maximum time of 1 scenario among numb_iter ones'
   for i in range(numb_iter):
-    sir_start_time = dt.datetime.now()
+    if not (i+1) % 50: onesir_start_time = dt.datetime.now()
     if not mf:
       #print("Start sir", i)
       #start = dt.datetime.now()
@@ -239,8 +268,8 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
     else: prev, cum_prev = sir(G, beta = beta, mu = mu, start_inf = start_inf, mf = mf)
     
     tmp_traj = prev, cum_prev
-    if (i+1) % 50 == 0: 
-      time_1sir = dt.datetime.now()-sir_start_time
+    if not (i+1) % 50: 
+      time_1sir = dt.datetime.now()-onesir_start_time
       #print("The time for 1 sir is", time_1sir)
       time_50sir = dt.datetime.now()-start_time
       print("Total time for %s its of max-for-loop %s. Time for 1 sir %s" % (i+1, time_50sir, time_1sir))
@@ -392,10 +421,12 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
 
   return avg_R_net, std_avg_R_net, avg_ordp_net, std_avg_ordp_net
 
-def rhu(n, decimals=0): #round_half_up
+def rhu(n, decimals=0, integer = False): #round_half_up
     import math
     multiplier = 10 ** decimals
-    return math.floor(n*multiplier + 0.5) / multiplier
+    res = math.floor(n*multiplier + 0.5) / multiplier
+    if integer: return int( res )
+    else: return res
   
 def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = False, partition = None, pos = None):
   import os.path
@@ -1365,13 +1396,12 @@ class NestedDict(dict):
 
 '===main, i.e. automatize common part for different nets'
 def main(folder, N, k_prog, p_prog, beta_prog, mu_prog, 
-  R0_min, R0_max, prune_needed = True):
+  R0_min, R0_max, prune_needed = False):
   from definitions import save_log_params, plot_save_nes, \
     NestedDict, jsonKeys2int, my_dir
   from itertools import product
   import networkx as nx
   import json
-
   'load a dic to save D-order parameter'
   ordp_pmbD_dic = NestedDict()
   
