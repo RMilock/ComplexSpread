@@ -80,15 +80,15 @@ def filter_out_k(arr, k = 0):
 #@njit(parallel = True)
 def pinff(j,daily_new_inf,current_state,future_state,beta):
   'If the contact is susceptible and not infected by another node in the future_state, try to infect it'
-  print("I'm in pinff")
+  #print("I'm in pinff")
   #for j in prange(len(tests)):
   if current_state[j] == 'S' and future_state[j] == 'S':  
     if npr.random_sample() < beta:
       future_state[j] = 'I'; daily_new_inf += 1   
-      print("Ive infected", j, " ", future_state[j], " ", daily_new_inf)
+      #print("Ive infected", j, " ", future_state[j], " ", daily_new_inf)
+      #print("c & future_state\n", current_state, "\n", future_state)
     else:
         future_state[j] = 'S'
-  print("c & future_state", current_state, future_state)
   return current_state, future_state, daily_new_inf
 
 #@njit(parallel = True)
@@ -119,10 +119,10 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
   arr_ndi = np.asarray([]) #arr to computer Std(daily_new_inf(t)) for daily_new_inf(t)!=0
 
   'Initial Conditions'
-  global current_state
+  #global current_state
   current_state = np.asarray(['S' for i in node_labels])
 
-  global future_state
+  #global future_state
   future_state = np.asarray(['S' for i in node_labels])
   
   if seed: npr.seed(0)
@@ -145,7 +145,7 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
 
   'start and continue whenever there s 1 infected'
   while(len(inf_list)>0):    
-    global daily_new_inf 
+    #global daily_new_inf 
     daily_new_inf = 0
     'Infection Phase: inf_list = current_time infected'
     'each infected tries to infect all of the neighbors'
@@ -158,16 +158,16 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
         tests = npr.choice(ls, size = rhu(mean, integer = True)) #spread very fast since multiple infected center
       tests = tests.astype(int) #convert 35.0 into int
       #print(tests, type(tests))
+
+      print("I'm infecting with the node %s of %s" % (i, inf_list))
+      for i in tests:
+        print("daily new infected", daily_new_inf)
+        _,_,daily_new_inf = pinff(i, daily_new_inf, current_state, future_state, beta)
+        if daily_new_inf: print("dni!=0 current-future out", daily_new_inf, "\n", \
+    current_state, "\n", future_state)
+      '''
       with Pool(processes=4) as f:
         f.starmap(pinff, [(i, daily_new_inf, current_state, future_state,1) for i in tests])
-      '''
-      for j in tests:
-        'If the contact is susceptible and not infected by another node in the future_state, try to infect it'
-        if current_state[j] == 'S' and future_state[j] == 'S':
-          if npr.random_sample() < beta:
-            future_state[j] = 'I'; daily_new_inf += 1     
-          else:
-            future_state[j] = 'S'
       '''
     
     #print("dail_n_i", daily_new_inf)
@@ -178,19 +178,26 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
     'not the new infected'    
     'This part is important in the OrderPar since diminishes the inf_list # that is in the "while-loop"'    
     
+
+    for i in inf_list:
+      preclist(i, future_state,mu)
+    
+    '''
     with Pool(processes=4) as f:
       f.starmap(preclist, [(i, future_state, mu) for i in range(len(inf_list))])
+    '''
 
     'Time update: once infections and recovery ended, we move to the next time-step'
     'The future state becomes the current one'
     current_state = future_state.copy() #w/o .copy() it's a mofiable-"view"
     
+    #print("end curr-futu", current_state, future_state)
     'Updates inf_list with the currently fraction of inf/rec and save lenS to avg_R' 
     inf_list = np.asarray([i for i, x in enumerate(current_state) if x == 'I'])
     rec_list = np.asarray([i for i, x in enumerate(current_state) if x == 'R'])
 
     'Saves the fraction of new daily infected (ndi) and recovered in the current time-step'
-    prevalence = np.append(prevalence,daily_new_inf/float(N))
+    prevalence = np.append(prevalence, daily_new_inf/float(N))
     #prevalence.append(len(inf_list)/float(N))
     #recovered.append(len(rec_list)/float(N))
     cum_prevalence = np.append(cum_prevalence, cum_prevalence[-1]+daily_new_inf/N)  
