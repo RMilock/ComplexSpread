@@ -6,9 +6,9 @@ import numpy.random as npr
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm 
 import os #to create a folder
-from numba import njit, config
-from numba import jit_module
-config.THREADING_LAYER = "default"
+from numba import njit, config, prange
+from multiprocessing import Pool
+#config.THREADING_LAYER = "default"
 
 #Thurner pmts: beta = 0.1, mu = 0.16; D = 3 vel 8
 #MF def: beta, mu = 0.001/cf, 0.05/cf or 0.16/cf ; cf = 1
@@ -69,37 +69,35 @@ def plot_params():
   plt.rc('xtick.major', pad = 16)
   #plt.rcParams['xtick.major.pad']='16'
 
-
-@njit(parallel = True)
+#@njit(parallel = True)
 def filter_out_k(arr, k = 0):
   filtered = np.array([np.float64(x) for x in np.arange(0)])
   for i in np.arange(arr.size):
       if arr[i] == k:
-          filtered = np.append(filtered, arr[i])
+        filtered = np.append(filtered, arr[i])
   return filtered
 
-from numba import prange
-@njit(parallel = True)
-def pinff(tests,daily_new_inf,current_state,future_state,beta):
+#@njit(parallel = True)
+def pinff(j,daily_new_inf,current_state,future_state,beta):
   'If the contact is susceptible and not infected by another node in the future_state, try to infect it'
-  #print("I'm in pinff")
-  for j in prange(len(tests)):
-    if current_state[tests[j]] == 'S' and future_state[tests[j]] == 'S':  
-      if npr.random_sample() < beta:
-        future_state[tests[j]] = 'I'; daily_new_inf += 1   
-        #print("Ive infected", tests[j], " ", future_state[tests[j]], " ", daily_new_inf)
-      else:
-          future_state[tests[j]] = 'S'
-  #print("future_state", future_state)
+  print("I'm in pinff")
+  #for j in prange(len(tests)):
+  if current_state[j] == 'S' and future_state[j] == 'S':  
+    if npr.random_sample() < beta:
+      future_state[j] = 'I'; daily_new_inf += 1   
+      print("Ive infected", j, " ", future_state[j], " ", daily_new_inf)
+    else:
+        future_state[j] = 'S'
+  print("c & future_state", current_state, future_state)
   return current_state, future_state, daily_new_inf
 
-@njit(parallel = True)
-def preclist(future_state, inf_list,mu): 
-  for i in prange(len(inf_list)):
-    if npr.random_sample() < mu:
-      future_state[inf_list[i]] = 'R'
-    else:
-      future_state[inf_list[i]] = 'I'
+#@njit(parallel = True)
+def preclist(i,future_state,mu): 
+  #for i in np.range(len(inf_list)):
+  if npr.random_sample() < mu:
+    future_state[i] = 'R'
+  else:
+    future_state[i] = 'I'
   return future_state
 
 def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
@@ -121,7 +119,10 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
   arr_ndi = np.asarray([]) #arr to computer Std(daily_new_inf(t)) for daily_new_inf(t)!=0
 
   'Initial Conditions'
+  global current_state
   current_state = np.asarray(['S' for i in node_labels])
+
+  global future_state
   future_state = np.asarray(['S' for i in node_labels])
   
   if seed: npr.seed(0)
@@ -143,7 +144,8 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
   num_susc = np.asarray([N-start_inf])
 
   'start and continue whenever there s 1 infected'
-  while(len(inf_list)>0):     
+  while(len(inf_list)>0):    
+    global daily_new_inf 
     daily_new_inf = 0
     'Infection Phase: inf_list = current_time infected'
     'each infected tries to infect all of the neighbors'
@@ -156,9 +158,8 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
         tests = npr.choice(ls, size = rhu(mean, integer = True)) #spread very fast since multiple infected center
       tests = tests.astype(int) #convert 35.0 into int
       #print(tests, type(tests))
-      pinff(tests, daily_new_inf, current_state, future_state,beta)
-      #print("current_state, future_state", current_state, future_state)
-      #print("breakpoint")
+      with Pool(processes=4) as f:
+        f.starmap(pinff, [(i, daily_new_inf, current_state, future_state,1) for i in tests])
       '''
       for j in tests:
         'If the contact is susceptible and not infected by another node in the future_state, try to infect it'
@@ -177,7 +178,8 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
     'not the new infected'    
     'This part is important in the OrderPar since diminishes the inf_list # that is in the "while-loop"'    
     
-    preclist(future_state,inf_list, mu)
+    with Pool(processes=4) as f:
+      f.starmap(preclist, [(i, future_state, mu) for i in range(len(inf_list))])
 
     'Time update: once infections and recovery ended, we move to the next time-step'
     'The future state becomes the current one'
@@ -627,8 +629,8 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
       file_path = my_dir + r0_folder + file_name
       
       'plot all'
-      _, ax = plt.subplots(figsize = (24,14))
-
+      _, ax = plt.subplots(figsize = (20,20)) #(24,14) should change also the subplots_adjust!!!
+ 
       'plot sir'
       print("\nThe model has N: %s, D: %s(%s), beta: %s, mu: %s, p: %s, R0: %s" % 
       (N,rhuD2,rhu(std_D,2),rhu(beta,3),rhu(mu,3),rhu(p,3),rhu(R0,3)) )
