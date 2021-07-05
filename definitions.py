@@ -69,6 +69,7 @@ def plot_params():
   plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
   plt.rc('axes', labelpad = 20)
   plt.rc('xtick.major', pad = 16)
+  plt.rcParams["figure.figsize"] = [24,14]
   #plt.rcParams['xtick.major.pad']='16'
 
 #@njit(parallel = True)
@@ -127,14 +128,14 @@ def sirnumpy(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False
   #global future_state
   future_state = np.asarray(['S' for i in node_labels])
   
-  if seed: random.seed(0)
+  if seed: npr.seed(0)
 
   'Selects the seed of the disease'
-  seeds = random.choices(node_labels, start_inf)  #without replacement, i.e. not duplicates
+  seeds = npr.choice(node_labels, start_inf, replace = False)  #without replacement, i.e. not duplicates
   for seed in seeds:
     current_state[seed] = 'I'
     future_state[seed] = 'I'
-    inf_list.append(seed)
+    inf_list = np.append(inf_list,seed)
 
   #print("inf_lsit", inf_list, type(inf_list[0]))
 
@@ -157,16 +158,16 @@ def sirnumpy(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False
       'Select the neighbors at random as in a mean-field theory'
       if mf: 
         ls = np.concatenate((np.arange(i), np.arange(i+1,N)))
-        tests = random.choices(ls, size = rhu(mean, integer = True)) #spread very fast since multiple infected center
+        tests = npr.choice(ls, size = rhu(mean, integer = True)) #spread very fast since multiple infected center
       tests = tests.astype(int) #convert 35.0 into int
       #print(tests, type(tests))
 
-      print("I'm infecting with the node %s of %s" % (i, inf_list))
+      #print("I'm infecting with the node %s of %s" % (i, inf_list))
       for i in tests:
-        print("daily new infected", daily_new_inf)
+        #print("daily new infected", daily_new_inf)
         _,_,daily_new_inf = pinff(i, daily_new_inf, current_state, future_state, beta)
-        if daily_new_inf: print("dni!=0 current-future out", daily_new_inf, "\n", \
-    current_state, "\n", future_state)
+        #if daily_new_inf: print("dni!=0 current-future out", daily_new_inf, "\n", \
+                            #current_state, "\n", future_state)
       '''
       with Pool(processes=4) as f:
         f.starmap(pinff, [(i, daily_new_inf, current_state, future_state,1) for i in tests])
@@ -174,13 +175,13 @@ def sirnumpy(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False
     
     
     #print("dail_n_i", daily_new_inf)
-    if daily_new_inf != 0: 
-      arr_ndi.append(daily_new_inf)
+    if daily_new_inf != 0: arr_ndi = np.append(arr_ndi,daily_new_inf)
     #print("arr_ni", arr_ndi)
 
     'Recovery Phase: only the prev inf nodes (=inf_list) recovers with probability mu'
     'not the new infected'    
     'This part is important in the OrderPar since diminishes the inf_list # that is in the "while-loop"'    
+
 
     for i in inf_list:
       preclist(i, future_state,mu)
@@ -200,7 +201,7 @@ def sirnumpy(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False
     rec_list = np.asarray([i for i, x in enumerate(current_state) if x == 'R'])
 
     'Saves the fraction of new daily infected (ndi) and recovered in the current time-step'
-    prevalence.append(daily_new_inf/float(N))
+    prevalence = np.append(prevalence, daily_new_inf/float(N))
     #prevalence.append(len(inf_list)/float(N))
     #recovered.append(len(rec_list)/float(N))
     cum_prevalence = np.append(cum_prevalence, cum_prevalence[-1]+daily_new_inf/N)  
@@ -363,7 +364,6 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
   
   return prevalence, cum_prevalence
 
-
 def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_inf = 10,verbose = False):
   'def a function that iters numb_iter and make an avg of all the trajectories'
   from itertools import zip_longest
@@ -420,11 +420,11 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
     
   'Only for nets: compute mean and std of avg_R and std_ndi'
   if not mf:
-    avg_R = np.mean(list_avg_R)
+    avg_R = sum(list_avg_R) / float(len(list_avg_R))
     std_avg_R = np.sqrt(std_avg_R)
 
     'order parameter with std'
-    avg_ordp = np.mean(list_ordp)
+    avg_ordp = sum(list_ordp) / float(len(list_ordp))
     std_avg_ordp = np.std(list_ordp, ddof = 1)
 
   plot_trajectories = copy.deepcopy(trajectories)
@@ -610,9 +610,20 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
   plot_params()
 
   'plot G, adj_mat, degree distribution'
-  plt.figure(figsize = (20,20))
+  plt.figure(figsize = (20,20)) #20,20
 
   ax = plt.subplot(221)
+  xmin, xmax = ax.get_xlim()
+  ymin, ymax = ax.get_ylim()
+  print("\nThese are the xlim %s, ylim %s" % ((xmin,xmax),(ymin,ymax)))
+
+  xbmin, xbmax = ax.get_xbound()
+  ybmin, ybmax = ax.get_ybound()
+  print("\nThese are the xblim %s, yblim %s" % ((xbmin,xbmax),(ybmin,ybmax)) )
+
+  #ax.set_xlim(xmin = 0, xmax = 1)
+  #ax.set_ylim(ymin = 0, ymax = 1)
+
 
   '''
   if p == 0 and folder[:3] == "WS_":
@@ -667,12 +678,12 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
   adj_matrix = nx.adjacency_matrix(G).todense()
   axs.matshow(adj_matrix, cmap=cm.get_cmap("Greens"))
   #print("Adj_matrix is symmetric", np.allclose(adj_matrix, adj_matrix.T))
-  plt.subplots_adjust(top=0.898,
-  bottom=0.088,
+  plt.subplots_adjust(top=0.85,
+  bottom=0.13 ,  #0.088
   left=0.1,
   right=0.963,
-  hspace=0.067,
-  wspace=0.164)
+  hspace=0.067, #0.067
+  wspace=0.164) #0.164
 
   '''
   if you need to automatize the procedure. Try with,
@@ -760,7 +771,7 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
       file_path = my_dir + r0_folder + file_name
       
       'plot all'
-      _, ax = plt.subplots(figsize = (20,20)) #(24,14) should change also the subplots_adjust!!!
+      _, ax = plt.subplots(figsize = (24,20)) #init = (24,14); BA_Model = (20,20) should change also the subplots_adjust!!!
  
       'plot sir'
       print("\nThe model has N: %s, D: %s(%s), beta: %s, mu: %s, p: %s, R0: %s" % 
@@ -829,7 +840,7 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
         else:
           d[p][mu][beta][D] = [std_D,value,std]
 
-      _, ax = plt.subplots(figsize = (20,14))
+      _, ax = plt.subplots(figsize = (24,14))
 
       'WARNING: here suptitle has beta // mu but the dict is ordp[p][mu][beta][D] = [std_D, ordp, std_ordp]'
       'since in the article p and mu are fixed!'
@@ -1558,6 +1569,7 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
       'since D_real ~ 2*D (D here is fixing only the m and N0), R0_max-folder ~ 2*R0_max'
       if R0_min <= beta*D/mu <= R0_max:
         done_iterations+=1
+
         print("\nIterations left: %s" % ( total_iterations - done_iterations ) )
         
         ordp_path = "".join((my_dir(), folder, "/OrdParam/p%s/beta%s/" % (rhu(p,3),rhu(beta,3)) ))
@@ -1568,7 +1580,7 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
             ordp_pmbD_dic = json.loads(f.read(), object_hook=jsonKeys2int)
 
         pp_ordp_pmbD_dic = json.dumps(ordp_pmbD_dic, sort_keys=False, indent=4)
-        if done_iterations == 1: print(pp_ordp_pmbD_dic)
+        if done_iterations == 1: print("Previous ordp %s \n@ %s" % (pp_ordp_pmbD_dic, ordp_path))
         
         m, N0 = 0,0
         pos, partition = None, None
@@ -1590,9 +1602,7 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
           from definitions import bam
           m, N0 = regD,regD; 
           G = nx.barabasi_albert_graph(N, m = regD) #bam(N, m = int(m), N0 = int(N0))
-          #nx.draw_circular(G)
-          #import matplotlib.pylab as plt
-          #plt.show()
+          if k_prog[0] <= 1: prune_needed = True
 
         if folder == "Complete":
           G = nx.connected_watts_strogatz_graph(100, regD, p)
@@ -1637,8 +1647,10 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
           pos = partition_layout(G, partition, ratio=clique_size/cliques*0.1)
 
         'generate solo nodes to reduce <k>'
+        
         if prune_needed:
           i = 1
+          print("\nCreating solo-nodes to match the wanted D...")
           print("regD VS wanna-have average (D)", regD, D)
           while(D <= np.mean([j for _,j in G.degree()])):
             choosen_nodes = np.random.choice(G.nodes(), 25, replace = False)
@@ -1656,13 +1668,13 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
         start_time = dt.datetime.now()       
         plot_save_nes(G, m = m, N0 = N0, pos = pos, partition = partition,
         p = p, folder = folder, adj_or_sir="AdjMat", done_iterations=done_iterations)
-        print("\nThe end-time of 1 generation of one AdjMat is", dt.datetime.now()-start_time)
+        print("\nThe end-time of 1 generation of one AdjMat plot is", dt.datetime.now()-start_time)
 
         start_time = dt.datetime.now()       
         plot_save_nes(G, m = m, N0 = N0,
         p = p, folder = folder, adj_or_sir="SIR", R0_max = R0_max, beta = beta, mu = mu, 
         ordp_pmbD_dic = ordp_pmbD_dic, done_iterations=done_iterations)
-        print("\nThe end-time of 1 generation of one SIR is", dt.datetime.now()-start_time)
+        print("\nThe end-time of the generation of one SIR plot is", dt.datetime.now()-start_time)
 
 def parameters_net_and_sir(folder = None, p_max = 0.3):
   'progression of net-parameters'
@@ -1670,7 +1682,7 @@ def parameters_net_and_sir(folder = None, p_max = 0.3):
   'WARNING: put SAME beta, mu, D and p to compare at the end the different topologies'
   #k_prog = np.concatenate(([0.2,0.4,0.6,0.8],np.arange(2,20,2)))
   #k_prog = np.concatenate(([1.0],np.arange(2,20,2)))
-  k_prog = np.arange(1,20,2)
+  k_prog = np.concatenate(([1,2,3,4,5],np.arange(7,20,2)))
   p_prog = [rhu(x,1) for x in np.linspace(0,p_max,int(p_max*10)+1)]
   beta_prog = [0.01, 0.05, 0.2, 0.25]; mu_prog = [0.05, 0.2, 0.25]
   R0_min = 0; R0_max = 30
