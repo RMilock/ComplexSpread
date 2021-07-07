@@ -1,7 +1,7 @@
-\documentclass[a4paper,11pt,twoside]{report} %%{book}
+\documentclass[a4paper,11pt,twoside]{book} %%{book}
 
 \usepackage[top=5cm,bottom=5cm,inner=5cm,outer=3cm]{geometry}
-\usepackage{graphicx} %per poter inserire le figure
+\usepackage{graphicx, subcaption} %per poter inserire le figure
 \usepackage{csquotes} %handle " and ""
 \MakeOuterQuote{"}  %handle opening/closing quotation
 \usepackage{amssymb,amsmath,amsthm,amsfonts,bm}
@@ -9,8 +9,8 @@
 \usepackage{xspace}
 \usepackage{tabularx}
 \usepackage{indentfirst}
-\usepackage{subfigure}
-\usepackage[small]{caption}
+%\usepackage{subfigure}
+%\usepackage[small]{caption}
 \usepackage{eucal}
 \usepackage{eso-pic}
 \usepackage{url}
@@ -63,8 +63,6 @@
     linkcolor=blue,
     urlcolor=blue
 }
-
-
 
 \makeatletter
 \renewcommand\tableofcontents{%
@@ -149,31 +147,85 @@
 
 \newgeometry{top=2cm,bottom=2cm,left=2cm,right=2cm}
 
-\begin{abstract}
-The usual simplified description of epidemic dynamics predicts an exponential growth. This is due to the mean field character of the
-dynamical equations. However, a recent paper (Thurner S, Klimek P and Hanel R 2020 Proc. Nat. Acad. Sci. 117, 22684) \cite{Thurner::NetBasedExpl} showed
+\chapter[Abstract]{Abstract}
+The usual simplified description of epidemic dynamics predicts an exponential growth. This is due to the mean field character of the dynamical equations. However, a recent paper (Thurner S, Klimek P and Hanel R 2020 Proc. Nat. Acad. Sci. 117, 22684) \cite{Thurner::NetBasedExpl} showed
 that in a network with fixed connectivity, the nodes become infected at a rate that increases linearly rather than exponentially.
 Experimental data for COVID-19 seem to validate this approach. In this thesis we plan to study this model by tuning its parameters.
 In particular, we monitor the effect induced by a significant presence of hubs in the network.
-\end{abstract}
+
+\chapter[Motivations]{Motivations}
+Last Update: \today
+\section{Motivations}
+"The COVID-19 pandemics has led to a dramatic loss of human life worldwide and presents an unprecedented challenge to public health, food systems and the world of work"\cite{Chriscaden::2021_ImpactCOVID19}. In this scenario, monitoring and forecasting the diffusion of the virus is a essential tool for policymakers to handle the health-care resources and restrictions among individuals. To this purpose, many academics, e.g. \href{https://web.unipd.it/covid19/en/}{UniPD against COVID}\footnote{https://web.unipd.it/covid19/en/}, have been trying to tackle the COVID-19 spreading as well as its side-effects, which have to be considered on the "path to normality". This drastic shift with respect to the "path to herd immunity" comes from a recent study \cite{GU::2021_SitePathToNormality} which shed light on the fact that "herd immunity", due to delay on vaccinations, could probably not be reached for the end of 2021. In other words, the recovery of the pre-COVID situation could be slow even in the presence of effective vaccines.
+
+So, an interesting path to cover is to describe the evolution of the COVID-19 pandemic, e.g. with the SIR model \cite{pizzuti::2020_ItalyCOVIDnetwork}, on different network topologies in order to simulate the different containment policies, i.e. "lockdowns".
 
 
-\chapter[Introduction]{Thesis Summary Riccardo Milocco}
+\chapter[Introduction]{Introduction}
 %\include{cap_Introduction}
 
-Last Update: \today
 
-\section{Introduction}
+\section{Gentle Introduction}
+Infectious diseases are responsible for a significant health and economic burden on society. New diseases appear frequently and old diseases persist. Therefore, many mathematical models have been used recently to guide policy makers to mitigate the impact of new infectious diseases (e.g. Polio, H1N1 influenza and Ebola) or established ones (such as HIV, cholera and seasonal influenza).
+On the other hand, with the phrase \textit{All models are wrong; some models are useful} \cite{Box::2005_StatDesign}, George Box wanted to highlight that no model, no matter how complicated\footnote{Instead, the complexity of a model could challenge its possibility to be predictive in many scenarios. A related topic is the "overfitted model" in statistical learning or "Ocham's razor" in Philosophy}, is perfect. Thus, a way to evaluate a "successefull" model has to be recovered.
+
+Inside the "ecosystems" of models, there are the simple models which allow to analytically explain how the primary mechanisms influence important characteristics (e.g. epidemic threshold, epidemic size\footnote{how large it will be}, how long it will last). To be more accurate, it is also possible to develop models that incorporate much more details about both the disease and individual-level interactions \cite{Kiss::MathOfEpiOnNet}.
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width = .4\linewidth]{perfect_model.png}
+	\caption{A caricature of the relation between model realism, complexity and the
+	insight the model provides \cite{Kiss::MathOfEpiOnNet}.}
+	\label{fig:perfect_model}
+\end{figure}	
+
+As suggested by the \autoref{fig:perfect_model}\footnote{\textit{"In medio stat virtus"}}, models provide maximum insight where the right balance of realism (circle filled with dots, e.g. Graph-Neural-Network to predict $R_t$ \cite{Davahli::USA_predicting_COVID19}) and simplicity (circle with vertical lines e.g. a mean-field approximation of the SIR model \cite{Kiss::Ch1MathOfEpiOnNet}) is met\footnote{The equilibrium point may depend on the specific posed question} (central circle with oblique lines).
+
+In this middle region, there could be find several works that use network analysis as the underlying structure for a phenomenon(\cite{Thurner::NetBasedExpl} \cite{VespignaniSatorras2001Epidemic} \cite{pizzuti::2020_ItalyCOVIDnetwork}); while other, more involved, that incorporate human mobility data in several hybrid models \cite{ZEROUAL::DL_COVID19, Stubinger::Incidence_Diff_Countries} in order to predict its diffusion. For the sake of simplicity, the present work of thesis is going to deepen the paper of \cite{Thurner::NetBasedExpl}. In particular, Thurner et al. \cite{Thurner::NetBasedExpl}, by focusing on the COVID-19 spreading in Austria and in the USA, are able to find a scenario, i.e. a combination of the spreading parameters\footnote{the infection rate $\beta$, recover rate $\mu$, the long-range attachment probability $p$}, such that the outbreak is (quasi-)linear for a value of the average number of contact $D$. This manifestation of the SIR model is, at least, qualitatevely showed by the curves reported by the JHU University. 
+So, inspired by \cite{Thurner::NetBasedExpl}, the aim of this project is to analyze how the SIR model behave by changing its "innern" epidemic parameters but also the topology of the underlying social network, i.e. the susceptible people\footnote{In graph theory, a graph $G$ is a pair of node/vertices (V) and edges(E) which connnect the nodes, i.e. $G = (V,E)$. Thus, in the present context the nodes are the (susceptible) people. Therefore, "node" and "people" words may be used interchangebly according to the context.}.
+
+\section{Technical Introduction}
+At $8 \, \textnormal{May} \, 2020$, none of the affected COVID-19 states have reached "herd immunity"\footnote{The total infected cases at the first peak were $0.16\%$ of the total population, remarkably low with respect to the SARS-COV-2 "herd-immunity" level that are $0.8\%$ of the entire population.}, but still they reached the "epidemic peak" due to the containment restrictions on social contacts, e.g. \href{https://ourworldindata.org/coronavirus/country/austria}{Austria New Daily Infected}.
+The most striking observation is that the number of total cases, after early-stages when Non-Pharmaceutical Interventions (NPIs), i.e. lockdown, were not at work, exhibits a linear growth for an extended time interval in contrast with the "S-shaped" logistic curve predicted by the standard compartmental models. The extension of the linear regime depends on the onset of the measures; while for early stages, as it was the case for many countries \cite{Thurner::NetBasedExpl} ($8 \, \textnormal{May} \, 2020$), an exponential growth dominates the spreading of the disease.
+By taking care of the modification of the underlying social network structure, in this present work of thesis, we want to (qualitatively) recover the spreading trends for the states that have or have not applied the NPIs measures. \newline
+Specifically, an infection may occur for two reasons:
+\begin{enumerate}
+    \item interaction between an infected and a susceptible person;
+    \item contact is "intense" (e.g. long, close,...) enough to lead to a disease transmission.
+\end{enumerate}
+So, the rationale behind the social distancing is that it takes to a reduction of both of these factors.
+On the other hand, the analitically solvable SIR model assumes that, defined $N, D$ as the total number of individuals in the population and the average number of contacts respectively, there is the same probability that an individual encounters an infected person ("well-mixed population") and all the nodes have the same number of neighbours ($N-1$ or $D$). Therefore, as claimed in \cite{VespignaniSatorras2001Epidemic}, there is the need of studying how the underlying network affects the spreading of a disease, but still no focus is put on the spreading below the epidemic threshold \cite{Thurner::NetBasedExpl} as it is the case if nodes were separated thurough NPIs. 
+In this thesis, the main goal is to grasp the relevant features of a complex social network in presence of NPIs and compare them with respect to the mean-field approach which annihilate the network structure in favor of the analytical treatment of the SIR model. \newline
+In detail, we let the SIR Model evolve in different network topologies by changing the epidemic parameters. On the other hand, it has been considered both the standard models of the graph-theory ("Erdoes-Rényi","Scale-Free", "Caveman Model") but also a more involved topology, i.e. a Poissonian Small-World Network. As a benchmark of a "well-mixed" population, it has been used an "annealed" mean-field (see ) which is a natural realisation of a mean-field network with a fixed average number of contacts per node.
+
+\chapter{The Models}
+To this end, we proceeded with the following steps.
+At first, we pruned a fully connected graph of $N = 1000$ nodes, by keeping fixed $N$ while having $D$, i.e. the average of nearest neighbors. In parallel, since $R_0 = \frac{\beta \cdot D}{\mu}$, we doubled the $\beta$ \footnote{$\beta \in [N,2]$} parameter to keep the power of the epidemic $R_0$ fixed (\ref{fig::pruning_p0.0}). 
+
+Since the aim is to understand the difference with respect to the "well-mixed" population model, we put in the same plot the number of total infected cases with the epidemics that spreads either on a specific network (in green) or in a "mean-field" fashion (in orange)\footnote{Moreover, the daily infected of the network (in blue) and of the mean-field (in magenta)}. More precisely, the "mean-field" approximation is a "D-neighbors-mean-field" where every node has $D$ nearest neighbors picked at random on the whole set of nodes. In this way, the hypothesis of the "well-mixed" population is recovered, i.e. everyone has the same probability to get in touch with an infected, and the spreading could be modeled with the exact same parameters ($\beta \textnormal{ and } \mu$) as the network epidemics.
+
+Then, we introduced the "rewiring probability" $p$ which enables the distant nodes to connect faster, thus, obtaining a Erdoes-Rényi (E-R) graph with non-zero $p$. In this case, we could recover the "(pseudo) linearity" of the SIR infection, as it is shown in \ref{fig::pruning_p0.1}, using two similar methods of choosing the spreading parameters $\beta \textnormal{ and } \mu$:
+\begin{itemize}
+	\item pick a series of $\beta \in [0,1]$ and $\mu \in [0,1]$ coefficients at random;
+	\item choosing $\mu \in [0,1]$ and fixing $p=0.1$. Then, as in the previous point, while halving D, the $\beta$ is doubled.
+\end{itemize}
+For conciseness, in \ref{fig::pruning_p0.1}, it is reported only the epidemics obtained by the "pruning procedure".
+\newline
+To further test the recovered (pseudo) linearity with respect to the mean-field benchmark, we used a Poissonian "small-world" network which enabled us to taking care of degree heterogeneity (i.e. different social contacts), family-clusters and their overlaps, small-world feature, given the fact that "leisure" activities may connect nodes that are diametrically opposite. Moreover, by changing the number of the average degree $D$ we may pass from light ("exponential spreading" for $D\simeq5$) to severe ("linear spreading" for  $D\simeq2.5$) NPIs measures, i.e. a severe lock-down.
+The Poissonian "small-world" network could be realized by imposing, at first, a Poissonian degree sequence on all nodes ("Configuration Model"); then, re-link the nodes to their closest neighboring nodes, i.e. a nearest neighbors rewiring (NNR) procedure is applied. Thus, obtaining a network with poissonian degree distribution and the small-world property.
+The (pseudo) linearity obtain with this graph is reported in the \ref{fig::NNR_Conf_Model}.
+
+Furthermore, the work focused on analyzing the network spreading on a fully-connected cavemen graph, where the families cores could be taken into consideration; and also enabling the possibility of a "long-range" connection via the rewiring probability $p = 0.1$ (cfr. \ref{fig::Caveman_Model}). Finally for what concerns the different network models, it has been studied the case of "(pseudo) linear" epidemics on a Barabasi-Albert (B-A) Model, i.e. with the presence of hubs (cfr. \ref{fig::Barabasi_AlbertSIR}).
+
+Moreover, the critical average degree $D_c$ \footnote{$D_c$ as reported in \cite{Thurner::NetBasedExpl} describes a "first-order-phase transition" between exponential and linear growth of an epidemic} , is going to be recovered for the quoted network topologies. A final up-to-date point, would be to use a Graph Neural Network architecture, based on the previously described scenarios and networks, in order the make epidemics forecasting. For this purpose, a relevant reference, is \cite{Davahli::USA_predicting_COVID19}
 
 \section{Goals Outline}
 
 \begin{enumerate}
-	\item Assuming that a typical social network has an average number of contact (degree) $ D \simeq 5$; while lockdown measures reduce it to the household size ($D\simeq2.5$ [references??]), our goal is to reproduce the dynamics of an epidemic spreading on a sparser network due to the Non-Pharmaceutical Interventions (NPIs) generally known as lockdown\footnote{For brevity, the word "lockdown" is an alias for all the "lockdown-like" measures undertaken to prevent the diffusion of Covid-19 without requiring Pharmaceutical drug treatment, e.g. confinment (the direct translation of "lockdown") but also contact tracing, higher hygiene, face masks,}. A direct comparison of the obtained curves with the states of Austria and the USA \cite{Thurner::NetBasedExpl} is satisfactory even at a plain-eye inspection. However, the project aims at the study of how the topology of a network could characterize a paradigmatic model as the SIR one. 
-    So, no statistical fit has been performed in this work, since a relevant work on the available data, e.g.
-    \href{https://github.com/pcm-dpc/COVID-19}{\textit{GitHub Protezione Civile}} , has to be performed.
-    Specifically, the number of infected at the early stages has to be refined due to the heterogeneous way of defining an "Infected" person. In fact, 
-    In particular, these states express the (quasi-)linearity in the cumulative number of cases similarly to the simulated ones.
-    Moreover, it has to be pointed out that the previous quoted states are representative of two opposite political policies facing the Covid-19 pandemic and undertaken by many others: a immediate "severe lockdown" (Austria) and "light restriction" on contacts (USA).
+	\item Assuming that a typical social network has an average number of contact (degree) $D\simeq16.5$(\cite{Liu::2021_Review_SContactPattern}\footnote{A "contact" is defined as per touching or conversationing at a certain distance. For a spreading of a SARS disease, this open the discussed topic on the validity of the "2 meters" distance policy \cite{Jones::2020_2metersSDIstance}}); while lockdown measures reduce it to the household size ($D\simeq3.5$\cite{Liu::2021_Review_SContactPattern}), our goal is to reproduce the dynamics of an epidemic spreading on a sparser network due to the Non-Pharmaceutical Interventions (NPIs) generally known as lockdown\footnote{For brevity, the word "lockdown" is an alias for all the "lockdown-like" measures undertaken to prevent the diffusion of COVID-19 without requiring Pharmaceutical drug treatment, e.g. confinment (the direct translation of "lockdown") but also contact tracing, higher hygiene, face masks,}. A direct comparison of the obtained curves with the states of Austria and the USA \cite{Thurner::NetBasedExpl} is satisfactory even at a plain-eye inspection. However, the project aims at the study of how the topology of a network could characterize a paradigmatic model as the SIR one. 
+    So, no statistical fit has been performed, since a relevant work on the available data has to be performed, e.g. removing out-of-range values, impossible data combinations, and missing values on \href{https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series}{\textit{GitHub John Hopkins University}}\footnote{https://github.com/CSSEGISandData/COVID-19/tree/master/csse\_covid\_19\_data/csse\_covid\_19\_time\_series}. In addition, for the fitting procedure, it would be possible to extend the SIR model in accordance to the other reported compartiments, e.g. death (SIRD), exposed (SEIR),$\dots$
+	Anyway, these states express the (quasi-)linearity in the cumulative number of cases similarly to the simulated ones.
+    Moreover, it has to be pointed out that the previous quoted states are representative of two opposite political policies, undertaken by many others states, in facing the COVID-19 pandemic: a immediate "severe lockdown" (Austria) and "light restriction" on contacts (USA).
 	\item As claimed in \cite{Thurner::NetBasedExpl}, we want to find that for any fixed transmission rate, recovery rate and "long-range" probability ($\beta, \, \mu, \, p$) there exists a critical number of social contacts ($D_c$) which describes a first-order phase transition of the disease growth obtained with the SIR model:
 	\begin{itemize}
 		\item for $D<D_c$, linear growth, i.e. low infection prevalence, occurs;
@@ -181,61 +233,17 @@ Last Update: \today
 	\end{itemize}
 
     The rationale behind is that, since $R_0 := \beta\, D/\mu$, by augmenting the average degree of the udnerlying network also the $R_0$ is enanched, resulting in a more powerful spreading.
-    On the way to obtain $D_c$, the simulated plots show a strongly dependence on $p$, i.e. the probability of a node to have a distant neighbor ("long-range" attachment), which is as crucial as $\beta, \mu \textnormal{ and } D$ in the characterisation of a epidemic spreading. Therefore, a new definition of $R_0 := R_0 $ is proposed, which integrate the possibility that same effective parameter but with different long-range attachment (e.g. one local and the other random attached) could drive to different scenarios.
+    \item On the way to obtain $D_c$, the simulated plots show a strongly dependence on $p$, i.e. the probability of a node to have a distant neighbor ("long-range" attachment), which is as crucial as $\beta, \mu \textnormal{ and } D$ in the characterisation of a epidemic spreading. Therefore, a new definition of $R_0 := R_0 $ is proposed, which integrate the possibility that same effective parameter but with different long-range attachment (e.g. one local and the other random attached) could drive to different scenarios.
 	Finally, by setting our parameters to the empirical estimates of $\beta$ and $\mu$, we are going to estimate $D_c$.
 \end{enumerate}
 
-At $8 \, \textnormal{May} \, 2020$, none of the affected Covid-19 states have reached "herd immunity" \footnote{The total infected cases at the first peak were $0.3\%$ of the total population, remarkably low with respect to the SARS reported level that are $0.5\%-0.8\%$ of the entire population.}, but still they have reached the "epidemic peak" due to the containment restrictions on social contacts.
-The most striking observation is that the epidemic curves, especially when NPIs  are introduced, exhibit a linear growth for an extended time interval in contrast with the "S-shaped" logistic curve as predicted by the standard compartmental models. The extended of the linear regime depends on the onset of the measures; while for the early stages, as it was the case for many 
-countries \cite{Thurner::NetBasedExpl} ($8 \, \textnormal{May} \, 2020$), an exponential growth dominates the spreading of the disease.
-By taking care of the modification of the underlying social network structure, it's possible to recover the spreading trends for the states that have or have not applied the NPIs measures.
 
-Infection may occur for two reasons:
-\begin{enumerate}
-    \item interaction between an infected and a susceptible person;
-    \item contact is "intense" (e.g. long, close,...) enough to lead to a disease transmission.
-\end{enumerate}
-So, the rationale behind social distancing is that it takes to a reduction of both of these factors.
-Moreover, the standard SIR model assumes that there's the same probability that an individual encounters an infected person ("well-mixed population") and all the nodes have the same number of neighbours ( $N-1$ or $\langle k\rangle$ ). However, since their first introduction, considering the complex network structure as provided remarkable results. e.g. how the vaccination threshold depends on the network topology \cite{VespignaniSatorras2001Epidemic}. No focus was still be put on the spreading of the disease below the epidemic threshold, since few works where published trying to analyze the lockdown effects, e.g. \cite{Ferguson::CapturingHumanBehaviour}. In this thesis work, we try to grasp the relevant features of a complex social network. In fact, they present richer structures with respect to the well-known model ("Erdoes-Rényi","Scale-Free", etc.), including multilevel organization; weak ties between communities; and temporal aspects that suggest a degree of fluidity, however, with stable social cores.
-To this scope, we proceeded by following steps.
-
-
-At first, we pruned a fully connected graph of $N = 1000$ nodes, by keeping fixed $N$ while having the nearest neighbors $k$. In parallel, since $R_0 = \frac{\beta \dot <k>}{\mu}$, we doubled the $\beta$ parameter to keep the power of the epidemic $R_0$ fixed (\ref{fig::pruning_p0}). 
-
-Since the aim is to understand at which extent the underlying network structure force the spreading to differ with respect to the "well-mixed" population model, i.e. the mean-field theory, we put in the same plot the number of total infected cases with the epidemics that has spread either on the network (in green) or in a "mean-field" fashion (in orange)\footnote{Moreover, the daily infected of network (in blue) and of the mean-field (in magenta)}. More precisely, the "mean-field" is a "quenched-mean-field" where every node has $D$ nearest neighbors picked at random on the whole set of nodes. In this way, the hypothesis of the "well-mixed" population is recovered, i.e. every-one has the same probability to get in touch with an infected, and the spreading could be modeled with the exact same parameters ($\beta \textnormal{ and } \mu$) as the network epidemics.
-
-Then, we introduced the "rewiring probability" which enables the distant nodes to connect faster, thus, obtaining a standard Erdoes-Rényi with non-zero $p$. In this case, we could recover the "linearity" of the SIR infection as is shown in \ref{fig::pruning_p0.1}.
-
-To further test the recovered linearity with respect to the mean-field benchmark, we used a Poissonian "small-world" network which enabled us to taking care of degree heterogeneity (i.e. different social contacts), family-clusters and their overlaps, small-world feature, given the fact that "leisure" activities may connect nodes that are diametrically opposite. Moreover, by changing the number of the average degree $D$ we may pass from light to severe NPIs measures, i.e. strict lockdown.
-The Poissonian "small-world" network could be reproduced by imposing, at first, a Poissonian degree sequence on all nodes ("Configuration Model"); then, re-link the nodes to their closest neighboring nodes on the circle. Thus, obtaining a network with poissonian degree distribution and the small-world property.
-The linearity obtain with this graph is reported in the \ref{fig::NNR_Conf_Model}
-
-The further works are focused in analyzing the network spreading on a fully-connected cavemen graph and on a network with the presence of hubs.
-Moreover, the critical average degree $D_c$ (cfr. the initial part of this review) is going to be recovered for the quoted network topologies.
-\newpage
-Figures
-\begin{figure}[t]
-	\vspace*{-.5cm}
-	\centering
-	\includegraphics[scale = 0.3]{WS_Pruned_p0.0_5.png}
-	\caption{Linearity for "pruning" method with $p = 0$}
-	\label{fig::pruning_p0}
-\end{figure}
-\begin{figure}[tbph]
-	\centering
-	\includegraphics[scale = 0.3]{WS_Epids_D4_p0.056_SIR_R0_1.875_N1000_D4_beta0.417_mu0.889.png}
-	\caption{Linearity of the total number of cases with $p = 0.056$}
-	\label{fig::pruning_p0.1}
-\end{figure}
 
 \newpage
-Figure
-\begin{figure}
-	\centering
-	\includegraphics[scale = 0.3]{NNR_Conf_Model_SIR_R0_1.487_N1000_D4_p0.0_beta0.293_mu0.788}
-	\caption{Linearity for the nearest neighbors rewiring with $p = 0$}
-	\label{fig::NNR_Conf_Model}
-\end{figure}
+\section{Relevant Figures}
+\begin{verbatim}
+	FIGURES ARE AFTER "\textbf{\end{document}}"
+\end{verbatim}
 
 
 \chapter[Model]{Model}
@@ -333,9 +341,79 @@ Typo under $(10.50)$ multiply by $kp_k$ not $k-1)p_k$
 \bibliographystyle{plain}
 \bibliography{../bib/my_bibliography.bib}
 
-
-
-
-
-
 \end{document}
+
+
+\begin{figure}[h]
+    \begin{subfigure}{0.4\textwidth}
+        \includegraphics[width=\linewidth, height=8cm]{WS_Pruned_AdjMat_N1000_D14.0_p0.0.png}
+        \centering
+        \caption{Network information for the regular "D-halving" graph}
+        \label{fig::adjmat_pruning_p0.0}
+    \end{subfigure}
+    \begin{subfigure}{0.4\textwidth}
+        \includegraphics[width=\textwidth, height=8cm]{WS_Pruned_SIR_p0_9}
+        \caption{(pseudo) linearity of the total number of infected for the "halving-D" method with $p = 0$}
+        \label{fig::pruning_p0.0}
+    \end{subfigure}
+\end{figure}
+
+\newpage
+\begin{figure}[h]
+	\begin{subfigure}{0.4\textwidth}
+		\includegraphics[width=\textwidth, height=9cm]{WS_Pruned_AdjMat_N1000_D6.0_p0.1.png}
+		\centering
+		\caption{Network information for the E-R model with $p = 0.1$}
+		\label{fig::adjmat_pruning_p0.1}
+	\end{subfigure}
+	\begin{subfigure}{0.4\textwidth}
+		\includegraphics[width=\textwidth, height=8cm]{WS_Pruned_SIR_p0.1_4_2.png}
+		\caption{(pseudo) linearity of the total number of infected for the E-R model with $p = 0.1$}
+		\label{fig::pruning_p0.1}
+	\end{subfigure}
+\end{figure}
+
+\newpage
+\begin{figure}[h]
+	\begin{subfigure}{0.4\textwidth}
+		\includegraphics[width=\textwidth, height=9cm]{NNR_Conf_Model_AdjMat_N1000_D6_p0.0.png}
+		\centering
+		\caption{Network information for the "Poissonian" small-world network with $p = 0$}
+		\label{fig::adjmat_NNR_Conf_Model}
+	\end{subfigure}
+	\begin{subfigure}{0.4\textwidth}
+		\includegraphics[width=\textwidth, height=8cm]{NNR_R0_1-2_p0.0_27.png}
+		\caption{(pseudo) linearity for the nearest neighbors rewiring network with $p = 0$}
+		\label{fig::NNR_Conf_Model}
+	\end{subfigure}
+\end{figure}
+
+\newpage
+\begin{figure}[h]
+	\begin{subfigure}{0.4\textwidth}
+		\includegraphics[width=\textwidth, height=9cm]{Caveman_Model_AdjMat_N1000_D5.0_p0.1.png}
+		\centering
+		\caption{Network information for the Caveman network model with $p = 0.1$}
+		\label{fig::adjmat_Caveman_Model}
+	\end{subfigure}
+	\begin{subfigure}{0.4\textwidth}
+		\includegraphics[width=\textwidth, height=8cm]{CavemanMod_R0_1-3_p0.1_18.png}
+		\caption{"(pseudo) linearity" for the Caveman network model with $p = 0.1$}
+		\label{fig::Caveman_Model}
+	\end{subfigure}
+\end{figure}
+
+\newpage
+\begin{figure}[ht]
+	\begin{subfigure}{0.4\textwidth}
+		\includegraphics[width=\textwidth, height=9cm]{B-A_Model_AdjMat_N1000_D4.0_p0.0_m2_N0_2.png}
+		\centering
+		\caption{Network information for the B-A graph with $p = 0$}
+		\label{fig::adjmat_B-A_Model}
+	\end{subfigure}
+	\begin{subfigure}{0.4\textwidth}
+		\includegraphics[width=\textwidth, height=8cm]{B-A_Mod_R0_0-1_p0_6.png}
+		\caption{"(pseudo) linearity" for the B-A graph with $p = 0$}
+		\label{fig::Barabasi_AlbertSIR}
+	\end{subfigure}
+\end{figure}
