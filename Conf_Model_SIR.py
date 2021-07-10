@@ -1,20 +1,10 @@
 import numpy as np
 from itertools import product
 import networkx as nx
-from definitions import *
-#from definitions import save_log_params, plot_save_nes, \
-#config_pois_model, NN_pois_net, parameters_net_and_sir, NestedDict, my_dir
+from definitions import main, save_log_params, plot_save_nes, \
+NN_pois_net, parameters_net_and_sir, \
+NestedDict, my_dir, jsonKeys2int
 import os; import json
-
-'save scaled version for better visualization - not used'
-def scaled_conf_pois(G,D,cut_off=30):    
-  scaled_N = int(G.number_of_nodes()/cut_off) # int(D/cut_off)
-  return config_pois_model(scaled_N, D)
-
-def jsonKeys2int(x):
-    if isinstance(x, dict):
-        return {float(k):v for k,v in x.items()}
-    return x
 
 '''Configurational Model with poissonian degree:
 1) Question: 
@@ -26,15 +16,17 @@ def jsonKeys2int(x):
   <br>Ex., $D = 50 = N, <k> ~ 28$. For $N= 1000 \text{ and } D = 3 \textrm{ or } 8, 
   <k> \textrm{is acceptable.}$
 '''
-N = int(1e3);  folder = "NN_Conf_Model"
-std_pmbD_dic = NestedDict()
+N = int(30);  folder = "NN_Conf_Model"
+
+'''
+ordp_pmbD_dic = NestedDict()
 std_path = "".join( (my_dir(),folder,"/Std/saved_std_dicts.txt") )
 if os.path.exists(std_path): 
   with open(std_path,"r") as f:
-    std_pmbD_dic = json.loads(f.read(), object_hook=jsonKeys2int)
+    ordp_pmbD_dic = json.loads(f.read(), object_hook=jsonKeys2int)
 
 'progression of net-parameters'
-'''
+
 k_prog = np.arange(2,34,2)
 p_prog = np.linspace(0,p_max,int(p_max*10)+1)
 mu_prog = np.linspace(0.1,1,15)
@@ -44,7 +36,11 @@ R0_min = 0.5; R0_max = 6
 '''
 
 k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max =  parameters_net_and_sir(folder = folder) 
+main(folder = folder, N = N, k_prog = k_prog, p_prog = p_prog, \
+  beta_prog = beta_prog, mu_prog = mu_prog, R0_min = R0_min, R0_max = R0_max)
 
+
+'''
 'try only with p = 0.1'
 total_iterations = 0
 for D,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog):  
@@ -59,7 +55,6 @@ text = "N %s;\nk_prog %s, len: %s;\np_prog %s, len: %s;\nbeta_prog %s, len: %s;\
         mu_prog, len(mu_prog),  R0_min, R0_max, total_iterations)
 save_log_params(folder = folder, text = text)
 
-
 saved_nets = []
 for D,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog):  
   if R0_min <= beta*D/mu <= R0_max:
@@ -67,15 +62,16 @@ for D,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog):
     print("\nIterations left: %s" % ( total_iterations - done_iterations ) )
     if os.path.exists(std_path): 
       with open(std_path,"r") as f:
-        std_pmbD_dic = json.loads(f.read(), object_hook=jsonKeys2int)
+        ordp_pmbD_dic = json.loads(f.read(), object_hook=jsonKeys2int)
 
-
-    G = NN_pois_net(N, ext_D = D, p = p)
+    G = NN_pois_net(N, folder = folder, ext_D = D, p = p, conn_flag = False)
     print("connected components", len(list(nx.connected_components(G))))
 
     plot_save_nes(G = G,
     p = p, folder = folder, adj_or_sir="AdjMat", done_iterations=done_iterations)
     plot_save_nes(G = G,
     p = p, folder = folder, adj_or_sir="SIR", R0_max = R0_max, beta = beta, mu = mu, 
-    std_pmbD_dic = std_pmbD_dic, done_iterations=done_iterations)
+    ordp_pmbD_dic = ordp_pmbD_dic, done_iterations=done_iterations)
     print("---")
+
+'''
