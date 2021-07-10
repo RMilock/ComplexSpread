@@ -3,7 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import networkx as nx
-from definitions import save_log_params, parameters_net_and_sir, caveman_defs
+from definitions import save_log_params, parameters_net_and_sir, caveman_defs, main
     
     
 'start of the main()'
@@ -12,10 +12,9 @@ from definitions import rhu, plot_save_nes
 
 partition_layout, comm_caveman_relink = caveman_defs()
    
-N = int(1e3); p_max = 0.1; folder = "Caveman_Model"
+N = int(1e3); p_max = 0.3; folder = "Caveman_Model"
 
-
-'progression of net-parameters'
+'progression of cliquesnet-parameters'
 k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max =  parameters_net_and_sir(folder = folder, p_max = p_max) 
 '''
 p_prog = np.linspace(0,p_max,2)
@@ -24,11 +23,15 @@ beta_prog = np.linspace(0.001,1,7)
 R0_min = 0.5; R0_max = 5
 '''
 
+main(folder = folder, N = N, k_prog = k_prog, p_prog = p_prog, \
+  beta_prog = beta_prog, mu_prog = mu_prog, R0_min = R0_min, R0_max = R0_max)
+
+'''
 'try only with p = 0.1'
 total_iterations = 0
 for D,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog):  
   for n_rl_ring in [rhu(x) for x in np.linspace(1,D,3)]:
-    if R0_min < beta*D/mu < R0_max:
+    if R0_min <= beta*D/mu <= R0_max:
       total_iterations+=1
 print("Total Iterations:", total_iterations)
 done_iterations = 0
@@ -41,12 +44,12 @@ save_log_params(folder = folder, text = text)
 saved_nets = []
 for D,p,beta,mu in product(k_prog, p_prog, beta_prog, mu_prog):  
   for n_rl_ring in [rhu(x) for x in np.linspace(1,D,3)]:
-    if R0_min < beta*D/mu < R0_max:
+    if R0_min <= beta*D/mu <= R0_max:
       done_iterations+=1
       print("Iterations left: %s" % ( total_iterations - done_iterations ) )
-      clique_size = D; cliques = int(N/D)
-
       
+      'The Model'
+      clique_size = D; cliques = int(N/D)
       G = comm_caveman_relink(cliques=cliques, clique_size = D, 
                               p = p, relink_rnd = D, numb_link_inring = 1)
       
@@ -61,7 +64,6 @@ for D,p,beta,mu in product(k_prog, p_prog, beta_prog, mu_prog):
                               p = p, relink_rnd = D, numb_link_inring = 1),
       p = p, folder = folder, adj_or_sir="SIR", R0_max = R0_max, beta = beta, mu = mu, done_iterations=done_iterations)
 
-    '''
     if "N%s_D%s_p%s"% (N,D,rhu(p,3)) not in saved_nets: 
       print("This is p", p)
       plot_save_net(G = G,  folder = folder, D = D, p = p, done_iterations = done_iterations)
