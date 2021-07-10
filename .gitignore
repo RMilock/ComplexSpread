@@ -127,3 +127,29 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# custom ignored files
+
+LateX/images
+LateX/images_old
+dask-worker-space
+LateX/full-text/Complex_Spread_Full.log
+LateX/full-text/Complex_Spread_Full.toc
+
+LateX/full-text/Old_Ver_To_Check/Complex_Spread_Full.aux
+LateX/full-text/Complex_Spread_Full.bbl
+LateX/full-text/Complex_Spread_Full.aux
+LateX/full-text/Complex_Spread_Full.blg
+LateX/full-text/Complex_Spread_Full.fls
+LateX/full-text/Complex_Spread_Full.fdb_latexmk
+LateX/full-text/Complex_Spread_Full.synctex.gz
+LateX/full-text/Old_Ver_To_Check/Complex_Spread_Full.bbl
+.gitignore
+LateX/full-text/Old_Ver_To_Check/Complex_Spread_Full.blg
+LateX/full-text/Old_Ver_To_Check/Complex_Spread_Full.out
+LateX/full-text/Old_Ver_To_Check/Complex_Spread_Full.toc
+LateX/full-text/Old_Ver_To_Check/Complex_Spread_Full.synctex.gz
+CSSE_JHU/CSSEGISandData_1.7.csv
+CSSE_JHU/data_viz.ipynb
+CSSE_JHU/owid-covid-data.csv
+.vscode/launch.json

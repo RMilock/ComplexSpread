@@ -1,4 +1,4 @@
-\documentclass[a4paper,11pt,twoside]{book} %%{book}
+\documentclass[a4paper,12pt,twoside]{book} %%{book}
 
 \usepackage[top=5cm,bottom=5cm,inner=5cm,outer=3cm]{geometry}
 \usepackage{graphicx, subcaption} %per poter inserire le figure
@@ -11,6 +11,7 @@
 \usepackage{indentfirst}
 %\usepackage{subfigure}
 %\usepackage[small]{caption}
+\usepackage{caption}
 \usepackage{eucal}
 \usepackage{eso-pic}
 \usepackage{url}
@@ -56,6 +57,7 @@
 
 \titleformat{\chapter}[display]
   {\normalfont\bfseries}{}{0pt}{\Huge}
+
 \hypersetup{
     colorlinks,
     citecolor=blue,
@@ -77,12 +79,12 @@
    {#3#2|_{#4}}%
 }
 
-
 \begin{document}
 
 \newgeometry{top=2cm,bottom=2cm,left=2cm,right=2cm}
 
 %%old for {book}: \frontmatter
+%below: textsc = font "small caps"
 \begin{titlepage}
 \vspace{5mm}
 \begin{figure}[hbtp]
@@ -91,25 +93,24 @@
 \end{figure}
 \vspace{5mm}
 \begin{center}
-{{\huge{\textsc{\bf UNIVERSIT\`A DEGLI STUDI DI PADOVA}}}\\}
-\vspace{5mm}
+{{\huge{\textbf{\LARGE UNIVERSIT\'A DEGLI STUDI DI PADOVA}}}\\}
+\vspace{20mm}
 {\Large{\bf Dipartimento di Fisica e Astronomia "Galileo Galilei"}} \\
 \vspace{5mm}
-{\Large{\textsc{\bf Master Degree in Physics (LM-17)}}}\\
+{\Large{\textsc{\bf Master Degree in Physics (LM-17)}}}\\  
 \vspace{20mm}
 {\Large{\textsc{\bf Final Dissertation}}}\\
 \vspace{30mm}
 \begin{spacing}{3}
-{\LARGE \textbf{Modelling COVID-19 spreading in a network}}\\
 \end{spacing}
 \vspace{8mm}
 \end{center}
 
 \vspace{20mm}
 \begin{spacing}{2}
-\begin{tabular}{ l  c  c c c  cc c c c c  l }
-{\Large{\bf Candidate}} &&&&&&&&&&& {\Large{\bf Thesis supervisor}}\\
-{\Large{\bf Riccardo Milocco}} &&&&&&&&&&& {\Large{\bf Prof./Dr. Marco Baiesi}}\\
+\begin{tabular}{lccccccccccl}
+	{\Large{\bf Candidate}} &&&&&&&&&& {\Large{\bf Thesis supervisor}}\\
+	{\Large{\bf Riccardo Milocco}} &&&&&&&&&& {\Large{\bf Prof./Dr. Marco Baiesi}}\\
 \end{tabular}
 \end{spacing}
 \vspace{15 mm}
@@ -132,23 +133,25 @@
 
 
 
-%%old for {book}: \mainmatter
+%%old for {book}: 
+%\mainmatter
 
-\newcommand{\changefont}{%
-    \fontsize{7}{12}\selectfont
-}
+%\newcommand{\changefont}{%
+%    \fontsize{7}{12}\selectfont
+%}
 \fancyhf{}
-\fancyhead[LE,RO]{\changefont \slshape \rightmark} %section
-\fancyhead[RE,LO]{\changefont \slshape \leftmark} %chapter
-\fancyfoot[C]{\thepage}
+%\fancyhead[LE,RO]{\changefont \slshape \rightmark} %section
+%\fancyhead[RE,LO]{\changefont \slshape \leftmark} %chapter
+%\fancyfoot[C]{\thepage}
 \pagestyle{fancy}
+
 
 %-----------------------------------------------------------------------
 
 \newgeometry{top=2cm,bottom=2cm,left=2cm,right=2cm}
 
 \chapter[Abstract]{Abstract}
-The usual simplified description of epidemic dynamics predicts an exponential growth. This is due to the mean field character of the dynamical equations. However, a recent paper (Thurner S, Klimek P and Hanel R 2020 Proc. Nat. Acad. Sci. 117, 22684) \cite{Thurner::NetBasedExpl} showed
+The usuall simplified description of epidemic dynamics predicts an exponential growth. This is due to the mean field character of the dynamical equations. However, a recent paper (Thurner S, Klimek P and Hanel R 2020 Proc. Nat. Acad. Sci. 117, 22684) \cite{Thurner::NetBasedExpl} showed
 that in a network with fixed connectivity, the nodes become infected at a rate that increases linearly rather than exponentially.
 Experimental data for COVID-19 seem to validate this approach. In this thesis we plan to study this model by tuning its parameters.
 In particular, we monitor the effect induced by a significant presence of hubs in the network.
@@ -156,7 +159,8 @@ In particular, we monitor the effect induced by a significant presence of hubs i
 \chapter[Motivations]{Motivations}
 Last Update: \today
 \section{Motivations}
-"The COVID-19 pandemics has led to a dramatic loss of human life worldwide and presents an unprecedented challenge to public health, food systems and the world of work"\cite{Chriscaden::2021_ImpactCOVID19}. In this scenario, monitoring and forecasting the diffusion of the virus is a essential tool for policymakers to handle the health-care resources and restrictions among individuals. To this purpose, many academics, e.g. \href{https://web.unipd.it/covid19/en/}{UniPD against COVID}\footnote{https://web.unipd.it/covid19/en/}, have been trying to tackle the COVID-19 spreading as well as its side-effects, which have to be considered on the "path to normality". This drastic shift with respect to the "path to herd immunity" comes from a recent study \cite{GU::2021_SitePathToNormality} which shed light on the fact that "herd immunity", due to delay on vaccinations, could probably not be reached for the end of 2021. In other words, the recovery of the pre-COVID situation could be slow even in the presence of effective vaccines.
+"The COVID-19 pandemics has led to a dramatic loss of human life worldwide and presents an unprecedented challenge to public health, food systems and the world of work"\cite{Chriscaden::2021_ImpactCOVID19}. In this scenario, monitoring and forecasting the diffusion of the virus is a essential tool for policymakers to handle the health-care resources and restrictions among individuals. To this purpose, many academics, e.g. \href{https://web.unipd.it/covid19/en/}{UniPD against COVID}\footnote{https://web.unipd.it/covid19/en/}, have been trying to tackle the COVID-19 spreading as well as its side-effects, which have to be considered on the "path to normality". This drastic shift with respect to the "path to herd immunity" comes from a recent study \cite{GU::2021_SitePathToNormality} which shed light on the fact that "herd immunity", due to delay on vaccinations, could probably not be reached for the end of 2021. On the other hand, due to few practical points \cite{Nature:18.3.2021_NoHerdImmunity}, it is also probabile that the long-term prospects include COVID-19 becoming an endemic disease, much like influenza. 
+Therefore, the recovery of the pre-COVID situation could be slow even in the presence of effective vaccines.
 
 So, an interesting path to cover is to describe the evolution of the COVID-19 pandemic, e.g. with the SIR model \cite{pizzuti::2020_ItalyCOVIDnetwork}, on different network topologies in order to simulate the different containment policies, i.e. "lockdowns".
 
@@ -179,14 +183,51 @@ Inside the "ecosystems" of models, there are the simple models which allow to an
 	\label{fig:perfect_model}
 \end{figure}	
 
-As suggested by the \autoref{fig:perfect_model}\footnote{\textit{"In medio stat virtus"}}, models provide maximum insight where the right balance of realism (circle filled with dots, e.g. Graph-Neural-Network to predict $R_t$ \cite{Davahli::USA_predicting_COVID19}) and simplicity (circle with vertical lines e.g. a mean-field approximation of the SIR model \cite{Kiss::Ch1MathOfEpiOnNet}) is met\footnote{The equilibrium point may depend on the specific posed question} (central circle with oblique lines).
+As suggested by the \autoref{fig:perfect_model}\footnote{\textit{"In medio stat virtus"}} (\cite{Kiss::Ch1MathOfEpiOnNet}), models provide maximum insight where the right balance of realism (circle filled with dots, e.g. regarding epidemiology Graph-Neural-Network to predict $R_t$ \cite{Davahli::USA_predicting_COVID19}) and simplicity (circle with vertical lines e.g. on epidemics the deterministic SIR model ) is met\footnote{The equilibrium point may depend on the specific posed question} (central circle with oblique lines).
 
 In this middle region, there could be find several works that use network analysis as the underlying structure for a phenomenon(\cite{Thurner::NetBasedExpl} \cite{VespignaniSatorras2001Epidemic} \cite{pizzuti::2020_ItalyCOVIDnetwork}); while other, more involved, that incorporate human mobility data in several hybrid models \cite{ZEROUAL::DL_COVID19, Stubinger::Incidence_Diff_Countries} in order to predict its diffusion. For the sake of simplicity, the present work of thesis is going to deepen the paper of \cite{Thurner::NetBasedExpl}. In particular, Thurner et al. \cite{Thurner::NetBasedExpl}, by focusing on the COVID-19 spreading in Austria and in the USA, are able to find a scenario, i.e. a combination of the spreading parameters\footnote{the infection rate $\beta$, recover rate $\mu$, the long-range attachment probability $p$}, such that the outbreak is (quasi-)linear for a value of the average number of contact $D$. This manifestation of the SIR model is, at least, qualitatevely showed by the curves reported by the JHU University. 
-So, inspired by \cite{Thurner::NetBasedExpl}, the aim of this project is to analyze how the SIR model behave by changing its "innern" epidemic parameters but also the topology of the underlying social network, i.e. the susceptible people\footnote{In graph theory, a graph $G$ is a pair of node/vertices (V) and edges(E) which connnect the nodes, i.e. $G = (V,E)$. Thus, in the present context the nodes are the (susceptible) people. Therefore, "node" and "people" words may be used interchangebly according to the context.}.
+So, inspired by \cite{Thurner::NetBasedExpl}, the aim of this project is to analyze how the SIR model behave by changing its "innern" epidemic parameters but also the topology of the underlying social network, i.e. the susceptible people\footnote{In graph theory, a graph $G$ is a pair of node/vertices (V) and edges(E) which connnect the nodes, i.e. $G = (V,E)$. Thus, in the present context the nodes are the individuals. Therefore, "node" and "individual" (or synonyms) words may be used interchangebly according to the context.}.
 
 \section{Technical Introduction}
-At $8 \, \textnormal{May} \, 2020$, none of the affected COVID-19 states have reached "herd immunity"\footnote{The total infected cases at the first peak were $0.16\%$ of the total population, remarkably low with respect to the SARS-COV-2 "herd-immunity" level that are $0.8\%$ of the entire population.}, but still they reached the "epidemic peak" due to the containment restrictions on social contacts, e.g. \href{https://ourworldindata.org/coronavirus/country/austria}{Austria New Daily Infected}.
-The most striking observation is that the number of total cases, after early-stages when Non-Pharmaceutical Interventions (NPIs), i.e. lockdown, were not at work, exhibits a linear growth for an extended time interval in contrast with the "S-shaped" logistic curve predicted by the standard compartmental models. The extension of the linear regime depends on the onset of the measures; while for early stages, as it was the case for many countries \cite{Thurner::NetBasedExpl} ($8 \, \textnormal{May} \, 2020$), an exponential growth dominates the spreading of the disease.
+At $8 \, \textnormal{May} \, 2020$, none of the affected COVID-19 states have reached "herd immunity" but still they reached the "epidemic peak" due to the containment restrictions on social contacts. One paradigmatic example is the case of Austria, for which the total infected cases at the first peak were $0.16\%$ of the total population, remarkably low with respect to the SARS-COV-2 "herd-immunity" level that are supposed to be at $0.8\%$ (\cite{Zingano:2021_HI_hom_pop}) of the entire (susceptible) population. A graphical representation of the cases could be find in \autoref{fig:NDI}, \autoref{fig:CNDI} produced by \href{https://ourworldindata.org/coronavirus/country/austria}{Austria New Daily Infected}.
+
+\begin{figure}[htpb]
+	\centering
+	\begin{subfigure}{.5\textwidth}
+	  \centering
+	  \includegraphics[width=\textwidth]{OWiD/Austria_NDI.png}
+	  \caption{Austria until 8.5.2020}
+	  %\label{fig:lab1}
+	\end{subfigure}%
+	\begin{subfigure}{.5\textwidth}
+	  \centering
+	  \includegraphics[width=\textwidth]{OWiD/USA_NDI.png}
+	  \caption{USA until 8.5.2020}
+	  %\label{fig:lab2}
+	\end{subfigure}
+	\caption{Daily Number Of Cases}
+	\label{fig:NDI}
+\end{figure}
+
+\begin{figure}[htbp]
+	\centering
+	\begin{subfigure}{.5\textwidth}
+	  \centering
+	  \includegraphics[width=\textwidth]{OWiD/Austria_CNDI.png}
+	  \caption{Austria until 8.5.2020}
+	  \label{fig:lab1}
+	\end{subfigure}%
+	\begin{subfigure}{.5\textwidth}
+	  \centering
+	  \includegraphics[width=\textwidth]{OWiD/USA_CNDI.png}
+	  \caption{USA until 8.5.2020}
+	  \label{fig:lab2}
+	\end{subfigure}
+	\caption{Cumulative Daily Number Of Cases}
+	\label{fig:CNDI}
+\end{figure}
+The most striking observation is that the number of total cases, after early-stages when 
+\newline Non-Pharmaceutical-Interventions (NPIs), i.e. lockdown, were at work, exhibits a (quasi-)linear growth for an extended time interval in contrast with the "S-shaped" logistic curve predicted by the standard compartmental models. The extension of the linear regime depends on the onset of the measures; while for early stages, as it was the case for many countries \cite{Thurner::NetBasedExpl} ($8 \, \textnormal{May} \, 2020$), an exponential growth dominates the spreading of the disease.
 By taking care of the modification of the underlying social network structure, in this present work of thesis, we want to (qualitatively) recover the spreading trends for the states that have or have not applied the NPIs measures. \newline
 Specifically, an infection may occur for two reasons:
 \begin{enumerate}
@@ -194,9 +235,19 @@ Specifically, an infection may occur for two reasons:
     \item contact is "intense" (e.g. long, close,...) enough to lead to a disease transmission.
 \end{enumerate}
 So, the rationale behind the social distancing is that it takes to a reduction of both of these factors.
-On the other hand, the analitically solvable SIR model assumes that, defined $N, D$ as the total number of individuals in the population and the average number of contacts respectively, there is the same probability that an individual encounters an infected person ("well-mixed population") and all the nodes have the same number of neighbours ($N-1$ or $D$). Therefore, as claimed in \cite{VespignaniSatorras2001Epidemic}, there is the need of studying how the underlying network affects the spreading of a disease, but still no focus is put on the spreading below the epidemic threshold \cite{Thurner::NetBasedExpl} as it is the case if nodes were separated thurough NPIs. 
-In this thesis, the main goal is to grasp the relevant features of a complex social network in presence of NPIs and compare them with respect to the mean-field approach which annihilate the network structure in favor of the analytical treatment of the SIR model. \newline
-In detail, we let the SIR Model evolve in different network topologies by changing the epidemic parameters. On the other hand, it has been considered both the standard models of the graph-theory ("Erdoes-Rényi","Scale-Free", "Caveman Model") but also a more involved topology, i.e. a Poissonian Small-World Network. As a benchmark of a "well-mixed" population, it has been used an "annealed" mean-field (see ) which is a natural realisation of a mean-field network with a fixed average number of contacts per node.
+On the other hand, the analitically solvable SIR model assumes that, defined $N, D$ as the total number of individuals in the population and the average number of contacts respectively, there is the same probability that an individual encounters an infected person ("well-mixed population") and all the nodes have the same number of neighbours ($N-1$ or $D$). This approach allow to recover analytical results for a epidemic spreading but it annihilates the underlying network structure. Therefore, as claimed in \cite{VespignaniSatorras2001Epidemic}, there is the need of studying how the network affects the spreading of a disease, but still no focus is put on the spreading below the epidemic threshold \cite{Thurner::NetBasedExpl} as it is the case if nodes were separated thurough NPIs. 
+In this thesis, the main goal is to grasp the relevant features of a complex social network in presence of NPIs and compare them with respect to a "well-mixed" population model.
+In detail, by changing the epidemic parameters, we let the SIR Model evolve in different network topologies such as standard models of the graph-theory ("Erdoes-Rényi","Scale-Free", "Caveman Model") but also a new involved topology, i.e. a Poissonian Small-World Network. As a benchmark of a "well-mixed" population, it has been used an "annealed" mean-field (see ??) which is a natural realisation of a mean-field network with a fixed average number of contacts per node.
+Furthermore, $R_0 := \beta*D/\mu$ is heuristically defined as the the average number of new infections caused by an individual in a completely susceptible population\footnote{The susceptible individuals are chosen according to "epidemic targets", e.g. only childs for the measles} \cite{Kiss::MathOfEpiOnNet}. Moreover, it is well consolidated that for $R_0 > 1$ an epidemic is possible (not guaranteed); while for $R_0 < 1$ the disease will die out. 
+Thus, these informations drive naturally to suppose that $R_0$ could also be a signal of the strngth of an epidemic outbreak. Instead, this is not the case, since, as reported in the section ??, for equal $R_0$ values there could be different behaviour of a disease. Thus, a new parameter has to be introduce that has to:
+\begin{itemize}
+	\item grasp the different behaviour of epidemics;
+	\item depend only on the initial condition, i.e. network metrics (e.g. "long-range" parameter $p$) and disease parameters ($\beta \textnormal{ and } \mu$).
+\end{itemize}
+
+A possible solution is to incorporate on the existing $R_0$, an estimate of $p$ even for models which is not a innern parameter, e.g. the ad-hoc Poissonian Small-World Network.
+
+Finally, as in \cite{Thurner::NetBasedExpl}, a "epidemic" order parameter\footnote{Preciselly (see ??), it is the standard deviation of the daily new infected} is computed for each spread to classify a light outbreak, i.e. an outbreak which infect less than the $30\%$ of the entire popularion, with a stronger one. In this way, a first-order phase transition could be obtained by plotting, for sufficientely high $p$\footnote{$p$ is the long-range rewiring probability.} the order parameter against the average degree of contacts.
 
 \chapter{The Models}
 To this end, we proceeded with the following steps.
