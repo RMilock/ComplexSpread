@@ -39,11 +39,11 @@ def func_file_name(folder, adj_or_sir, N, D, p, R0 = -1, m = 0, N0 = 0, beta = 0
   from definitions import rhu
   if adj_or_sir == "AdjMat":
     if folder == "B-A_Model":
-      name = f'{folder}_{adj_or_sir}_{N}_{rhu(D)}_{rhu(p,3)}_{m}_{N0}.png'
+      name = f'{folder}_{adj_or_sir}_{N}_{rhu(D,1)}_{rhu(p,3)}_{m}_{N0}.png'
       #name = "".join(folder, "_%s_N%s_D%s_p%s_m%s_N0_%s" % (
       #adj_or_sir, N, rhu(D), rhu(p,3), m, N0),".png")  
       return name
-    else: return f'{folder}_{adj_or_sir}_{N}_{rhu(D)}_{rhu(p,3)}.png' #folder + "_%s_N%s_D%s_p%s.png" % (adj_or_sir, N,rhu(D),rhu(p,3)) 
+    else: return f'{folder}_{adj_or_sir}_{N}_{rhu(D,1)}_{rhu(p,3)}.png' #folder + "_%s_N%s_D%s_p%s.png" % (adj_or_sir, N,rhu(D),rhu(p,3)) 
     
 
   if adj_or_sir == "SIR":
@@ -245,6 +245,7 @@ def sirnumpy(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False
   return prevalence, cum_prevalence
 
 def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
+  #this is the regular sir
   'If mf == False, the neighbors are not fixed;' 
   'If mf == True, std mf by choosing @ rnd the num of neighbors'
 
@@ -291,8 +292,6 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
   cum_prevalence = [start_inf/N]
   num_susc = [N-start_inf]
 
-
-
   'start and continue whenever there s 1 infected'
   while(len(inf_list)>0):        
     daily_new_inf = 0
@@ -303,7 +302,8 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
         if not mf: tests = G.neighbors(i) #only != wrt to the SIS: contact are taken from G.neighbors            
         if mf: 
           ls = list(range(N)); ls.remove(i)
-          tests = random.sample(ls, k = int(mean)) #spread very fast since multiple infected center
+          print(rhu(mean), type(rhu(mean)))
+          tests = random.sample(ls, k = int(rhu(mean))) #spread very fast since multiple infected center
         tests = [int(x) for x in tests] #convert 35.0 into int
         for j in tests:
           'If the contact is susceptible and not infected by another node in the future_state, try to infect it'
@@ -376,18 +376,168 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
     #print("num_su[0], np.sum(num_susc), len(prev), oneit_avg_R2", \
     #  num_susc[0],np.sum(num_susc), len(prevalence), oneit_avg_R)
 
-    return oneit_avg_R, std_oneit_avg_R, oneit_avg_dni, op, prevalence, cum_prevalence
+    #return oneit_avg_R, std_oneit_avg_R, oneit_avg_dni, op, prevalence, cum_prevalence
+    return oneit_avg_dni, op, prevalence, cum_prevalence
+  
+  return prevalence, cum_prevalence
+
+def sirvec(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
+  'If mf == False, the neighbors are not fixed;' 
+  'If mf == True, std mf by choosing @ rnd the num of neighbors'
+
+  import random
+  import pprint
+  from functools import partial 
+  from itertools import product, chain
+  import copy
+
+  #here's the modifications of the "test_ver1"
+  'Number of nodes in the graph'
+  N, mean, _ = N_D_std_D(G)
+
+  'Label the idnividual wrt to the # of the node'
+  node_labels = G.nodes()
+  
+  'Currently infected idnividuals and the future infected and recovered'   
+  if seed: 
+    random.seed(0)
+
+  'Selects the seed of the disease'
+  inf_list = random.sample(node_labels, start_inf) #inf nodes @ time t
+  #print("inf_list", inf_list)
+
+  #no set since random.choice not double
+  # current = fut.copy() not possible since set() have fixed leng --> use list
+  inn_sir = {"S":[x for x in node_labels if x not in inf_list], "I":inf_list, "R":[]}
+  #inn_sir1 since if not for future_state["S"].add(j) changes also current_state
+  inn_sir1 = copy.deepcopy(inn_sir)
+  #inn_sir1 = {"S":[x for x in node_labels if x not in inf_list], "I":inf_list.copy(), "R":[]}
+  dsir = {0: inn_sir, 1: inn_sir1} 
+
+  #or NEW IDEA: 
+  # sir = {"S":{np.arange(node_labels)}}
+  #sir["I"] = random.choices(sir["S"],)
+  
+  pp = pprint.PrettyPrinter(indent=4, sort_dicts=False)
+  #pp.pprint(dsir)
+
+  'initilize prevalence (new daily infected) and recovered list'
+  'we dont track infected'
+  current_state = dsir[0] #['S' for i in node_labels] #sir[0]
+  future_state = dsir[1] #['S' for i in node_labels] #sir[1]
+  prevalence = [start_inf/N] #[daily_new_inf/N] since dni ~ 0 in many cases. Start with 0 to have smaller std
+  cum_prevalence = [start_inf/N]
+  arr_dni = [] # arr to computer Std(daily_new_inf(t)) for daily_new_inf(t)!=0
+
+  'start and continue whenever there s 1 infected'
+  while(len(inf_list)>0):        
+    daily_new_inf = 0
+    
+    def Gneigbors(i, mean, mf):
+      if not mf: tests = G.neighbors(i) #only != wrt to the SIS: contact are taken from G.neighbors            
+      if mf: 
+          ls = list(range(N)); ls.remove(i)
+          tests = random.sample(ls, k = int(mean)) #spread very fast since multiple infected center
+      tests = list(map(lambda x : int(x), tests)) #convert 35.0 into int
+      return tests
+
+    fixed_G = partial(Gneigbors,mean = mean, mf = mf)
+    tests = list(map(fixed_G, inf_list))
+
+    #print("inf, tests", inf_list, "\ntests", tests)
+
+    'Infection Phase: inf_list = prev_time infecteds'
+    'each infected tries to infect all of the neighbors'
+
+    #make [12] x [0,..,11,13,...19]
+    prod = [product([i], tests[inf_list.index(i)]) for i in inf_list]
+    prod = chain.from_iterable(prod) #this is an iterable
+
+    for i,j in prod:
+        ''''Select the neighbors of the infected node'
+        if not mf: tests = G.neighbors(i) #only != wrt to the SIS: contact are taken from G.neighbors            
+        if mf: 
+          ls = list(range(N)); ls.remove(i)
+          tests = random.sample(ls, k = int(mean)) #spread very fast since multiple infected center
+        tests = list(map(lambda x : int(x), tests)) #convert 35.0 into int
+        for j in tests[inf_list.index(i)]:
+          'If the contact is susceptible and not infected by another node in the future_state, try to infect it'
+          #NEW IDEA: create a dict for current and future i.e.
+          
+          #if j in dic[0]["S"] and j in dic[1]["S"] and random.random() < beta:
+          #  dic[1]["I"].add(j)
+          '''
+        if j in current_state["S"] and j in future_state["S"] and random.random() < beta:
+          future_state["I"].append(j); future_state["S"].remove(j); daily_new_inf += 1
+          #print("Infection node", j); pp.pprint(current_state)
+          #pp.pprint(future_state);  print("end of inf\n")      
+    
+    #New IDEA: this is more velox
+    #if daily_new_inf: print("dail_n_i", daily_new_inf)
+    if daily_new_inf: arr_dni = arr_dni+[daily_new_inf]
+    #print("arr_ni", arr_dni)
+
+    'Recovery Phase: only the prev inf nodes (=inf_list) recovers with probability mu'
+    'not the new infected'    
+    'This part is important in the OrderPar since diminishes the inf_list # that is in the "while-loop"'    
+
+    def future_rec(i):
+      if random.random() < mu:
+        future_state["I"].remove(i)
+        future_state["R"].append(i)
+        #print("Recovering node", i); pp.pprint(current_state); 
+        #pp.pprint(future_state); print("End of Rec\n")
+        return i
+
+
+    #print("new cicle current_state before recovering")
+    #pp.pprint(current_state)
+    
+    #for i in inf_list
+    rec_list = list(map(lambda x: future_rec(x), current_state["I"]))
+    #if np.any(rec_list): print("recovered nodes", rec_list )
+      
+    
+    'Time update: once infections and recovery ended, we move to the next time-step'
+    'The future state becomes the current one'
+    current_state = copy.deepcopy(future_state) #w/o .copy() it's a mofiable-"view"
+    
+    'Updates inf_list with the currently fraction of inf/rec and save lenS to avg_R' 
+
+    #IDEA: this is = to take the index on "current_state"
+    inf_list = current_state["I"]
+    #rec_list = current_state["R"]
+
+    'Saves the fraction of new daily infected (dni) and recovered in the current time-step'
+    prevalence.append(daily_new_inf/float(N))
+    cum_prevalence.append(cum_prevalence[-1]+daily_new_inf/N)  
+
+  'Order Parameter (op) = Std(Avg_dni(t)) s.t. dni(t)!=0 as a func of D'
+  if not mf:
+    ddof = 1
+    if len(arr_dni) <= 1: ddof = 0
+    if arr_dni == []: arr_dni = [0]
+    oneit_avg_dni = np.mean(arr_dni)
+    'op = std_dni'
+    op = np.std( arr_dni, ddof = ddof )
+    #if len(arr_dni) > 1:
+    #  if len([x for x in arr_dni if not x]) > 0: 
+    #    raise Exception("Error There's 0 dni: dni, arr_daily, std", daily_new_inf, arr_dni, op)
+    return oneit_avg_dni, op, prevalence, cum_prevalence
   
   return prevalence, cum_prevalence
 
 def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_inf = 10,verbose = False):
   'def a function that iters numb_iter and make an avg of all the trajectories'
+  print("NUMB OF IT", numb_iter)
   from itertools import zip_longest
+  from itertools import chain
   from definitions import sir
   import numpy as np
   import datetime as dt
   import copy
 
+  #mi servono solo gli infetti...quidni numb_idx_cl = 1
   numb_idx_cl = 2; counts = [[],[]]; max_len = 0 
 
   'here avg are "means" among all the iterations'
@@ -396,7 +546,7 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
   avg_traj= [[] for _ in range(numb_idx_cl)]
   std_avg_traj = [[] for _ in range(numb_idx_cl)]
   
-  avg_R = 0; std_avg_R = 0; list_avg_R = []; 
+  #avg_R = 0; std_avg_R = 0; list_avg_R = []; 
   avg_ordp = 0; list_ordp = [] #ordp = std(dni s.t. dni!=0)
   start_time = dt.datetime.now()
 
@@ -404,22 +554,17 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
   for i in range(numb_iter):
     if not (i+1) % 50: onesir_start_time = dt.datetime.now()
     if not mf:
-      #print("Start sir", i)
-      #start = dt.datetime.now()
-      avg_R, std_avg_R, _, std_dni, prev, cum_prev \
+      _, std_dni, prev, cum_prev \
         = sir(G, beta = beta, mu = mu, start_inf = start_inf, mf = mf)
-      #print("End sir in time", dt.datetime.now()-start)
-      #avg_R, oneit_avg_dni, std_dni, prev, rec, cum_prev \
-      #  = 1,3,5,[1,2],[3,4,5],[6,7,8,9]
-      #list_avg_R.append(avg_R)
-      #std_avg_R += std_avg_R**2 / max(1,numb_iter) #using error propagation for the mean
       list_ordp.append(std_dni)
     else: prev, cum_prev = sir(G, beta = beta, mu = mu, start_inf = start_inf, mf = mf)
     
+    #print("prev", len(prev), prev, "\ncum_prev", len(cum_prev), cum_prev)
     tmp_traj = prev, cum_prev
     if not (i+1) % 50: 
+      'only printing here'
       time_1sir = dt.datetime.now()-onesir_start_time
-      #print("The time for 1 sir is", time_1sir)
+      print("The time for 1 sir is", time_1sir)
       time_50sir = dt.datetime.now()-start_time
       print("Total time for %s its of max-for-loop %s. Time for 1 sir %s" % (i+1, time_50sir, time_1sir))
       if not mf:
@@ -428,14 +573,11 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
       start_time = dt.datetime.now()
 
     'append tmp_traj and search for the max time of one epidemic'
-    for idx_cl in range(numb_idx_cl):     #save only infected right?
+    for idx_cl in range(numb_idx_cl):     #save only infected right? In fact, idx_cl = 0
       #if idx_cl == 0: print("\ntmp_traj", tmp_traj) 
       trajectories[idx_cl].append(tmp_traj[idx_cl])
-      tmp_max = len(np.max(trajectories[idx_cl], axis = 0))
-      
-      #tmp_max = len(tmp_traj[0])
-      #if tmp_max > max_len: max_len = tmp_max
-      
+      max_len = len(max(trajectories[idx_cl], key=len))
+      #print("trajectories", trajectories[idx_cl], "max len", max_len)
     
   'Only for nets: compute mean and std of avg_R and std_dni'
   if not mf:
@@ -458,16 +600,20 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
       'create a max-len list repeating the last element'
       'Varying idx_cl, traj[idx][i] has the != len wrt trj[0][i] since its increasing, fel, with +=last_el_list'
       'traj[classes to be considered, e.g. infected = 0][precise iteration we want, e.g. "-1"]'
-      
-      last_el_list = [trajectories[idx_cl][i][-1] for _ in range(max_len-len(trajectories[idx_cl][i]))]
       #print("max_len", max_len, len(trajectories[idx_cl][i]), len(last_el_list), len(trajectories[0][i]) )
       #print(last_el_list, type(last_el_list[0]),type(trajectories[idx_cl][i][0]))
-      
-      
       #new idea:
-      #[trajectories[idx_cl][i] + [trajectories[idx_cl][i][-1]]*(max_len-len(trajectories[idx_cl][i]))]
-      trajectories[idx_cl][i] = np.append(trajectories[idx_cl][i], last_el_list)
+      old = trajectories[idx_cl][i].copy()
+      last_el_list = [trajectories[idx_cl][i][-1]]*(max_len-len(trajectories[idx_cl][i]))
+      trajectories[idx_cl][i] = list(chain(old,last_el_list))
       
+      #print("max_len", max_len, len(old), len(last_el_list) )
+      #print("trajectiories", i, idx_cl, old, trajectories[idx_cl][i], len(trajectories[idx_cl][i]))
+      #if last_el_list != []: print(last_el_list)
+
+      #old one
+      #last_el_list = [trajectories[idx_cl][i][-1] for _ in range(max_len-len(trajectories[idx_cl][i]))]
+      #trajectories[idx_cl][i] = np.append(trajectories[idx_cl][i], last_el_list)
       
       if verbose:
         print("\niteration(s):", i, "idx_cl ", idx_cl)
@@ -480,6 +626,7 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
         print("avg", avg_traj)
 
       length = len(trajectories[idx_cl][i]) #should be max_len
+
       if length != max_len: raise Exception("Error: %s not max_len %s of %s-th it" % (length,max_len,i))
     if i == 199: print("End of avg_traj on 200 scenarios")
 
@@ -490,7 +637,8 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
     std_avg_traj[idx_cl] = np.std(trajectories[idx_cl], axis = 0, ddof = 1)
   print("End idx_cl %s round"%idx_cl)
   
-  if not mf: return avg_R, std_avg_R, avg_ordp, std_avg_ordp, plot_trajectories, avg_traj, std_avg_traj
+  #if not mf: return avg_R, std_avg_R, avg_ordp, std_avg_ordp, plot_trajectories, avg_traj, std_avg_traj
+  if not mf: return avg_ordp, std_avg_ordp, plot_trajectories, avg_traj, std_avg_traj
   return plot_trajectories, avg_traj, std_avg_traj
 
 def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter = 200):
@@ -503,8 +651,10 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
   'plot ratio of daily infected and daily cumulative recovered'
   'Inf and Cum_Infected from Net_Sir; Recovered from MF_SIR'
   print("\nNetwork-SIR loading...")
-  avg_R_net, std_avg_R_net, avg_ordp_net, std_avg_ordp_net, trajectories, avg_traj, std_avg_traj \
+  #old ver: add avg_R_net, std_avg_R_net, 
+  avg_ordp_net, std_avg_ordp_net, trajectories, avg_traj, std_avg_traj \
   = itermean_sir(G, mf = False, beta = beta, mu = mu, start_inf  = start_inf, numb_iter=numb_iter)
+  
   print("Final avg_ordp_net", avg_ordp_net)
   print("\nMF-SIR loading...")
   mf_trajectories, mf_avg_traj, mf_std_avg_traj = itermean_sir(G, mf = True, mu = mu, beta = beta, start_inf = start_inf, numb_iter = numb_iter)
@@ -552,7 +702,7 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
 
   'plot labels'
   ax.set_xlabel('Time[1day]')
-  ax.set_ylabel('Idnivs/N')
+  ax.set_ylabel('Indivs/N')
   
   'set legend above the plot if R_0 in [0,2] in the NNR_Config_Model'
   folders = ["NoNR_Conf_Model"] #"WS_Epids"]
@@ -574,14 +724,13 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
     order = [2,3,0,1,4]
     ax.legend([handles[idx] for idx in order],[labels[idx] for idx in order],loc="best"); 'set legend in the "best" mat plot lib location'
 
-  return avg_R_net, std_avg_R_net, avg_ordp_net, std_avg_ordp_net
+  return avg_ordp_net, std_avg_ordp_net#, avg_R_net, std_avg_R_net,
 
 def rhu(n, decimals=0, integer = False): #round_half_up
     import math
     multiplier = 10 ** decimals
     res = math.floor(n*multiplier + 0.5) / multiplier
-    if integer: return int( res )
-    else: return res
+    return int( res )
   
 def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = False, partition = None, pos = None):
   import os.path
@@ -635,13 +784,13 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
   plt.figure(figsize = (20,20)) #20,20
 
   ax = plt.subplot(221)
-  xmin, xmax = ax.get_xlim()
+  '''xmin, xmax = ax.get_xlim()
   ymin, ymax = ax.get_ylim()
   print("\nThese are the xlim %s, ylim %s" % ((xmin,xmax),(ymin,ymax)))
 
   xbmin, xbmax = ax.get_xbound()
   ybmin, ybmax = ax.get_ybound()
-  print("\nThese are the xblim %s, yblim %s" % ((xbmin,xbmax),(ybmin,ybmax)) )
+  print("\nThese are the xblim %s, yblim %s" % ((xbmin,xbmax),(ybmin,ybmax)) )'''
 
   #ax.set_xlim(xmin = 0, xmax = 1)
   #ax.set_ylim(ymin = 0, ymax = 1)
@@ -798,7 +947,7 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
       'plot sir'
       print("\nThe model has N: %s, D: %s(%s), beta: %s, mu: %s, p: %s, R0: %s" % 
       (N,rhuD2,rhu(std_D,2),rhu(beta,3),rhu(mu,3),rhu(p,3),rhu(R0,3)) )
-      avg_R_net, std_avg_R_net, avg_ordp_net, std_avg_ordp_net = \
+      avg_ordp_net, std_avg_ordp_net = \
         plot_sir(G, ax=ax, folder = folder, beta = beta, mu = mu, start_inf = start_inf, 
                 numb_iter = numb_iter)
       plt.subplots_adjust(
@@ -1683,10 +1832,10 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
               #new_edges = list(filter(lambda x: x[0]!=node or x[1]!=node, G.edges()))
             #print("Removed nodes", node, np.mean([j for _,j in G.degree()]))
             i+=1
-          print("The %s has %s left_nodes with avg %s" 
+          print("At the end of pruning: %s has %s left_nodes with avg %s" 
           % (folder, len(G.nodes())-25*i,np.mean([j for _,j in G.degree()])))
 
-        print("\nIterations left: %s" % ( total_iterations - done_iterations ) )
+        #print("\nIterations left: %s" % ( total_iterations - done_iterations ) )
 
         import datetime as dt
         start_time = dt.datetime.now()       
@@ -1708,7 +1857,7 @@ def parameters_net_and_sir(folder = None, p_max = 0.3):
   #k_prog = np.concatenate(([1.0],np.arange(2,20,2)))
   k_prog = np.concatenate(([1,2,3,4,5],np.arange(7,20,2)))
   p_prog = [rhu(x,1) for x in np.linspace(0,p_max,int(p_max*10)+1)]
-  beta_prog = [0.01, 0.05, 0.2, 0.25]; mu_prog = [0.05, 0.2, 0.25]
+  beta_prog = [0.5, 0.01, 0.05, 0.2, 0.25]; mu_prog = [0.5, 0.05, 0.2, 0.25]
   R0_min = 0; R0_max = 30
 
   'this should be deleted to have same params and make comparison more straight-forward'
