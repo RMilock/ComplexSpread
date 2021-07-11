@@ -39,17 +39,17 @@ def func_file_name(folder, adj_or_sir, N, D, p, R0 = -1, m = 0, N0 = 0, beta = 0
   from definitions import rhu
   if adj_or_sir == "AdjMat":
     if folder == "B-A_Model":
-      name = f'{folder}_{adj_or_sir}_{N}_{rhu(D,1)}_{rhu(p,3)}_{m}_{N0}.png'
+      name = f'{folder}_{adj_or_sir}_{N}_{rhu(D)}_{rhu(p,3)}_{m}_{N0}.png'
       #name = "".join(folder, "_%s_N%s_D%s_p%s_m%s_N0_%s" % (
       #adj_or_sir, N, rhu(D), rhu(p,3), m, N0),".png")  
       return name
-    else: return f'{folder}_{adj_or_sir}_{N}_{rhu(D,1)}_{rhu(p,3)}.png' #folder + "_%s_N%s_D%s_p%s.png" % (adj_or_sir, N,rhu(D),rhu(p,3)) 
+    else: return f'{folder}_{adj_or_sir}_{N}_{rhu(D)}_{rhu(p,3)}.png' #folder + "_%s_N%s_D%s_p%s.png" % (adj_or_sir, N,rhu(D),rhu(p,3)) 
     
 
   if adj_or_sir == "SIR":
     return folder + "_%s_R0_%s_N%s_D%s_p%s_beta%s_mu%s"% (
             adj_or_sir, '{:.1f}'.format(R0),
-            N,rhu(D,1), rhu(p,3), rhu(beta,3), rhu(mu,3) ) + ".png"
+            N,rhu(D), rhu(p,3), rhu(beta,3), rhu(mu,3) ) + ".png"
 
 '===Plot and Save SIR + Net'
 def plot_params():
@@ -302,7 +302,7 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
         if not mf: tests = G.neighbors(i) #only != wrt to the SIS: contact are taken from G.neighbors            
         if mf: 
           ls = list(range(N)); ls.remove(i)
-          print(rhu(mean), type(rhu(mean)))
+          #print(rhu(mean), type(rhu(mean)))
           tests = random.sample(ls, k = int(rhu(mean))) #spread very fast since multiple infected center
         tests = [int(x) for x in tests] #convert 35.0 into int
         for j in tests:
@@ -529,7 +529,6 @@ def sirvec(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
 
 def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_inf = 10,verbose = False):
   'def a function that iters numb_iter and make an avg of all the trajectories'
-  print("NUMB OF IT", numb_iter)
   from itertools import zip_longest
   from itertools import chain
   from definitions import sir
@@ -564,7 +563,6 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
     if not (i+1) % 50: 
       'only printing here'
       time_1sir = dt.datetime.now()-onesir_start_time
-      print("The time for 1 sir is", time_1sir)
       time_50sir = dt.datetime.now()-start_time
       print("Total time for %s its of max-for-loop %s. Time for 1 sir %s" % (i+1, time_50sir, time_1sir))
       if not mf:
@@ -635,7 +633,7 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
   for idx_cl in range(numb_idx_cl):    
     avg_traj[idx_cl] = np.mean(trajectories[idx_cl], axis = 0) #avg wrt index, e.g. all 0-indexes
     std_avg_traj[idx_cl] = np.std(trajectories[idx_cl], axis = 0, ddof = 1)
-  print("End idx_cl %s round"%idx_cl)
+  #print("End idx_cl %s round"%idx_cl)
   
   #if not mf: return avg_R, std_avg_R, avg_ordp, std_avg_ordp, plot_trajectories, avg_traj, std_avg_traj
   if not mf: return avg_ordp, std_avg_ordp, plot_trajectories, avg_traj, std_avg_traj
@@ -730,7 +728,8 @@ def rhu(n, decimals=0, integer = False): #round_half_up
     import math
     multiplier = 10 ** decimals
     res = math.floor(n*multiplier + 0.5) / multiplier
-    return int( res )
+    if integer: return int(res)
+    return res
   
 def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = False, partition = None, pos = None):
   import os.path
@@ -748,7 +747,6 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
   std_D = rhu( np.std(degrees, ddof = 1), 2 )
 
   rhuD = rhu(D) #used for func_file_name, mean in hist, 
-  print("D%s" % (D))
   #D = rhu( D)
   adj_or_sir = "AdjMat"
   if nx.is_connected(G): avg_l = nx.average_shortest_path_length(G)
@@ -814,7 +812,7 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
   if folder in folders: width = 0.2*N/max(1,len(long_range_edges))
   if folder == "B-A_Model": 
     width = 0.2*N/max(1,len(long_range_edges))
-    print("The edge width is", int(width*10)/10)
+    #print("The edge width is", int(width*10)/10)
   if folder== "Caveman_Model":
     nx.draw(G, pos, node_color=list(partition.values()), node_size = 5, width = 0.5, with_labels = False)
   else: nx.draw_circular(G, ax=ax, with_labels=False, font_size=20, node_size=25, width=width)
@@ -850,7 +848,7 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
   axs.matshow(adj_matrix, cmap=cm.get_cmap("Greens"))
   #print("Adj_matrix is symmetric", np.allclose(adj_matrix, adj_matrix.T))
   plt.subplots_adjust(top=0.85,
-  bottom=0.13 ,  #0.088
+  bottom=0.09,  #0.088
   left=0.1,
   right=0.963,
   hspace=0.067, #0.067
@@ -880,7 +878,7 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
       nc_file.write("".join((file_name, " #disc_comp: %s" % len(sorted_disc_components), "\n")))
 
   with open(log_path, mode) as text_file: #write only 1 time
-    print("file_name", file_name)
+    #print("file_name", file_name)
     text_file.write("".join((file_name, "\n")) )    
     #text_file.write("".join(("N: ", file_name, "; D=%s" % real_D, "\n")) )
 
@@ -952,8 +950,8 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
                 numb_iter = numb_iter)
       plt.subplots_adjust(
       top=0.920,
-      bottom=0.151,
-      left=0.126,
+      bottom=0.10,
+      left=0.10,
       right=0.962,
       hspace=0.2,
       wspace=0.2)
@@ -1099,11 +1097,11 @@ def plot_save_nes(
   if adj_or_sir == "AdjMat": 
     saved_files = already_saved_list(folder, adj_or_sir, chr_min = chr_min, my_print= my_print, done_iterations= done_iterations)
     file_name = func_file_name(folder = folder, adj_or_sir = adj_or_sir, \
-    N = N, D = rhu(D), R0 = R0, p = p, m = m, N0 = N0)
+    N = N, D = D, R0 = R0, p = p, m = m, N0 = N0)
   if adj_or_sir == "SIR": 
     saved_files = already_saved_list(folder, adj_or_sir, chr_min = chr_min, my_print= my_print, done_iterations=done_iterations)
     file_name = func_file_name(folder = folder, adj_or_sir = adj_or_sir, \
-    N = N, D = rhu(D,1), R0 = R0, p = p, m = m, N0 = N0, beta = beta, mu = mu)
+    N = N, D = D, R0 = R0, p = p, m = m, N0 = N0, beta = beta, mu = mu)
   if file_name not in saved_files: 
     print("I'm saving", file_name)
     #infos_sorted_nodes(G, num_sorted_nodes = True)
@@ -1402,8 +1400,8 @@ def infos_sorted_nodes(G, num_sorted_nodes = False):
     import networkx as nx
     'sort nodes by key = degree. printing order: node, adjacent nodes, degree'
     nodes = G.nodes()
-    print("<k>: ", np.sum([j for (i,j) in G.degree() ]) / len(nodes), 
-          " and <k>/N ", np.sum([j for (i,j) in G.degree() ]) / len(nodes)**2, end="\n" )
+    #print("<k>: ", np.sum([j for (i,j) in G.degree() ]) / len(nodes), 
+    #      " and <k>/N ", np.sum([j for (i,j) in G.degree() ]) / len(nodes)**2, end="\n" )
     
     'put adj_matrix into dic for better visualisation'
     adj_matrix =  nx.adjacency_matrix(G).todense()
@@ -1751,7 +1749,7 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
             ordp_pmbD_dic = json.loads(f.read(), object_hook=jsonKeys2int)
 
         pp_ordp_pmbD_dic = json.dumps(ordp_pmbD_dic, sort_keys=False, indent=4)
-        if done_iterations == 1: print("Previous ordp %s \n@ %s" % (pp_ordp_pmbD_dic, ordp_path))
+        if done_iterations == 1: print("Previous ordp %s" % (pp_ordp_pmbD_dic))
         
         m, N0 = 0,0
         pos, partition = None, None
@@ -1766,8 +1764,6 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
           if folder == "Caveman_Model": regD = 2
           else: regD = 1
         else: regD = D
-
-        print("3nd: D %s, regD %s" % (D, regD))
         regD = int(regD)
 
 
@@ -1857,7 +1853,7 @@ def parameters_net_and_sir(folder = None, p_max = 0.3):
   #k_prog = np.concatenate(([1.0],np.arange(2,20,2)))
   k_prog = np.concatenate(([1,2,3,4,5],np.arange(7,20,2)))
   p_prog = [rhu(x,1) for x in np.linspace(0,p_max,int(p_max*10)+1)]
-  beta_prog = [0.5, 0.01, 0.05, 0.2, 0.25]; mu_prog = [0.5, 0.05, 0.2, 0.25]
+  beta_prog = [0.01,0.05,0.1,0.2,0.4,0.5]; mu_prog = [0.01, 0.05, 0.1, 0.2, 0.9]
   R0_min = 0; R0_max = 30
 
   'this should be deleted to have same params and make comparison more straight-forward'
