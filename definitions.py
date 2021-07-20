@@ -10,6 +10,9 @@ import os #to create a folder
 from numba import njit, config, prange
 from multiprocessing import Pool
 
+
+##THESE ARE THE DEFS BEFORE ENCOUTERING THE MASTER OF CS
+
 #config.THREADING_LAYER = "default"
 
 #Thurner pmts: beta = 0.1, mu = 0.16; D = 3 vel 8
@@ -244,7 +247,7 @@ def sirnumpy(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False
   
   return prevalence, cum_prevalence
 
-def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
+def sirlist(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
   #this is the regular sir
   'If mf == False, the neighbors are not fixed;' 
   'If mf == True, std mf by choosing @ rnd the num of neighbors'
@@ -281,6 +284,8 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
   #e.g. dic[1]["S"]
 
   inf_list = random.sample(node_labels, start_inf)  #without replacement, i.e. not duplicates
+  if rhu(mean,0)-1 <= 0 and mf: #too slow for D = 1
+    inf_list = []
   for seed in inf_list:
     current_state[seed] = 'I'
     future_state[seed] = 'I'
@@ -292,6 +297,7 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
   cum_prevalence = [start_inf/N]
   num_susc = [N-start_inf]
 
+  
   'start and continue whenever there s 1 infected'
   while(len(inf_list)>0):        
     daily_new_inf = 0
@@ -301,6 +307,8 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
         'Select the neighbors of the infected node'
         if not mf: tests = G.neighbors(i) #only != wrt to the SIS: contact are taken from G.neighbors            
         if mf: 
+          #if rhu(mean,0)-1 <= 0: #too slow for D = 1
+          #  mean = 0
           ls = list(range(N)); ls.remove(i)
           #print(rhu(mean), type(rhu(mean)))
           tests = random.sample(ls, k = int(rhu(mean))) #spread very fast since multiple infected center
@@ -381,7 +389,7 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
   
   return prevalence, cum_prevalence
 
-def sirvec(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
+def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
   'If mf == False, the neighbors are not fixed;' 
   'If mf == True, std mf by choosing @ rnd the num of neighbors'
 
@@ -441,7 +449,10 @@ def sirvec(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
       tests = list(map(lambda x : int(x), tests)) #convert 35.0 into int
       return tests
 
-    fixed_G = partial(Gneigbors,mean = mean, mf = mf)
+    import time 
+    start = time.time()
+    fixed_G = partial(Gneigbors, mean = mean, mf = mf)
+    print(time.time()-start)
     tests = list(map(fixed_G, inf_list))
 
     #print("inf, tests", inf_list, "\ntests", tests)
@@ -536,7 +547,7 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
   import datetime as dt
   import copy
 
-  #mi servono solo gli infetti...quidni numb_idx_cl = 1
+  #mi servono solo gli infetti...quidni numb_idx_cl = 2, prev and cum_prev
   numb_idx_cl = 2; counts = [[],[]]; max_len = 0 
 
   'here avg are "means" among all the iterations'
@@ -642,9 +653,9 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
 def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter = 200):
 
   'D = numb acts only in mf_avg_traj'
-  import itertools
+  from definitions import rhu
   # MF_SIR: beta = 1300e-3, MF_SIR: mu = 0.05
-  N = G.number_of_nodes()
+  N, D, _ = N_D_std_D(G)
 
   'plot ratio of daily infected and daily cumulative recovered'
   'Inf and Cum_Infected from Net_Sir; Recovered from MF_SIR'
@@ -654,7 +665,7 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
   = itermean_sir(G, mf = False, beta = beta, mu = mu, start_inf  = start_inf, numb_iter=numb_iter)
   
   print("Final avg_ordp_net", avg_ordp_net)
-  print("\nMF-SIR loading...")
+  print("\nMF-SIR loading...")  
   mf_trajectories, mf_avg_traj, mf_std_avg_traj = itermean_sir(G, mf = True, mu = mu, beta = beta, start_inf = start_inf, numb_iter = numb_iter)
   'plotting the many realisations'    
   colors = ["paleturquoise","wheat","lightgreen", "thistle"]
@@ -683,10 +694,10 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
   if string_format == "0.0":
     string_format = format(value, ".1e")
 
-  ax.plot(mf_avg_traj[1], label=r"MF::Sum_NDI (%s%%$\pm$%s%%)"\
+  ax.plot(mf_avg_traj[1], label=r"MF::Cum_NDI (%s%%$\pm$%s%%)"\
     % (np.round(mf_avg_traj[1][-1]*100,1), string_format ), \
     color = "tab:orange" ) #mf::cd_inf, np.round(mf_std_avg_traj[1][-1]*100,1)
-  ax.plot(avg_traj[1], label=r"Net::Sum_NDI (%s%%$\pm$%s%%)" %
+  ax.plot(avg_traj[1], label=r"Net::Cum_NDI (%s%%$\pm$%s%%)" %
     (np.round(avg_traj[1][-1]*100,1), np.round(std_avg_traj[1][-1]*100,1) ), \
     color = "tab:green") #net::cd_inf
 
@@ -892,13 +903,14 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
     for line in sorted_lines:
       r.write(line)
 
-def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 10, numb_iter = 200):
+def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 10, numb_iter = 50):
   import os.path
   from definitions import my_dir, func_file_name, N_D_std_D
   import datetime as dt
   import matplotlib.pylab as plt
   start_time = dt.datetime.now()
 
+  print("numb_iter", numb_iter)
   mode = "a"
   #if done_iterations == 1: mode = "w"
   my_dir = my_dir() #"/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/Tests/"
@@ -984,8 +996,8 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
       value = avg_ordp_net
       std = std_avg_ordp_net
 
-      pp_ordp_pmbD_dic = json.dumps(ordp_pmbD_dic, sort_keys=False, indent=4)
-      print("Start dic", pp_ordp_pmbD_dic)
+      #pp_ordp_pmbD_dic = json.dumps(ordp_pmbD_dic, sort_keys=False, indent=4)
+      #print("Start dic", pp_ordp_pmbD_dic)
 
       print("\nTo be added pmbD itermean:", p, mu, beta, D, value)
       
@@ -1017,7 +1029,7 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
         plt.suptitle(r"$Average Std(Daily New Infected) :: p%s,\beta:%s,\mu:%s$"%(rhu(p,3),rhu(beta,3),rhu(mu,3))) 
         #plt.suptitle(f"$Average Std(Daily New Infected) :: p:{rhu(p,3)},\beta{beta,3}:,\mu:{rhu(mu,3)}")
       else: plt.suptitle(r"$Average Std(Daily New Infected) :: p%s,\beta:%s,\mu:%s$"%(rhu(p,3),rhu(beta,3),rhu(mu,3)))
-      ax.set_xlabel("Avg_Degree [Idnivs]")
+      ax.set_xlabel("Avg_Degree [Indivs]")
       ax.set_ylabel("Std(NDI)")
       
       if folder == "WS_Pruned":
