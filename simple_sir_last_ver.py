@@ -22,13 +22,13 @@ it drives to a nearer pruning.
 '''
 
 'rewire all the edges with a probability of p'
-N = int(5e3); p_max = 0.2
+N = int(1e3); p_max = 0.3
 
 def even_int(x):
   if int(x) % 2 != 0: return int(x-1)
   return int(x)
 
-for pruning in [True]: 
+for pruning in [False]: 
   if pruning == True:
     folder = "WS_Pruned"
 
@@ -116,7 +116,7 @@ for pruning in [True]:
     k_prog = np.arange(2,18,2)
     R0_min = 0.3; R0_max = 5
     '''
-    folder = "WS_Epids"; p_max = 0.2
+    folder = "WS_Epids"
     k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max =  parameters_net_and_sir(folder = folder, p_max = p_max) 
     #p_prog = np.concatenate((np.array([0.001]), np.linspace(0.01,0.1,5)))
 
