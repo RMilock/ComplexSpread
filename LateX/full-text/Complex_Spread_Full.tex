@@ -23,7 +23,7 @@
 \usepackage{textcomp}
 \usepackage{cite}
 \usepackage{multirow}
-%\usepackage[utf8]{inputenc}   %per riuscire a scrivere gli accenti, but w/ this a error wit csquote is raised. So, use \usep[english]{babel} only.
+%\usepackage[utf8]{inputenc}   %per riuscire a scrivere gli accenti, but w/ this a error with csquote is raised. So, use \usep[english]{babel} only.
 \usepackage[english]{babel}   %per riuscire a scrivere gli accenti
 \usepackage{setspace}
 \usepackage{etoc}
@@ -43,6 +43,10 @@
 \usepackage{siunitx}
 \usepackage{bm}
 \usepackage{bigints}
+
+\usepackage{pgfplots} % to make plot inside LateX
+\pgfplotsset{compat = 1.16}
+
 \usepackage{enumitem}
 \usepackage{hyperref}
 \usepackage{xcolor}
@@ -51,6 +55,9 @@
 \usepackage{mathtools}
 \usepackage[style=ddmmyyyy]{datetime2}
 
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+
 \pagestyle{fancy} 
 
 \graphicspath{{../images/}}
@@ -58,12 +65,13 @@
 \titleformat{\chapter}[display]
   {\normalfont\bfseries}{}{0pt}{\Huge}
 
+\definecolor{brown}{rgb}{0.28, 0.02, 0.03}
 \hypersetup{
-    colorlinks,
-    citecolor=blue,
-    filecolor=blue,
-    linkcolor=blue,
-    urlcolor=blue
+colorlinks,
+citecolor=blue,
+filecolor=blue,
+linkcolor=blue,
+urlcolor=blue
 }
 
 \makeatletter
@@ -101,12 +109,10 @@
 \vspace{20mm}
 {\Large{\textsc{\bf Final Dissertation}}}\\
 \vspace{30mm}
-\begin{spacing}{3}
-\end{spacing}
-\vspace{8mm}
+{\Large{\textsc{\bf Modelling COVID-19 In a Network}}}\\
+\vspace{45mm}
 \end{center}
 
-\vspace{20mm}
 \begin{spacing}{2}
 \begin{tabular}{lccccccccccl}
 	{\Large{\bf Candidate}} &&&&&&&&&& {\Large{\bf Thesis supervisor}}\\
@@ -150,28 +156,40 @@
 
 \newgeometry{top=2cm,bottom=2cm,left=2cm,right=2cm}
 
-\chapter[Abstract]{Abstract}
-The usuall simplified description of epidemic dynamics predicts an exponential growth. This is due to the mean field character of the dynamical equations. However, a recent paper (Thurner S, Klimek P and Hanel R 2020 Proc. Nat. Acad. Sci. 117, 22684) \cite{Thurner::NetBasedExpl} showed
+\chapter*{Abstract}
+The usual simplified description of epidemic dynamics predicts an exponential growth. This is due to the mean field character of the dynamical equations. However, a recent paper (Thurner S, Klimek P and Hanel R 2020 Proc. Nat. Acad. Sci. 117, 22684) \cite{Thurner::NetBasedExpl} showed
 that in a network with fixed connectivity, the nodes become infected at a rate that increases linearly rather than exponentially.
 Experimental data for COVID-19 seem to validate this approach. In this thesis we plan to study this model by tuning its parameters.
 In particular, we monitor the effect induced by a significant presence of hubs in the network.
 
-\chapter[Motivations]{Motivations}
+\chapter*{Motivations}
 Last Update: \today
-\section{Motivations}
-"The COVID-19 pandemics has led to a dramatic loss of human life worldwide and presents an unprecedented challenge to public health, food systems and the world of work"\cite{Chriscaden::2021_ImpactCOVID19}. In this scenario, monitoring and forecasting the diffusion of the virus is a essential tool for policymakers to handle the health-care resources and restrictions among individuals. To this purpose, many academics, e.g. \href{https://web.unipd.it/covid19/en/}{UniPD against COVID}\footnote{https://web.unipd.it/covid19/en/}, have been trying to tackle the COVID-19 spreading as well as its side-effects, which have to be considered on the "path to normality". This drastic shift with respect to the "path to herd immunity" comes from a recent study \cite{GU::2021_SitePathToNormality} which shed light on the fact that "herd immunity", due to delay on vaccinations, could probably not be reached for the end of 2021. On the other hand, due to few practical points \cite{Nature:18.3.2021_NoHerdImmunity}, it is also probabile that the long-term prospects include COVID-19 becoming an endemic disease, much like influenza. 
-Therefore, the recovery of the pre-COVID situation could be slow even in the presence of effective vaccines.
+"The COVID-19 pandemics has led to a dramatic loss of human life worldwide and presents an unprecedented challenge to public health, food systems and the world of work"\cite{Chriscaden::2021_ImpactCOVID19}. In this scenario, monitoring and forecasting the diffusion of the virus is a essential tool for policymakers to handle the health-care resources and restrictions among individuals. To this purpose, many academics, e.g. \href{https://web.unipd.it/covid19/en/}{UniPD against COVID-19}\footnote{https://web.unipd.it/covid19/en/}, have been trying to tackle the COVID-19 spreading as well as its side-effects, which have to be considered on the "path to normality". This drastic shift with respect to the "path to herd immunity" comes from a recent study \cite{GU::2021_SitePathToNormality} which shed light on the fact that "herd immunity", due to delay on vaccinations, could probably not be reached for the end of 2021. On the other hand, due to few practical points \cite{Nature:18.3.2021_NoHerdImmunity}, it is also probabile that the long-term prospects include COVID-19 becoming an endemic disease, much like influenza. 
+Therefore, the recovery of the pre-COVID-19 situation could be slow even in the presence of effective vaccines.
 
-So, an interesting path to cover is to describe the evolution of the COVID-19 pandemic, e.g. with the SIR model \cite{pizzuti::2020_ItalyCOVIDnetwork}, on different network topologies in order to simulate the different containment policies, i.e. "lockdowns".
+So, an interesting path to cover is to describe the evolution of the COVID-19 pandemic, e.g. with the SIR model \cite{pizzuti::2020_ItalyCOVIDnetwork}, on different network topologies in order to simulate the different containment policies, i.e. "lock-downs".
 
 
 \chapter[Introduction]{Introduction}
 %\include{cap_Introduction}
 
+\section{Complexity}
+Since its beginning, Physics has been driven by a "Unification Principle"\footnote{from Newton with the "gravity"-relationship between an apple and the Moon; passing to Einstein, whom the effects of gravity are equal to the ones of an accelerated rocket for; ending to the \textit{Grand Unified Theory} as a unification of of general relativity with the particle physics},which aims at describing the reality as a "reduction" and simplification of its constituents and interactions. Nevertheless, this optimistic gaze, is (amazingly) challenged by the complexity that emerges in the world we are living in. This complexity could have broader origins but also different spatial scales: from ants' nest to storms, from the markets to human/animal migrations, from the epidemics to ecosystems. Therefore, Nature is capable of obeying simple laws but, on the other hand, to straightforwardly generate complex phenomena. A paradigmatic example is the flocking of birds: the core of the flock assumes different shapes due to a collective interaction among the birds; while an alone bird would proceed in a defined direction.
+These facts were enough to establish the new branch of \textit{Physics Of the Complex Systems} which ultimate goal is to describe the emergence of the "complex" phenomena from the simple law of physics, e.g. "gravity model" \cite{GravityModelsandEmpiricalTrade}.
+Having understood that \textit{"More is different"} \cite{Anderson:1972_MoreIsDifferent} and its ubiquity, it is natural to demand a formal definition of "Complexity". Nevertheless, quoting the Novel Price Murray Gell-Mann \cite{Gell-Man:1987_S&C}, "a variety of different measures would be required to capture all our intuitive ideas about what is meant by complexity and by its opposite, simplicity" . In fact, from computational complexity to other information measures, all such quantities are context-dependent and subjective, since they depend on many aspects, such as the detail level (coarse graining) of the entity to describe. Thus, a rough but clear definition could be drawn for the Complex System Society site \cite{CSS:2021_compsystdef}:
 
-\section{Gentle Introduction}
-Infectious diseases are responsible for a significant health and economic burden on society. New diseases appear frequently and old diseases persist. Therefore, many mathematical models have been used recently to guide policy makers to mitigate the impact of new infectious diseases (e.g. Polio, H1N1 influenza and Ebola) or established ones (such as HIV, cholera and seasonal influenza).
-On the other hand, with the phrase \textit{All models are wrong; some models are useful} \cite{Box::2005_StatDesign}, George Box wanted to highlight that no model, no matter how complicated\footnote{Instead, the complexity of a model could challenge its possibility to be predictive in many scenarios. A related topic is the "overfitted model" in statistical learning or "Ocham's razor" in Philosophy}, is perfect. Thus, a way to evaluate a "successefull" model has to be recovered.
+\begin{definition}[\textit{"Complexity"}]
+Complex systems are systems where the collective behavior of their parts entails emergence of properties that can hardly, if not at all, be inferred from properties of the parts.
+\end{definition}
+
+In other words, the non-linear interactions among the parts of which a complex system is composed let emerge a behavior which could not be understood simply by applying the fundamental laws to its constituents.
+
+The first representation of this weaved system is by considering entities and connections among them. Thus, a powerful tool to describe it is the Network Science.
+In particular, the purpose of this thesis is to study the epidemic spreading of the COVID-19 over different topologies of the underlying social network of individuals. This phenomenon is regarded as a complex system through the analysis of the SIR model, which grasps the emergent features rather than the microscopic behavior of the disease.
+
+\subsection{Models Ecosystem}
+Infectious epidemics are responsible for a significant health and economic burden on society. New diseases appear frequently and old diseases persist. Therefore, many mathematical models have been used recently to guide policy makers to mitigate the impact of new infectious diseases (e.g. Polio, H1N1 influenza and Ebola) or established ones (such as HIV, cholera and seasonal influenza).
+On the other hand, with the phrase \textit{All models are wrong; some models are useful} \cite{Box::2005_StatDesign}, George Box wanted to highlight that no model, no matter how complicated\footnote{Instead, the complexity of a model could challenge its possibility to be predictive in many scenarios. A related topic is the "over-fitted model" in statistical learning or "Occam's razor" in Philosophy}, is perfect. Thus, a way to evaluate a "successful" model has to be recovered.
 
 Inside the "ecosystems" of models, there are the simple models which allow to analytically explain how the primary mechanisms influence important characteristics (e.g. epidemic threshold, epidemic size\footnote{how large it will be}, how long it will last). To be more accurate, it is also possible to develop models that incorporate much more details about both the disease and individual-level interactions \cite{Kiss::MathOfEpiOnNet}.
 
@@ -185,10 +203,11 @@ Inside the "ecosystems" of models, there are the simple models which allow to an
 
 As suggested by the \autoref{fig:perfect_model}\footnote{\textit{"In medio stat virtus"}} (\cite{Kiss::Ch1MathOfEpiOnNet}), models provide maximum insight where the right balance of realism (circle filled with dots, e.g. regarding epidemiology Graph-Neural-Network to predict $R_t$ \cite{Davahli::USA_predicting_COVID19}) and simplicity (circle with vertical lines e.g. on epidemics the deterministic SIR model ) is met\footnote{The equilibrium point may depend on the specific posed question} (central circle with oblique lines).
 
-In this middle region, there could be find several works that use network analysis as the underlying structure for a phenomenon(\cite{Thurner::NetBasedExpl} \cite{VespignaniSatorras2001Epidemic} \cite{pizzuti::2020_ItalyCOVIDnetwork}); while other, more involved, that incorporate human mobility data in several hybrid models \cite{ZEROUAL::DL_COVID19, Stubinger::Incidence_Diff_Countries} in order to predict its diffusion. For the sake of simplicity, the present work of thesis is going to deepen the paper of \cite{Thurner::NetBasedExpl}. In particular, Thurner et al. \cite{Thurner::NetBasedExpl}, by focusing on the COVID-19 spreading in Austria and in the USA, are able to find a scenario, i.e. a combination of the spreading parameters\footnote{the infection rate $\beta$, recover rate $\mu$, the long-range attachment probability $p$}, such that the outbreak is (quasi-)linear for a value of the average number of contact $D$. This manifestation of the SIR model is, at least, qualitatevely showed by the curves reported by the JHU University. 
-So, inspired by \cite{Thurner::NetBasedExpl}, the aim of this project is to analyze how the SIR model behave by changing its "innern" epidemic parameters but also the topology of the underlying social network, i.e. the susceptible people\footnote{In graph theory, a graph $G$ is a pair of node/vertices (V) and edges(E) which connnect the nodes, i.e. $G = (V,E)$. Thus, in the present context the nodes are the individuals. Therefore, "node" and "individual" (or synonyms) words may be used interchangebly according to the context.}.
+In this middle region, there could be find several works that use network analysis as the underlying structure for a phenomenon(\cite{Thurner::NetBasedExpl} \cite{VespignaniSatorras2001Epidemic} \cite{pizzuti::2020_ItalyCOVIDnetwork}); while other, more involved, that incorporate human mobility data in several hybrid models \cite{ZEROUAL::DL_COVID19, Stubinger::Incidence_Diff_Countries} in order to predict its diffusion. For the sake of simplicity, the present work of thesis is going to deepen the paper of \cite{Thurner::NetBasedExpl}. In particular, Thurner et al. \cite{Thurner::NetBasedExpl}, by focusing on the COVID-19 spreading in Austria and in the USA, are able to find a scenario, i.e. a combination of the spreading parameters\footnote{the infection rate $\beta$, recover rate $\mu$, the long-range attachment probability $p$}, such that the outbreak is (quasi-)linear for a value of the average number of contact $D$. This manifestation of the SIR model is, at least, qualitatively, showed by the curves reported by the JHUniversity. 
+So, inspired by \cite{Thurner::NetBasedExpl}, the aim of this project is to analyze how the SIR model behave by changing its "inner" epidemic parameters but also the topology of the underlying social network, i.e. the susceptible people.
 
-\section{Technical Introduction}
+\section{A Technical Introduction}
+\label{sec:ATechIntro}
 At $8 \, \textnormal{May} \, 2020$, none of the affected COVID-19 states have reached "herd immunity" but still they reached the "epidemic peak" due to the containment restrictions on social contacts. One paradigmatic example is the case of Austria, for which the total infected cases at the first peak were $0.16\%$ of the total population, remarkably low with respect to the SARS-COV-2 "herd-immunity" level that are supposed to be at $0.8\%$ (\cite{Zingano:2021_HI_hom_pop}) of the entire (susceptible) population. A graphical representation of the cases could be find in \autoref{fig:NDI}, \autoref{fig:CNDI} produced by \href{https://ourworldindata.org/coronavirus/country/austria}{Austria New Daily Infected}.
 
 \begin{figure}[htpb]
@@ -226,8 +245,7 @@ At $8 \, \textnormal{May} \, 2020$, none of the affected COVID-19 states have re
 	\caption{Cumulative Daily Number Of Cases}
 	\label{fig:CNDI}
 \end{figure}
-The most striking observation is that the number of total cases, after early-stages when 
-\newline Non-Pharmaceutical-Interventions (NPIs), i.e. lockdown, were at work, exhibits a (quasi-)linear growth for an extended time interval in contrast with the "S-shaped" logistic curve predicted by the standard compartmental models. The extension of the linear regime depends on the onset of the measures; while for early stages, as it was the case for many countries \cite{Thurner::NetBasedExpl} ($8 \, \textnormal{May} \, 2020$), an exponential growth dominates the spreading of the disease.
+The most striking observation is that the number of total cases (\autoref{fig:CNDI}), after early-stages when Non-Pharmaceutical-Interventions (NPIs), i.e. lockdown, were at work, exhibits a (quasi-)linear growth for an extended time interval in contrast with the "S-shaped" logistic curve predicted by the standard compartmental models. The extension of the linear regime depends on the onset of the measures; while for early stages, as it was the case for many countries \cite{Thurner::NetBasedExpl} ($8 \, \textnormal{May} \, 2020$), an exponential growth dominates the spreading of the disease.
 By taking care of the modification of the underlying social network structure, in this present work of thesis, we want to (qualitatively) recover the spreading trends for the states that have or have not applied the NPIs measures. \newline
 Specifically, an infection may occur for two reasons:
 \begin{enumerate}
@@ -235,21 +253,296 @@ Specifically, an infection may occur for two reasons:
     \item contact is "intense" (e.g. long, close,...) enough to lead to a disease transmission.
 \end{enumerate}
 So, the rationale behind the social distancing is that it takes to a reduction of both of these factors.
-On the other hand, the analitically solvable SIR model assumes that, defined $N, D$ as the total number of individuals in the population and the average number of contacts respectively, there is the same probability that an individual encounters an infected person ("well-mixed population") and all the nodes have the same number of neighbours ($N-1$ or $D$). This approach allow to recover analytical results for a epidemic spreading but it annihilates the underlying network structure. Therefore, as claimed in \cite{VespignaniSatorras2001Epidemic}, there is the need of studying how the network affects the spreading of a disease, but still no focus is put on the spreading below the epidemic threshold \cite{Thurner::NetBasedExpl} as it is the case if nodes were separated thurough NPIs. 
+On the other hand, the analytically solvable SIR model assumes that, defined $N, D$ as the total number of individuals in the population and the average number of contacts respectively, there is the same probability that an individual encounters an infected person ("well-mixed population") and all the nodes have the same number of neighbors ($N-1$ or $D$). This approach allow to recover analytical results for a epidemic spreading but it annihilates the underlying network structure. Therefore, as claimed in \cite{VespignaniSatorras2001Epidemic}, there is the need of studying how the network affects the spreading of a disease, but still no focus is put on the spreading below the epidemic threshold \cite{Thurner::NetBasedExpl} as it is the case if nodes were separated through NPIs. 
 In this thesis, the main goal is to grasp the relevant features of a complex social network in presence of NPIs and compare them with respect to a "well-mixed" population model.
-In detail, by changing the epidemic parameters, we let the SIR Model evolve in different network topologies such as standard models of the graph-theory ("Erdoes-Rényi","Scale-Free", "Caveman Model") but also a new involved topology, i.e. a Poissonian Small-World Network. As a benchmark of a "well-mixed" population, it has been used an "annealed" mean-field (see ??) which is a natural realisation of a mean-field network with a fixed average number of contacts per node.
-Furthermore, $R_0 := \beta*D/\mu$ is heuristically defined as the the average number of new infections caused by an individual in a completely susceptible population\footnote{The susceptible individuals are chosen according to "epidemic targets", e.g. only childs for the measles} \cite{Kiss::MathOfEpiOnNet}. Moreover, it is well consolidated that for $R_0 > 1$ an epidemic is possible (not guaranteed); while for $R_0 < 1$ the disease will die out. 
-Thus, these informations drive naturally to suppose that $R_0$ could also be a signal of the strngth of an epidemic outbreak. Instead, this is not the case, since, as reported in the section ??, for equal $R_0$ values there could be different behaviour of a disease. Thus, a new parameter has to be introduce that has to:
+In detail, by changing the epidemic parameters, we let the SIR Model evolve in different network topologies such as standard models of the graph-theory ("Erdös-Rényi","Scale-Free", "Caveman Model") but also a new involved topology, i.e. a poissonian Small-World Network. As a benchmark of a "well-mixed" population, it has been used an "annealed" mean-field (see ??) which is a natural realization of a mean-field network with a fixed average number of contacts per node.
+Furthermore, $R_0 := \beta \cdot D/\mu$ is heuristically defined as the the average number of new infections caused by an individual in a completely susceptible population\footnote{The susceptible individuals are chosen according to "epidemic targets", e.g. only children for the measles} \cite{Kiss::MathOfEpiOnNet}. Moreover, it is well consolidated that for $R_0 > 1$ an epidemic is possible (not guaranteed); while for $R_0 < 1$ the disease will die out. 
+Thus, these informations drive naturally to suppose that $R_0$ could also be a signal of the strength of an epidemic outbreak. Instead, this is not the case, since, as reported in the section ??, for equal $R_0$ values there could be different behavior of a disease. Thus, a new parameter has to be introduce that has to:
 \begin{itemize}
-	\item grasp the different behaviour of epidemics;
+	\item grasp the different behavior of epidemics;
 	\item depend only on the initial condition, i.e. network metrics (e.g. "long-range" parameter $p$) and disease parameters ($\beta \textnormal{ and } \mu$).
 \end{itemize}
 
-A possible solution is to incorporate on the existing $R_0$, an estimate of $p$ even for models which is not a innern parameter, e.g. the ad-hoc Poissonian Small-World Network.
+A heuristics solution could be to characterize each spread via $R_{new} := \beta \cdot D/\mu * \mathbb{O}$ where $\mathbb{O} = \frac{D}{N-1}$, or equally $\mathbb{O} = D$. Thus, $R_0$ would still be considered as the secondary infected in a fully susceptible network; while $R_{new}$ as the "strength" a spread has due network limitations.
 
-Finally, as in \cite{Thurner::NetBasedExpl}, a "epidemic" order parameter\footnote{Preciselly (see ??), it is the standard deviation of the daily new infected} is computed for each spread to classify a light outbreak, i.e. an outbreak which infect less than the $30\%$ of the entire popularion, with a stronger one. In this way, a first-order phase transition could be obtained by plotting, for sufficientely high $p$\footnote{$p$ is the long-range rewiring probability.} the order parameter against the average degree of contacts.
+Finally, as in \cite{Thurner::NetBasedExpl}, a "epidemic" order parameter\footnote{Precisely (see ??), it is the standard deviation of the daily new infected} is computed for each spread to classify a light outbreak, i.e. an outbreak which infect less than the $30\%$ of the entire population, with a stronger one. In this way, a first-order phase transition could be obtained by plotting, for sufficiently high $p$\footnote{$p$ is the long-range rewiring probability.} the order parameter against the average degree of contacts.
+
+On the top of the presentation of the work developed, it seems natural to deepen the area of the Network Science.
+
+
+\section{Network Science}
+
+Two aspects contribute to the popularity of Network Science: its universality nature of networks and the availability of large datasets\footnote{and the computational power to analyze them} which map huge networks of the furthest kind, e.g. "food-webs" or the Science of Science.
+Its roots could be find in the Graph Theory, devoted to the analysis of the networks (or graphs), and Statistical Mechanics, committed to the formalization of the dynamical processes on network, such as self-organization and information theory.
+For our purpose, the Graph Theory allows to formalize a "networky" - complex system such as the social network of the individuals over which a disease spreads; while Statistical Mechanics to develop a model focusing on its emergent characteristic.
+
+\subsection{Graph Theory}
+\label{sec:GraphTheory}
+\begin{figure}[htbp]
+	\includegraphics[scale = 0.7, trim = {0cm 17cm 4cm 4cm}, clip]{BSN-1}
+	\caption{Contacts interaction Network. A contact is defined as the droplets that reach one individual. Therefore, a symmetric edge could represent a chat among two persons; where directed edges would be a "one-way" interaction such as in a room with pre-existent droplets. The number above each edge are the weights, which could be the minutes spent in the previous quoted room}
+	\label{fig:basicSN}
+\end{figure}
+
+A graph is a tuple (V,E) where the "V" stands for "vertexes" (1,2,3,4) while "E" for "edges" (the links between the vertexes).
+With the same notation, an edge connecting the node\footnote{In the context of a social network, a vertex represents a person/individual} $i$ to $j$ is, often, identified by $(i,j)$.
+Formally, the labels of the vertexes are the image of any bijective embedding from the nodes to a chosen set, e.g. integer numbers. The relationship among vertexes are accounted by the edges, which could be unsymmetrical, as for $(1,4)$, and with different strength of the connection, such as $(1,4) \text{ and } (1,3)$ which. If all the edges are symmetric, i.e. if (A,B) implies (B,A), the graph is said undirected, e.g. the friendship network; otherwise it is said directed, e.g. the phone contacts network. 
+With the given definitions, it is now clear that roughly everything could be divided in vertexes connected by am arbitrary relation.
+The simplest example, is the \textit{simple graph}, which is a unweighted, undirected graph containing no graph loops, i.e. $(i,i)$ edges, or multiple edges such as multiples-$(i,j)$.
+\begin{figure}[ht]
+	\includegraphics[width = \linewidth]{SimpleGraph_950.png}
+	\caption{Edges peculiarities. The labels are $1,2,3,4$ assigned anti-clockwise starting from the bottom}
+	\label{fig:simple}
+\end{figure}
+\newpage
+
+\subsection{Adjacency Matrix}
+Typically for real networks, the number of involved nodes is big, e.g. the Google web-graph available at \href{https://snap.stanford.edu/data/#socnets}{Standford University Network Dataset} is of the order of the $800k$ nodes and $5milion$ edges. Thus, despite the clearness of \autoref{fig:basicSN}, the most suitable way of representing a graph is by grouping all its properties in a matrix called the adjacency matrix $A$. 
+Starting from the basics, the (symmetric) adjacency matrix for the simple graph above is:
+\[
+A_{ij} :=
+\begin{cases}
+1 & \text{if exist an unweighted edge among i and j} \\
+0 & \text{otherwise}
+\end{cases}
+\quad
+\Leftrightarrow
+\quad
+A = 
+\begin{bmatrix}
+0 & 0 & 1 & 0 \\
+0 & 0 & 1 & 1 \\
+1 & 1 & 0 & 1 \\
+0 & 1 & 1 & 0 \\
+\end{bmatrix}
+\]
+
+Hereby, $A \in M_4(\mathbb{N})$ holds the nature of a simple graph:
+\begin{itemize}[noitemsep]
+	\item the rows represent the direct connections between the $i-th$ row and the $j-th$ column; while, the columns the edge $(j,i)$. Thus, there are only 4 nodes;
+	\item unweighted: the value of the elements of $A$ is binar;
+	\item without loops: the diagonal is $0$;
+	\item without multi-edges: the value of the entries of $A$ are strincly $0$ or $1$, account for the presence of, at maximum, one edge.
+\end{itemize}
+
+A more involved, adjancency matrix is the one of the righest graph which present multiples loops\footnote{As far as multiedges are concerned, the $2$ would be off-diagonal}.
+Formally,
+\[
+A = 
+\begin{bmatrix}
+0 & 0 & 1 & 0 \\
+0 & 0 & 1 & 1 \\
+1 & 1 & 0 & 1 \\
+0 & 1 & 1 & \textbf{2} \\
+\end{bmatrix}
+\]
+
+Thus, in \autoref{fig:basicSN} is report a (simple) weighted and directed graph with 4 nodes connected by a "central"\footnote{The "centrality" measure of the node is another important quantity which is context-dependent. In this case, the "centrality" refers to a degree centrality for which the most central node is the one with the highest number of contacts} node $1$.
+In particular,
+\[
+A = 
+\begin{bmatrix}
+0 & 1 & \textbf{5} & 1 \\
+1 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 \\ 
+\end{bmatrix}
+\]
+where it is encoded the direct edges since $A$ is not symmetric.
+
+\subsection{Degree}
+
+As quoted before, a (real) network could be very tangled. Thus, the degree distribution, i.e. the normalized number of vertexes with a certain degree, allows to check wheter all the nodes have, or not, the same number of contacts even at a plain eye inspection. 
+
+Formally, the degree of a vertex, in a (undirected) graph, is the number of edges connected to it. We denote the degree of node $i$ by $k_i$ and, by mean of $A$, $$k_i := \sum_{i=1}^{N} A_{ij},$$ where $N$ is the number of total nodes.
+For directed graphs, as in \autoref{fig:basicSN}, a distinction between the entering and exiting edges to a node has to be defined. In particular, by a generalisation of the previous $k_i$, 
+\begin{equation}
+	k_i^{in} := \sum_{j=1}^N A_{ij}, \quad k_j^{out} := \sum_{i=1}^N A_{ij}.
+	\label{eq:kin_kout}	
+\end{equation}
+where $k_i^{in(out)}$ is the number of in-going (out-going) number of edges. 
+
+\begin{figure}[t]
+\begin{subfigure}{.5\textwidth}
+	\begin{tikzpicture}
+	\begin{axis}[ybar interval, 
+		xtick align=inside,
+		ymin = 0,%, ymax=55,ymin=0, minor y tick num = 3]
+		ylabel = {Number of Nodes},
+		xlabel = {Indegrees},]
+	\addplot coordinates { (0, 0) (1, 3) (2, 0) (3, 0) (4, 0) (5, 1) (6, 0) };
+	\end{axis}
+	\end{tikzpicture}
+\end{subfigure}%
+\hfill
+\begin{subfigure}{.5\textwidth}
+	\begin{tikzpicture}
+	\begin{axis}[ybar interval, 
+		xtick align=inside,
+		ymin = 0,%, ymax=55,ymin=0, minor y tick num = 3]
+		ylabel = {Number of Nodes},
+		xlabel = {Outdegrees},]
+	\addplot coordinates { (0, 0) (1, 1) (2, 0) (3, 0) (4, 0) (5, 0) (6, 0) (7,1) (8,0) };
+	\end{axis}
+	\end{tikzpicture}
+\end{subfigure}
+\caption{Degree Distribution of the \autoref{fig:basicSN}}
+\label{fig:degreed_basicSN}
+\end{figure}
+
+Therefore, by applying the \autoref{eq:kin_kout}\footnote{A practical check is to count the tails for the outdegree and arrows for the innerdegree. Ultimately, each sum has to equate the number of edges (a undirected edge has to be count doubled)} to \autoref{fig:basicSN}, it is possible to recover the degree distribution of the vertexes as in the \autoref{fig:degreed_basicSN}. Thus, a possibile way to build a graph would be to draw the nodes degrees from a fixed distribution and, then, connecting the nodes according to their degree. In fact, this approach is going to be exploited in the further chapters by using a poissonian degree distribution and connecting the vertexes only to nearest neighbors via an ad-hoc algorithm.
+
+\section{Chapters Outline}
+In chapter one, the models of this present work are going to be exposed. In particular, the 4 network models (Erdoes-Renyi) will be treated in detail alongside with two kind of SIR models: the analytical SIR, which its ODEs are solvable; and the "monte-carlo" simulation one.
+
+\section{To Do for Introduction}
+\begin{itemize}	
+	\item insert the Knoenisberg graph, the "adjancent definition for two vertexes" and the Theorem 1.1 (FL);
+	\item add a Social Network eloquent image
+\end{itemize}	
 
 \chapter{The Models}
+\section{The Network Models}
+As could be perceived, modeling a complex (social) phenomenon\footnote{The "social" nature has been only evoked for concreteness. Nevertheless, this in-depth presentation of models is interdisciplinary as Network Science itself} with a network has two main tasks. The first is the identification of the nodes, which is a fairly simple task. The second is to pinpoint the emergent correlations in order to connect the vertexes and reproduce the phenomenon. The latter one is the real challenge in network theory.
+
+%Thus, the goal is to artificially reproduce the main topological features of the real networks. 
+Most of the real networks, however, do not show a comforting regularity such as the radial architecture of a spider net or the map of the main streets of Manhattan. Rather, their inner structure seems to be characterized by a certain degree of randomness, e.g. the internet network \cite{barabasi::2016networkbook}. Random network theory embraces this feature by constructing network models that are truly random. A review of these paradigmatic (Erdoes-Renyi, Watts-Strogatz, Barabasi-Albert) models is reported in the following sections. Ultimately, the newly proposed "Poissonian Small World" network (see \autoref{sec:ATechIntro}, \cite{Thurner::NetBasedExpl}) is presented.
+
+\section{The Erdös-Renyi Model}
+The Erdös-Renyi model (ER) is the first attempt to formally describe a random network. Thus, the primitive hyphothesis is that the nodes are linked togheter with a probability $p$. Formally,
+
+\begin{definition}[\textit{"Random Network"}]
+A random network $G(N,p)$ has N nodes where two nodes are connected with probability $p$.
+\end{definition}
+
+The random model, thus, generated is called "Erdös-Renyi model". In fact, these two mathematicians are the fathers of the random graph theory, obtained by merging graph theory with probability theory.
+
+Due to the random nature, this model may have different realisations even with $N$, $p$ fixed parameters. Therefore, the number of links and the nodes degree distribution (see \autoref{sec:GraphTheory}) becomes vital informations to be considered.
+In particular, a specific realisation could exhibit $L$ links with a probability
+\begin{equation}
+	\label{eq:probLrndNet}
+	p_L = p^L \cdot (1-p)^{ \binom{N}{2} - L } \cdot \binom{\binom{N}{2}}{L}.
+\end{equation}
+The \autoref{eq:probLrndNet} is the product of 3 terms: the probability to have $L$ edges; the probability not the having the remaining ones knowing that the total possible node pairs are \[ \binom{N}{2} = \frac{N(N-1)}{2} \]; the total combinations in the choice of the $L$ edges, since what counts is only to pick $L$ edges and not which ones.
+As expected, $p_L$ could be interpreted as $L$ succesful connection attempt knowing that an edge is chosen with probability $p$ and the total pairs are $\frac{N(N-1)}{2}$. Thus, a Binomial distribution with the average number of links equal to
+\[ <L> = \sum_{L = 0}^{\frac{N(N-1)}{2}} p_L L = p\frac{N(N-1)}{2} \label{eq:meanL} \] and, thus, the average per node contacts \[ <k> = \frac{2<L>}{N} = p(N-1) \label{eq:meank}. \]
+
+The two equations above highlight that $<L>$ and $<k>$ could be obtained by multiplying $p$ by the total number of available links and neighbors resp.\footnote{This is accordance with the mathematical definition of an average quantity.}. Alongside, as the network becomes denser, i.e. increasing $p$, also $<L>$ and $<k>$ would be enanched.
+Moreover, by multiplying the expression by q, it is possible to obtain $\sigma_{<x>} = q \, \cdot <x>,$ where $x = L \textnormal{ or } k$.
+
+Similarly, the probability\footnote{By means of $p_k$, $<k>$ and $\sigma_{<k>}$ could be recovered.} of having k number of contacts is 
+\begin{equation}
+	\label{eq:probkrndNet}
+	p_k = p^k \cdot (1-p)^{ \binom{N-1}{2} - k } \cdot \binom{\binom{N-1}{2}}{k}.
+\end{equation}
+where $N-1$ are the total neighboring nodes differently from $\binom{N}{2}$, which were the total node pairs (cf. \autoref{eq:probLrndNet}).
+
+Real network are sparse\footnote{Defining the "sparsity" of a network as the ratio $s : = <k>/N$, the internet-routers has $s \simeq 3.0 \cdot 10^{-5}$, since $N \simeq 200000 \text{ while } <k> \sim = 6$. Many others concrete example support this sparsity nature of real networks \cite{barabasi::2016networkbook}.}. Therefore, in the $<k> / N << 1$ limit\footnote{At least for $<k> \simeq 50 \text{ and } N \sim = 10^3$}, the \autoref{eq:probkrndNet} becomes the poissonian distribution with average $<k>$
+\begin{equation}
+	\label{eq:sparse_probk}
+	p_k = e^{-<k>} \frac{<k>^k}{k!}.
+\end{equation}
+
+Therefore, keeping in mind that the \autoref{eq:sparse_probk} is only valid in the sparse regime,
+\begin{itemize}
+	\item the explicit expressions of $<k> \simeq p\cdot N \textnormal{ and } \sigma_k = <k>^{1/2}$ assume a simpler form for a poissonian distribution. Moreover, as the binomial case, $<k> \textnormal{ and } \sigma_k$ increase if p increases, since the the network is becoming denser and, so, more spread in the node degrees.
+	\item it allows the same description for a pletora of networks with the same $<k>$, since the network characteristics does not depend on its size $N$.
+\end{itemize}
+
+\section{The emergence of a "Small-World"}
+
+A captivating argument, network science allows to study is the "Small-World phenomenon" or "six degrees of separation". The two quoted names comes, respectevely, from a theme developed by the Hungarian writer Fridgyes Karinthy in a play called "Chains" ($1978$) and an empirical experiment injected by the psicologist S. Milgram in $1967$. In fact, the most famous version states that a person, e.g. Kevin Bacon, is linked to a random one, e.g. Andrea Scotti, through only few acquaintances: according to \href{https://oracleofbacon.org/movielinks.php}{Kevin Bacon Number}\footnote{https://oracleofbacon.org/movielinks.php} only $2$ common persons. More precisely, the distance between two randomly chosen nodes in a graph is small. Random networks account for this aspect as we are going to obtain shortly.
+
+On average, the expected number of nodes $N$ at a certain distance $d$ is
+\[N(d) \approx 1+ \langle k \rangle + \cdots + \langle k \rangle^d = \frac{\langle k \rangle^{d+1} -1 }{\langle k \rangle - 1},  \] 
+where it has been taken advantage of the geometric series, after noting that $``1"$ is the selected nodes, $\langle k \rangle$ are its neighbors, $\langle k \rangle^2 \approx \langle k \rangle (\langle k \rangle - 1)$ the next neighbors and so on.
+Thus, by considering that for a real network $\langle k \rangle << 1$ and that $N(d_{max}) \sim N$, 
+\[
+	d_{max} \sim \frac{\ln(N)}{\ln(\langle k \rangle)}
+\]
+On the other hand, the above equation is more suitable in describing $\langle k \rangle$, since $d_{max}$ is dominated by few distant paths from the core giant component. Hence, 
+\begin{equation}
+	\langle d \rangle \sim \frac{\ln(N)}{\ln(\langle k \rangle)} 
+	\label{eq:SWrandnet}
+\end{equation} 
+is the formulation of the Karinthy's "Small-World phenomenon" obtained by considering that most of the nodes are contained within $\langle d \rangle$.
+Indeed, for a real network, $\ln(N) << N$ drives to a "smaller" average path length compared to the scaling with $N$, which is the typical scaling for a regular lattice\footnote{The common notion of distance is based on a regular lattice which do not shows the "Small-World" effect. Thus, this result could be perceived as a uncomfortable}.
+Moreover, the denominator of the \autoref{eq:SWrandnet} implies that the denser it becomes the network, the closer the nodes aggregate.
+As a sociological example, the average distance of a random person, in the current century, would be derived by applying the \autoref{eq:SWrandnet} by fixing $N \sim 7\cdot 10^9$ and $\langle k \rangle \sim 10^3$ yielding $\langle k \rangle \sim 3.28$ which is a more reliable results than the "six degrees of separation".
+
+\section{The community membership}
+As far as a social network is considered, it seems natural to measure the possibility to join a local community, e.g. an association or a family. More generally, real networks are characterized by the clustering formation, which "simplify" the network by aggregating the nodes, called clusters, which present common characteristics. Proceeding as the "coarse graining" tecnique of Statistical Mechanics, it becomes appealing to take care of the emergent properties exhibited by the "coarse-grained" network. In the following section, it is introduced the degree of "clusterisation" of a network.
+
+More preciselly, the local clustering coefficient $C_i$ measures the density of link among the neighboring $i-th's$ nodes. To gain a rough intuition of its purpose, it worths to consider two opposite limits: 
+\begin{itemize}
+	\item $C_i = 0$ as there are no links among neighbors;
+	\item $C_i = 1$ as there are fully connected neighbors.
+\end{itemize}
+
+Formally,
+\begin{equation}
+	C_i := \frac{\textnormal{average links of the i-th neigbors}}{\textnormal{total links among neighbors}} = \frac{\langle L_i \rangle}{\frac{k_i(k_i-1)}{2}} = p = \frac{\langle k \rangle}{N} = \langle C \rangle
+	\label{eq:rnd_clustcoefficient}
+\end{equation}
+
+where $k_i \textnormal{ and } N$ are the amount of neighboring vertexes of $i$ and the total nodes respectevely, \[ \langle L_i \rangle = p \cdot \frac{k_i(k_i-1)}{2} \quad \textnormal{ and } \quad \langle C \rangle := \frac{1}{N} \sum_{i = 1}^{N} C_i. \]
+
+The presence of a link among the two neighbors closes a ("friendship") triangle with the focal node, $C$ could also be interpreted as the normalized number of triangles centered in the selected node.
+Thus, $C_i = \langle C \rangle$ is independent by the $i-th$ node degree and, fixing the average degree of a network, it scales with $1/N$: for real networks $p = \langle k \rangle / N$ is small (real networks are sparse) and drives to a smaller $C$ that the one observed. A model that naturally generates "triangle", would be a good candidate to enhanche the clustering coefficient even for small $p$.
+
+
+
+\subsection{What Random Networks Can't Do}
+
+The end of a general model development is to validate it against reality, as done in the concrete series of examples.
+Thus, by looking at a real social network, e.g. at a cocktail party, there is the co-presence of highly connected nodes, called \textit{"hubs"}, alongside with the less interacting ones. In particular, the ER graph does not account for the presence of high-degree nodes\cite{barabasi::2016networkbook}, since they are strongly damped by the factor term $1/k!$ in \autoref{eq:probkrndNet}. Indeed, real networks are sparse but have also strongly heterogeneous degrees. In other words, the average degree per unit node is small, while preserving a high heterogeneity of the intrinsic node degrees. Thus, sparse links and amount of them per each node.
+
+Secondly, by looking at the evolution of the contact network underlying the quoted cocktail party, there could be identified 4 topological regimes starting from isolated individuals for $\langle k \rangle = 0$ and ending with a fully connected graph for $\langle k \rangle = N-1$ where $N$ are the total invited persons. Therefore, these regimes scan the formation path of a fully connected network, passing trough a rapid emergence of a gian component. This is in a one-to-one relation with a First-Order-Phase Transition treated in Statistical Mechanics. In detail, the formation of a ordered giant component could be compared with ice formation: the passage from disordered water molecules to an ordered structure.
+\newline Schematically,
+\begin{itemize}[noitemsep]
+	\item Subcritical Regime for $0 < \langle k \rangle < 1 \quad (p < 1/N)$ 
+	\item Critical point for $\langle k \rangle = 1 \quad (p = 1/N)$
+	\item Supercritical Regime for $\langle k \rangle > 1 \quad (p > 1/N)$: Single giant component formation
+	\item Connected Regime for $\langle k \rangle > \ln(N) \quad (p > \ln(N)/N)$
+\end{itemize}
+Thus, the ER model predicts the co-existence of a giant component, containing loops and cycles, and small components, which forms trees, for $1 < \langle k\rangle < \ln(N)$. This is clearly at odds with reality since, as a concrete example, in a real random electric power-grid some consumers should not get electric power \cite{barabasi::2016networkbook}. Many network, as the actor network, are in the connected regime but most are only in the Supercritical one while still connected.
+
+Thirdly, the real world networks exhibits a "Small-World" phenomenon not in agreement with the \autoref{eq:SWrandnet}. Hence, a new "Small-World" measure has to be proposed.
+
+Fourthly, plotting $C(k)$ while fixing $N$, the theoretical expectation is to grasp the independent nature of $C$ with respect to $k$. Nevertheless, the results is unsatisfatory, since $C$ decreases with the increasing of $k$ for a pletora of the real networks.
+Furthermore, $C/\langle k \rangle (N)$, for high $N$, is higher that its theoretical expectation. Thus, a refined model is needed, to explain the high $C$ even at small $p$ (or high $N$).
+
+\section{Watts-Strogatz Model}
+To face the problem of the "high $C$ at low edge probability (for now, redefined as $p_{ER}$)", while preserving the "Small-World" property, the mathematicians Duncan Watts and Steven Strogatz proposed in the $1998$ a hybrid model which interpolated between a regular lattice for $p = 0$ to a random network model for $p = 1$. The present model is, thus, called "Watts-Strogatz (WS) model". It worths to highlight that the present $p$, called in this context the "rewiring parameter", is the "long-range" rewiring probability, while the ER model $p_{ER}$ is the probability of a edge formation either among neighbors ("short range" connection) as among distant nodes ("long range" connection). Thus, the "distant" connected vertexes are $p\cdot N$ on average.
+In particular, a regular lattice is characterized by a high clustering (neighboring nodes are fully connected) but a high average path length; while a random network, as seen before, exhibits manifestly the "Small-World" property alongside with a low clustering coefficient especially, since triangles are rare for small $p$.
+Therefore, the parameter $p$ is introduce to fine tune the co-presence of the two kind of networks. In this way, it is possible to mimic for a range of $p$s the "Small-World" property, thanks to a low average path length, alongside with a high clustering coefficient.
+
+Practically, the idea is to start with a grid-like network, where all the nodes have $\langle k \rangle$ neighbors; then, with probability $p$, a link is chosen and one of the endpoints is replaced with a random vertex. The rationale behind this operation is that by diminishing a little the clustering it is possible to significantly reduce the average path length. Therefore, a "long-range" interaction is produced, dropping the average path length, while preserving the presence of triangles. 
+
+Anyway, this model doesn't explain the presence of the hubs, since neglected by the poissonian degree distribution, and the (inverse) dependence of $C(k)$ on the average network degree.
+
+As a pedagogical spoiler, the (four) previous problems would be faced by modifying the WS model adding the emergent properties of the real networks, such as the "scale-free" property.
+
+\subsection{The Epidemiological Models}
+\chapter{Results}
+\chapter{Conclusions}
+
+
+\bibliographystyle{plain}
+\bibliography{../bib/my_bibliography.bib}
+
+\end{document}
+
+
+
+
+
+
+
+
+
+\chapter{The Models}
+\subsection{The Network Models}
 To this end, we proceeded with the following steps.
 At first, we pruned a fully connected graph of $N = 1000$ nodes, by keeping fixed $N$ while having $D$, i.e. the average of nearest neighbors. In parallel, since $R_0 = \frac{\beta \cdot D}{\mu}$, we doubled the $\beta$ \footnote{$\beta \in [N,2]$} parameter to keep the power of the epidemic $R_0$ fixed (\ref{fig::pruning_p0.0}). 
 
@@ -270,10 +563,12 @@ Furthermore, the work focused on analyzing the network spreading on a fully-conn
 
 Moreover, the critical average degree $D_c$ \footnote{$D_c$ as reported in \cite{Thurner::NetBasedExpl} describes a "first-order-phase transition" between exponential and linear growth of an epidemic} , is going to be recovered for the quoted network topologies. A final up-to-date point, would be to use a Graph Neural Network architecture, based on the previously described scenarios and networks, in order the make epidemics forecasting. For this purpose, a relevant reference, is \cite{Davahli::USA_predicting_COVID19}
 
+\section{The Epidemiological Models}
+
 \section{Goals Outline}
 
 \begin{enumerate}
-	\item Assuming that a typical social network has an average number of contact (degree) $D\simeq16.5$(\cite{Liu::2021_Review_SContactPattern}\footnote{A "contact" is defined as per touching or conversationing at a certain distance. For a spreading of a SARS disease, this open the discussed topic on the validity of the "2 meters" distance policy \cite{Jones::2020_2metersSDIstance}}); while lockdown measures reduce it to the household size ($D\simeq3.5$\cite{Liu::2021_Review_SContactPattern}), our goal is to reproduce the dynamics of an epidemic spreading on a sparser network due to the Non-Pharmaceutical Interventions (NPIs) generally known as lockdown\footnote{For brevity, the word "lockdown" is an alias for all the "lockdown-like" measures undertaken to prevent the diffusion of COVID-19 without requiring Pharmaceutical drug treatment, e.g. confinment (the direct translation of "lockdown") but also contact tracing, higher hygiene, face masks,}. A direct comparison of the obtained curves with the states of Austria and the USA \cite{Thurner::NetBasedExpl} is satisfactory even at a plain-eye inspection. However, the project aims at the study of how the topology of a network could characterize a paradigmatic model as the SIR one. 
+	\item Assuming that a typical social network has an average number of contact (degree) $D\simeq16.5$(\cite{Liu::2021_Review_SContactPattern}\footnote{A "contact" is defined as per touching or conversationing at a certain distance. For a spreading of a SARS disease, this open the discussed topic on the validity of the "2 meters" distance policy \cite{Jones::2020_2metersSDIstance}}); while lockdown measures reduce it to the household size ($D\simeq3.5$\cite{Liu::2021_Review_SContactPattern}), our goal is to reproduce the dynamics of an epidemic spreading on a sparser network due to the Non-Pharmaceutical Interventions (NPIs) generally known as lockdown\footnote{For brevity, the word "lockdown" is an alias for all the "lockdown-like" measures undertaken to prevent the diffusion of COVID-19 without requiring Pharmaceutical drug treatment, e.g. confinment (the direct translation of "lockdown") but also contact tracing, higher hygiene, face masks,}. A direct comparison of the obtained curves with the states of Austria and the USA \cite{Thurner::NetBasedExpl} is satisfactory even at a plain-eye inspection. However, the project aims at studying of how the topology of a network could characterize a paradigmatic model as the SIR one. 
     So, no statistical fit has been performed, since a relevant work on the available data has to be performed, e.g. removing out-of-range values, impossible data combinations, and missing values on \href{https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series}{\textit{GitHub John Hopkins University}}\footnote{https://github.com/CSSEGISandData/COVID-19/tree/master/csse\_covid\_19\_data/csse\_covid\_19\_time\_series}. In addition, for the fitting procedure, it would be possible to extend the SIR model in accordance to the other reported compartiments, e.g. death (SIRD), exposed (SEIR),$\dots$
 	Anyway, these states express the (quasi-)linearity in the cumulative number of cases similarly to the simulated ones.
     Moreover, it has to be pointed out that the previous quoted states are representative of two opposite political policies, undertaken by many others states, in facing the COVID-19 pandemic: a immediate "severe lockdown" (Austria) and "light restriction" on contacts (USA).
@@ -323,7 +618,7 @@ The results are the following:
 \begin{itemize}
     \item In the large $D$ and $\epsilon$ limit, the mean-field condition is fulfilled and the model resembles the compartmental  SIR model. By mapping the parameters as done in \ref{eq::d/r to gamma/beta}, we may compare $P(t)$ from the network model with the compartmental $R(t)$ by shifting it of $-d$ days.
     As a relevant reference for the comparison to the "small $D$" evolution, we've plotted the histogram of the daily cases which shows the typical peak in the early-exponential stages and, then, a decrease towards herd immunity, which for \cite{Thurner::NetBasedExpl} has been reached at the $98\%$ of the overall population. 
-    \item By reducing the average degree to $D=3$, we've find a changing in the spreading behaviour, since $P(t)$ increases almost linearly for a remarkable timespan. At the end of the infection, nearly $1/5$ of the entire population has been infected which is noticeably smaller than the SIR predicted herd immunity nearly at $80\%$.
+    \item By reducing the average degree to $D=3$, we've find a changing in the spreading behavior, since $P(t)$ increases almost linearly for a remarkable timespan. At the end of the infection, nearly $1/5$ of the entire population has been infected which is noticeably smaller than the SIR predicted herd immunity nearly at $80\%$.
 \end{itemize}
 
 With this rough perception of the main results by considering the underlying network structure, we've further analyzed the parameter dependence.
@@ -335,8 +630,6 @@ The aim of this section is to obtain the value of the "critical average degree" 
     \mathbb{O}:=SD(C(t))
 \end{equation}{}
 as the standard deviation of the daily new cases, having removed the days without new infected. In this way,     $\mathbb{O}!=0$ signals the presence of a nonlinear increase of the daily new cases and, therefore, of its cumulative sum $P(t)$. Other way around, $\mathbb{O}=0$ corresponds to a linear growth of $P(t)$.
-
-
 
 
 \chapter{Appendix}
@@ -367,7 +660,7 @@ $$\tau_N^{SIS}=\frac{\tilde{k}^2}{\beta\langle k\rangle-\mu\tilde{k}^2}$$
 \newline
 where $\tilde{k}^2:=\frac{\langle k\rangle^2}{\langle k^2 \rangle }$ and ???? if the network is homogeneous
 $\langle k\rangle^2=\langle k^2 \rangle .$
-Check better what's the behaviour of $\langle k^2 \rangle $ wrt the considered network.
+Check better what's the behavior of $\langle k^2 \rangle $ wrt the considered network.
 
 \subsection{10.B}
 
@@ -375,24 +668,13 @@ If a nets lacks degree of correlation, i.e. $e_{ij}=q_iq_j$, the probability $p_
 
 Typo under $(10.50)$ multiply by $kp_k$ not $k-1)p_k$
 
+\chapter{Results}
+
+
+\chapter{Conclusion}
 
 
 
-
-\clearpage
-
-
-\chapter{Tight Binding model}
-
-
-\section{Second Quantization formulatio of the SIR Model}
-
-
-
-\bibliographystyle{plain}
-\bibliography{../bib/my_bibliography.bib}
-
-\end{document}
 
 
 \begin{figure}[h]
