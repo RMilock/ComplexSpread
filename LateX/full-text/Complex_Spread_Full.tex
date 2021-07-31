@@ -202,7 +202,7 @@ Inside the "ecosystems" of models, there are the simple models which allow to an
 	\label{fig:perfect_model}
 \end{figure}	
 
-As suggested by the \autoref{fig:perfect_model}\footnote{\textit{"In medio stat virtus"}} (\cite{Kiss::Ch1MathOfEpiOnNet}), models provide maximum insight where the right balance of realism (circle filled with dots, e.g. regarding epidemiology Graph-Neural-Network to predict $R_t$ \cite{Davahli::USA_predicting_COVID19}) and simplicity (circle with vertical lines e.g. on epidemics the deterministic SIR model ) is met\footnote{The equilibrium point may depend on the specific posed question} (central circle with oblique lines).
+As suggested by the \autoref{fig:perfect_model}\footnote{\textit{"Est modus in rebus"} \label{cit:GM}} (\cite{Kiss::Ch1MathOfEpiOnNet}), models provide maximum insight where the right balance of realism (circle filled with dots, e.g. regarding epidemiology Graph-Neural-Network to predict $R_t$ \cite{Davahli::USA_predicting_COVID19}) and simplicity (circle with vertical lines e.g. on epidemics the deterministic SIR model ) is met\footnote{The equilibrium point may depend on the specific posed question} (central circle with oblique lines).
 
 In this middle region, there could be find several works that use network analysis as the underlying structure for a phenomenon(\cite{Thurner::NetBasedExpl} \cite{VespignaniSatorras2001Epidemic} \cite{pizzuti::2020_ItalyCOVIDnetwork}); while other, more involved, that incorporate human mobility data in several hybrid models \cite{ZEROUAL::DL_COVID19, Stubinger::Incidence_Diff_Countries} in order to predict its diffusion. For the sake of simplicity, the present work of thesis is going to deepen the paper of \cite{Thurner::NetBasedExpl}. In particular, Thurner et al. \cite{Thurner::NetBasedExpl}, by focusing on the COVID-19 spreading in Austria and in the USA, are able to find a scenario, i.e. a combination of the spreading parameters\footnote{the infection rate $\beta$, recover rate $\mu$, the long-range attachment probability $p$}, such that the outbreak is (quasi-)linear for a value of the average number of contact $D$. This manifestation of the SIR model is, at least, qualitatively, showed by the curves reported by the JHUniversity. 
 So, inspired by \cite{Thurner::NetBasedExpl}, the aim of this project is to analyze how the SIR model behave by changing its "inner" epidemic parameters but also the topology of the underlying social network, i.e. the susceptible people.
@@ -399,11 +399,15 @@ In chapter one, the models of this present work are going to be exposed. In part
 \section{To Do for Introduction}
 \begin{itemize}	
 	\item insert the Koenigsberg graph, the "adjacent definition for two vertexes" and the Theorem 1.1 (FedLor), deg(loop) = 2 as $2L = \sum k$ must hold;
-	\item add a Social Network eloquent image, augment the simple network resolution or do them by yourself
+	\item add a Social Network eloquent image, augment the simple network resolution or do them by yourself;
+	\item World of War-craft had a serious bug which made epidemiologists devoting to it
+	\item Cit: Dario:Ad quid? - a quale scopo ?	Rebus sic stantibus - stando così le cose
+	\item Mene: Est modus in rebus
+	\item Andre: Ca van san direct
+	\item "A gratis"
 \end{itemize}	
 
-\chapter{The Models}
-\section{The Network Models}
+\chapter{The Network Models}
 As could be perceived, modeling a complex (social) phenomenon\footnote{The "social" nature has been only evoked for concreteness. Nevertheless, this in-depth presentation of models is interdisciplinary as Network Science itself} with a network has two main tasks. The first is the identification of the nodes, which is a fairly simple task. The second is to pinpoint the emergent correlations in order to connect the vertexes and reproduce the phenomenon. The latter one is the real challenge in network theory.
 
 %Thus, the goal is to artificially reproduce the main topological features of the real networks. 
@@ -450,7 +454,7 @@ Therefore, keeping in mind that the \autoref{eq:sparse_probk} is only valid in t
 	\item it allows the same description for a pletora of networks with the same $<k>$, since the network characteristics does not depend on its size $N$.
 \end{itemize}
 
-\section{The emergence of a "Small-World"}
+\subsection{The "Small-World" Property}
 \label{sec:SWProp}
 A captivating argument, network science allows to study is the "Small-World phenomenon" or "six degrees of separation". The two quoted names comes, respectively, from a theme developed by the Hungarian writer Fridgyes Karinthy in a play called "Chains" ($1978$) and an empirical experiment injected by the psychologist S. Milgram in $1967$. In fact, the most famous version states that a person, e.g. Kevin Bacon, is linked to a random one, e.g. Andrea Scotti, through only few acquaintances: according to \href{https://oracleofbacon.org/movielinks.php}{Kevin Bacon Number}\footnote{https://oracleofbacon.org/movielinks.php} only $2$ common persons. More precisely, the distance between two randomly chosen nodes in a graph is small. Random networks account for this aspect as we are going to obtain shortly.
 
@@ -471,8 +475,8 @@ Indeed, for a real network, $\ln(N) << N$ drives to a "smaller" average path len
 Moreover, the denominator of the \autoref{eq:SWrandnet} implies that the denser it becomes the network, the closer the nodes aggregate.
 As a sociological example, the average distance of a random person, in the current century, would be derived by applying the \autoref{eq:SWrandnet} by fixing $N \sim 7\cdot 10^9$ and $\langle k \rangle \sim 10^3$ yielding $\langle k \rangle \sim 3.28$ which is a more reliable results than the "six degrees of separation".
 
-\section{The community membership}
-As far as a social network is considered, it seems natural to measure the possibility to join a local community, e.g. an association or a family. More generally, real networks are characterized by the clustering formation, which "simplify" the network by aggregating the nodes, called clusters, which present common characteristics. Proceeding as the "coarse graining" technique of Statistical Mechanics, it becomes appealing to take care of the emergent properties exhibited by the "coarse-grained" network. In the following section, it is introduced the degree of "clusterization" of a network.
+\section{The Clustering Coefficient}
+As far as a social network is considered, it seems natural to introduce a measure of community membership which capture the possibility to join a local community, e.g. an association or a family. More generally, real networks are characterized by the clustering formation, which "simplify" the network by aggregating the nodes, called clusters, which present common characteristics. Proceeding as the "coarse graining" technique of Statistical Mechanics, it becomes appealing to take care of the emergent properties exhibited by the "coarse-grained" network. In the following section, it is introduced the degree of "clusterization" of a network.
 
 More precisely, the local clustering coefficient $C_i$ measures the density of link among the neighboring $i-th's$ nodes. To gain a rough intuition of its purpose, it worths to consider two opposite limits: 
 \begin{itemize}
@@ -533,11 +537,13 @@ TODO: Insert an image of a WS model and the clustering vs $\langle l \rangle$ pr
 
 \section{Configuration Model}
 To face the problem previously exposed, a practical starting point could be to reproduce the degree distribution by taking advantage of the configuration model 
-\cite{Menczer:2020_1stCoursNetSci}. Indeed, it is possible to built a network from an arbitrary degree sequence which either could be drawn by a distribution or by a real network of interest. Precisely,
+\cite{Menczer:2020_1stCoursNetSci}. Indeed, it is possible to built a network from an arbitrary degree sequence which either could be drawn by a distribution or by a real network of interest.
+Precisely,
 \begin{definition}[\textit{"Degree Sequence"}]
 	The degree sequence is a list of $N$ numbers \newline $(k_0, \cdots, k_{N-1})$ where $k_i$ is the degree of node $i$.
 \end{definition}
 A degree sequence, thus, determines uniquely a degree distribution but the reverse is not true, since for a particular degree distribution there are $N!$ possibilities of labeling the nodes: $(1,2,3)$ has the same degree distribution of $(3,2,1)$.
+Additionaly, a method to wire the nodes has to be chosen. Especially, the configuration model wires the nodes randomly; thus, building a random network. For these reasons, the generated graph is also called "random network with a pre-defined degree sequence". 
 
 As done before, a practical way of constructing a network clarifies many ideas.
 As a first step, consider to have a set of nodes with an assigned degree sequence. Pictorially, this could be depicted as a node with a number of dangling stub as its degree. Thus, the number of isolated stubs are twice the sum of all the degrees. 
@@ -548,7 +554,24 @@ The network is, further, composed by the following iterative steps:
 \end{itemize}
 This tying technique is replicated until all the stubs are saturated and it is random by construct. Therefore, this method generates random networks with a fixed degree distribution.
 
-Since the number of stubs equals its degree, each node ends up having the desired degree. Thus, forming the pointed distribution, multiple (random) networks could be created; even, showing so weird properties, such as loops or multi-edges. Therefore, further constraints has to imposed to obtain a specific topology, such as a connection only to "short-range" nodes. On the other hand, obtaining different realizations of the same degree distribution could have a statistically interesting result. Indeed, let's suppose a certain feature, such as the clustering coefficient\footnote{The quoted measure is recalled only as an example, since for real network the clustering coefficient depends on different features than the degree distribution}, is independent on the other network characteristics rather than the degree distribution. By using this method, it would be possible to obtain an average and a standard deviation of all the predictions made by many configuration graphs. Thus, by comparing the result with the statistical predictions, it would be possible to validate the hypothesis that the feature of interest depends only on the degree distribution.
+Since the number of stubs equals its degree, each node ends up having the desired degree. Thus, from the selected distribution, multiple (random) networks could be created; even, showing some peculiar properties, such as loops or multi-edges. Therefore, further constraints has to be imposed to obtain a specific topology, such as a connection only to "short-range" nodes. 
+
+The network is characterized by mainly two propertios:
+\begin{itemize}
+	\item the probability that a fixed node $i$ may connect to another one $j$ is
+		\begin{equation}
+			p_{ij} = \frac{k_ik_j}{2L-1}.
+		\end{equation}
+		In fact, there are $k_i$ stubs (or rays) trying to match the $k_j$ ending of node $j$; while $2L -1$ are the overall rays available for the chosen one which produces the $"-1"$;
+	\item the number of self-loops and multi-links decreases as $N$ increases, since it is less probable to connect with a specific node as $p \sim 1/N$. Typically it is not
+	needed to exclude them \cite{Newman:2010_Net:AnIntro}. More importantly, arbitrarly rejecting self-loops or multi-links would result in a modification of the starting degree distribution, yielding the analytical calculations difficult. 
+\end{itemize}
+
+Obtaining different realizations of the same degree distribution could have a statistically interesting result. Indeed, let's suppose a certain feature, such as the clustering coefficient\footnote{The quoted measure is recalled only as an example, since for real network the clustering coefficient depends on different features than the degree distribution}, is independent on the other network characteristics rather than the degree distribution. By using this method, it would be possible to obtain an average and a standard deviation of all the predictions made by many configuration graphs. Thus, by comparing the result with the statistical predictions, it would be possible to validate the hypothesis that the feature of interest depends only on the degree distribution.
+
+Subsequentely, a review of other approaches to artificially build a network is reported but not deepened, since not used in the following.
+Another method to generate a network from a fixed degree distribution is the "hidden parameter ($\eta$) method" which, in addition, do not form multi-edges and loops \cite{barabasi::2016networkbook} and allows to tune the average degree $\langle k \rangle$ modifying $\eta$.
+On the other hand, to recover a randomized version from the degree sequence, such as of a fixed real network, the "degree-preserving randomization" is the best help the theory provides. In this way, by just swapping two endpoint nodes at a time, it is possible to build an networks ensamble with the same degree distribution. So, check wheter a quantity depends only on the degree distribution itself or has a more involved structure.
 
 \section{Poissonian Small-World Network}
 Social network are highly non trivial exhibiting a involved structure, including multilevel organization; weak ties between communities; and temporal aspects that suggest a degree of fluidity with stable social cores \cite{Thurner::NetBasedExpl}.
@@ -557,7 +580,7 @@ As seen in the section \autoref{sec:ATechIntro}, however, the lockdown measures 
 In order to realize this peculiar network, the starting point is to use configuration model with the degree sequence drawn from a poissonian distribution. To simulate a closed population, the nodes are assumed to be put on a circle: the last and the first labeled nodes are neighboring nodes. Hence, both the "Small-World" property (see "The emergence of the Small-World property" \autopageref{sec:SWProp}) and the heterogeneity on the node degrees could be grasped at the same time. In this way, with low values of the poissonian parameter $\mu$ is possible to take into consideration the lock-down scenario where the average per node degree of contacts is the household size $D \sim 2.5$ \cite{Thurner::NetBasedExpl}. The configuration model generates a random wiring of the links, producing "long-range" connections which spoil the locality of the community structures (families). Therefore, by an ad-hoc algorithm, the stubs are forced to attach to the nearest nodes in the circle according to their degree. In practice, the wiring algorithm iterates over few steps\footnote{Recall that the degree sequence is already fixed and drawn by a poissonian distribution}:
 \begin{itemize}
 	\item choose the lowest degree $k_l$ node that has not already been saturated;
-	\item a even number of time $k_l \% 2$ on the clockwise and anti-clockwise nodes;
+	\item a even number of times $k_l \% 2$ on the clockwise and anti-clockwise nodes;
 	\item if the degree of the selected node is odd, wire one last time ($k_l - k_l \% 2 \, = 1$), say, anti-clockwise;
 	\item delete the endpoint nodes which have saturated their degree.
 \end{itemize}
@@ -591,7 +614,7 @@ A naive expectation is that the epidemic spread slower and more stochastically, 
 \end{definition}
 
 Empirical evidence shows that the degree distribution of the majority of the real network, e.g. WWW, is poorly behaving as a poissonian distribution, due to the presence of high degrees nodes or "hubs" \cite{barabasi::2016networkbook}. Rather, a better approximation is obtained via a power law distribution of the kind $p_k \sim k^{-\gamma}$ which in log-log scale turns into the linear relation $\log(p_k) \sim -\gamma \log(k)$ where $\gamma$ is called the "degree exponent". As far a directed network is considered, as WWW, the $k$ has to be sub-divide into $k_{in} \textnormal{ and } k_{out}$, thus doubling the quoted relations.
-Therefore, by exhibiting a power-law distributions of degree nodes, these kind of networks are endowed with "scale-free" property which, in turn, makes them call "scale-free networks". In detail, the power-laws are long-tailed function; hence, describing a phenomenon that has not a reference scale. For example, the heights distribution of a sample population displays a peak at the average height, which is the reference scale for that population. Instead, a power-law distribution does not have a peak and allows also for outliers, e.g. 100ft tall individuals. So, a reference scale for a power-law is not naturally present as in an exponential decaying distribution, such as binomial/poissonian/Gaussian distributions.
+Therefore, by exhibiting a power-law distributions of degree nodes, these kind of networks are endowed with "scale-free" property which, in turn, makes them call "scale-free networks". In detail, the power-laws are long-tailed function; hence, describing a phenomenon that has not a reference scale. For example, the heights distribution of a sample population displays a peak at the average height, which is the reference scale for that population. Instead, a power-law distribution does not have a peak and allows also for outliers, e.g. 100ft tall individuals. So, a reference scale for a power-law is not naturally present as in an exponential bounded distribution, i.e. when there is a exponential or faster decay for high $k$, such as binomial/poissonian/Gaussian distributions.
 
 In the following part, the discrete approach, assuming $k = 0,1,2\cdots$, is going to be developed; while only the continuum result would be reported. In fact, the discrete approach provides the ready-to-use formulas handle by a calculator which, by construction, uses discrete operations. On the other hand, the continuum approach is useful for analytically support of the calculation and could be obtained similarly to the discrete case.
 Formally, by exploiting the constraint on probabilities $p_k = C\cdot k^{-\gamma}$ \[\sum_{k=1}^{\infty} p_k = 1\], it is possible to recover the closed form
@@ -601,15 +624,229 @@ Formally, by exploiting the constraint on probabilities $p_k = C\cdot k^{-\gamma
 \end{equation}
 where $p_0 = p_{k=0}$ which has been separately considered as the power-law diverges for $k=0$.
 
-On the another hand, the continuum formalism drives to \[p(k) = (\gamma-1)k_{min}^{\gamma-1}k^{-\gamma},\] since the the smallest value for the power law to hold is not $1$, as in the discrete approach, but $k_{min}$.
+On the another hand, the continuum formalism drives to \[p(k) = (\gamma-1)k_{min}^{\gamma-1}k^{-\gamma},\] since the the smallest value for the power law to hold is not $1$, as in the discrete approach, but $k_{min}$, the degree for which
+\begin{equation}
+	\int_0^{k_{min}-1} p(k) dk \stackrel{!}{=} 1/N \qquad \textnormal{or} \qquad P(k_{min}-1) \stackrel{!}{=} 1/N.
+	\label{eq:kminrel}
+\end{equation}
+
+In the next part, the allowed maximum degree $k_max$ would be obtained either for a exponential bounded and a power-law distributions. Through this quantitative insight, it would be shown the dependence of $k_max$ on $N$, i.e. the size of the network. 
+
+In particular, the exponential distribution for which \(\int_{k_min}^infty p(k) dk = 1\) holds, is \[ \lambda e^{\lambda k_{min}} e^{-\lambda k} \] and, using \autoref{eq:kminrel}, $k_min = 1$.
+Furthermore, $k_max$ is defined to be such that the at most one node $i$ could have a degree $k_i$ larger than $k_max$. In other words, the cumulative distribution for degrees greater than $k_{max}$ is $1/N$; and, hence, $k_{max}$ (or the "natural cutoff") is expected to be the size of the bigger hub.
+In formulas, 
+\begin{equation}
+	\int_{k_{max}}^{infty} p(k) dk = 1/N \implies k_{max} = k_{min} + \frac{\ln(N)}{\lambda}.
+	\label{eq:Expkmax}	
+\end{equation}
+So, $k_{max}$ would not differ much with respect to $k_{min}$ since $\ln(N)$ would reduce much the size of the network $N$.
+For a Poisson distribution, more effort is needed but the same interpretation holds.
+Applying the same rationale to a scale-free network, 
+\begin{equation}
+	k_{max} = k_{min}\,N^{\frac{1}{\gamma-1}}.
+	\label{eq:SFkmax}
+\end{equation}
+In this case, there could be order of magnitude of difference between $k_{max}$ and $k_{min}$.
+Indeed, as a simple example, WWW forms a graph of on $N \sim 10^5$ documents with $\langle k \rangle \simeq 4.6$ and $\gamma = 2.1$ \cite{barabasi::2016networkbook}. 
+By assuming $\lambda = 1 \textnormal{ and recovering that }, k_{min} = 1$ using \autoref{eq:kminrel}, $k_max \sim 14$; while $k_{max} = 95.000$ for a scale-free network with $\gamma = 2.1$, e.g. WWW network. This short results reinforces the quoted insight that for the class of "exponentially decaying" distributions the hubs are strongly forbidden since the nodes have comparably the same degree. Instead, the highly connected nodes are naturally arising by increasing $N$ with an underlying power-law distribution.
+\label{sec:SFProperties}
+
+Not all the network are scale-free since the hubs are present only if nodes have unlimited degree capacity.
+In fact, there could be constraints, such as cost-benefit problem, which limit $k_max$ of the bigger node. In this overview, random network may be the best fit, e.g. national highways network, power grid of generator and switches, $\cdots$
+
+With all the previous effort a more quantitative approach to the explanation on the "scale-free" etymology could be ultimate.
+More precisely, defining the statistics momentums as
+\begin{equation}
+	\langle k^n \rangle := \int_{k_{min}}^{k_{max}} k^n\, p(k) dk
+\end{equation}
+it is possibile to recover the the mean and the variance for $n = 1,2$.
+Thus, for a poissonian distribution, the nodes degree $k$ belong to $\langle k \rangle \pm  \langle k \rangle ^ {1/2}$ interval, which drives to the desired $\langle k \rangle$ scale. At the same time, for a power-law distribution holds	
+\begin{equation}
+	\langle k^n \rangle \sim \frac{k_{max}^{n-\gamma+1}-k_{min}^{n-\gamma+1}}{n-\gamma+1}
+	\label{eq:kn_SFnets}
+	.
+\end{equation}
+Therefore, knowing that real networks have typically $\gamma \in (2,3)$, e.g. WWW has $\gamma =  2.1$ \cite{barabasi::2016networkbook}
+\begin{equation}
+	k \in \langle k \rangle \pm \lim_{N \to \infty} \langle k^2 \rangle = \infty.
+\end{equation}
+where the hidden limit of \( k_{max} \to \infty \) is understood, since $k_{max}$ increases with the system size. 
+So, no scale naturally arises.
+
+Hubs represent a one-hop bridge for many nodes, by centralizing the otherwise-distant nodes. Indeed, due to hubs, the average distance $\langle d \rangle \sim \ln(\ln(N))$ for $\gamma \in (2,3)$, pointing out a ultra small-world nature of "scale-free" network. An empirical example is the airport lines, which drastically diminish the \(\langle d \rangle\) of the national highways by reducing the hops from one city to another. The result rapidly quoted before is surrounded by three other regimes 
+\cite{Cohen:2003_SFUSW}:
+
+\begin{equation}
+	\langle d \rangle = 
+	\begin{cases}
+		constant & \gamma = 2 \\ \\
+		\ln(\ln(N)) & \gamma \in (2,3) \\ \\
+		\frac{\ln(N)}{\ln(\ln(N))} & \gamma = 3 \\ \\
+		\ln(N) & \gamma > 3
+	\end{cases}
+	\label{eq:USWdistance}
+\end{equation}
+\newline
+\textbf{Anomalous Regime ($\gamma = 2$)}: Due to $k_max \sim N$, the network is forced into a "wheel rim configuration", a central hub with spoke nodes. In this regime, the average path length is independent on the size of the graph.
+\newline
+\textbf{Ultra-Small World Regime ($2 < \gamma < 3$)}: By predicting a $\ln(\ln(N))$ trend of the average distance, \autoref{eq:USWdistance} guides to the concept of "ultra-small world phenomenon" as a slower growth than random network. Indeed, recalling the worldwide social network, \(\ln\ln(N) \sim 3 \text{ while } \ln(N) \sim 22\) more than few times higher than the expected "six degrees of separation".
+\newline
+\textbf{Critical Point ($\gamma = 3$)}: Looking back on the \autoref{eq:kn_SFnets}, the variance ($n=2$) is finite, marking the passage between the small-world ($\sim \ln(N)$) and the ultra-small world ($\sim \ln(\ln(N))$) classes of graphs.
+\newline
+\textbf{Small World ($\gamma > 3$)}:
+In this regime, the finiteness of the variance is understood, due to the light aggregation that the high-degree nodes could perform in these kind of networks.
+
+Moreover, recalling the root of "ultra-small world" \autoref{eq:SFkmax}, for $N \lesssim 10^2$ the path length distributions overlap in all the reported regimes and, so, converges to a Poisson distribution ($\gamma > 3)$ whose hubs are small to produce the "ultra-small world" phenomenon. In fact, to validate the power-law nature of a distribution, the nodes degree should be separated by 2-3 orders of magnitude. Hence, reverting the \autoref{eq:SFkmax},
+\[N = (\frac{k_{max}}{k_{min}})^\frac{1}{\gamma -1},\]
+which lucidly reproduce $N \sim 10^2$ for $\gamma = 2.1$ (WWW network).
+
+Thus, \(\langle d \rangle\) is changing with $\gamma$, as the smaller it is, the shorter would be the average distance; but also with $N$, as it is the "ab ovo" hypothesis for having big hubs.
+
+A sociological fact has to be remarked when trying to map the "ultra-small" world over social interactions. Indeed, an online experiment which aimed to replicate the "six degrees" concept find that individuals involved in complete chains, reaching their target, were less likely to send a message to a hub than individuals involved in incomplete chains \cite{Dodds:2003_GSonlineNet_6deg}. The reason may be self-imposed, since hubs are perceived as being busy, so contacted only in real need and avoid to concretely complete an "online experiment" challenge. Thus, network is not everything since actual success depends sensitively on individual incentives.
+
+Moreover, for a balanced approach on the comparison of real degree distributions and a power-law, it has to be considered that the hosted phenomenon (-a) is complex and affects the graph topology, which, in turn, spoils the shape of the degree distribution. Rebus sic stantibus \label{cit:D.Massa}, it is sufficient to establish a fair starting point, rather then the meticulous fitting with a long-tail one. More concretely, start adding ad-hoc features over or an "exponentially bounded" or a "scale-free" distribution, by looking at $\langle k \rangle ^2$ \cite{barabasi::2016networkbook}.
+
+As a final remark, many interesting features of scale-free networks, from their robustness to anomalous spreading phenomena, are linked to the $\gamma \in (2,3)$; thus, due to the small average distance which strengthen the considered phenomenon.
+
+\subsection{Growth and Preferential Attachment}
+
+Before deepening a model to naturally generate hubs (Albert-Barabási model), it is worth to review two important features without which it is impossible for hubs to emerge: growth and preferential attachment. Indeed, the explanation of the common similarities among graphs of broad origins (e.g. WWW, protein-protein interaction, social networks, $\cdots$), should be simple, but fundamental. The result of this investigation will change the methodology from describing a network’s topology to modeling the evolution of a complex system.
+
+Growth is an active process driven by the sequential increasing of the size of the network $N$ as per the addition of new nodes. Rather, a random network assume $N$ to be fixed. 
+
+Furthermore, most real networks new nodes prefer to link to the more connected ones, a process called "preferential attachment". On the other hand, random networks wire randomly with other nodes.
+
+Ça va sans dire \label{cit:A.Marzo}, the constraints are that the model to be dynamical and encode a "preferential" probability which changes at every modification of the topology, called also "event time". 
+
+\section{Barabási-Albert Model}
+To take advantage of the coexistence of both growth and preferential attachment in the real networks, it has been proposed a minimal model, the Barabási-Albert model \cite{barabasi::2016networkbook}:
+\begin{itemize}
+	\item start with $m_0$ nodes randomly connected and a degree at least equal to $1$;
+	\item \textbf{Growth:} at each event time add a new node with $m(\leq  m_0)$ stubs which are linked to different nodes;
+	\item \textbf{Preferential Attachment:} the probability to wire with a node $i$ depends on the degree centrality, i.e. importance based on the degree:
+	\begin{equation}
+		\Pi(k_i) = \frac{k_i}{\sum_{j = 1}^N k_j}
+	\end{equation}
+\end{itemize}
+
+So, preferential attachment has a stochastic nature not a deterministic one. Nevertheless, it increases the appeal of the (already) high-degree nodes, alias \label{cit:S.Sagone} "rich-gets-richer" phenomenon. As a result, while most of the nodes end up having few links, a bunch of nodes become highly connected; thus, performing the role of big hubs. A degree distribution which does not decay exponentially, i.e. a power law with $\gamma = 3$ \cite{barabasi::2016networkbook}, has been created. 
+
+Empirical studies on networks, such as actor and scientific collaboration networks, have found that the exponent at the numeratore of $\Pi(k_i) \sim k_i^\alpha$ could differ from $1$.
+Indeed, there are $3$ paradigmatic kinds of preferential attachments (pas) by varying the exponent $\alpha$: sublinear pas ($0<\alpha<1$), (linear\footnote{Commonly, the here-called "linear" pas is just called "preferential attachment" without further specification.}) pas ($\alpha = 1$), superlinear pas ($\alpha>1$). Briefly, the sublinear pas drives to an "stretched exponential distribution" (see \autoref{sec:SFProperties}); the linear to the standard scale-free network; while in the superlinear almost all nodes connects to few super-hubs (winner-takes-all phenomenon).
+Hence, only for $\alpha = 1$, a power-law distribution could be recovered, recalling that knowing the high-degree behavior is just a starting point to model the underlying phenomenon. 
+In addition, after $t$ event times, the network has gained $t$ new nodes for a total of $N = m_0 + t$ nodes and $m_0 + mt$ links.
+
+\section{Linearized Chord Diagram}
+Having in mind the general purpose and results, a more precise description would clarify two point left open, i.e. 
+\begin{itemize}
+	\item the arrangement of the initial $m_0$ nodes;
+	\item whether the next $m$ links were added simultaneously or one at the time. This could drive to the formation of multi-links, i.e. conflicting edges, due to assumed independent nature of the new stubs. 
+\end{itemize}
+
+These problem are solved with the idea of sequentially adding nodes the past graph(s).
+Fixing $m=1$ for simplicity, start with the empty graph $G_{m}^t = G_1^0$.
+At each event time, choose an initial vertex $v_i$ of $G_1^{(t-1)}$ and connect it to the new vertex $v_t$ with probability $p$ such that
+\begin{equation}
+	p =
+	\begin{cases}
+		\frac{k_i}{2t-1} & if \quad i \in [1,t-1] \\
+		\frac{1}{2t-1} & if \quad i = t
+	\end{cases}
+	.
+\end{equation}
+
+Rephrasing it, connect $v_t$ with $v_i$ with a probability of $\frac{k_i}{2t-1}$ if the nodes are different; otherwise, $\frac{1}{2t-1}$. This method does not forbid the formation of multi-edges and loops, but constraints their number to be negligible as the network grows.
+The present technique referred to $m=1$ for an immediate perception. Whether $m > 1$ stubs are involved, add them one at the time, enabling their contribution to the hubs degree.
+
+\section{Recovering Power-Law Distribution}
+Due to a new $m-$stubs node, the degree of a existing node $i$ changes at a rate
+\begin{equation}
+	\frac{dk_i}{dt} = m \Pi(k_i) = m \frac{k_i}{\sum_j k_j}
+	\label{eq:BA_dk_i/dt}
+	.
+\end{equation}
+Hence, for $t >> 1$, 
+\begin{equation}
+	k_i(t) = m (\frac{t}{t_i})^\beta
+	\label{eq:BA_modki(t)}
+\end{equation}
+where $\beta$, alias "dynamical exponent", has the value $\beta = 1/2$ \cite{barabasi::2016networkbook} and $t_i$ is the entering time for the node $i$.
+
+The remarks, coming from the \autoref{eq:BA_modki(t)}, are multiple:
+\begin{itemize}
+	\item all the nodes follow the same power law, since $\beta$ is independent on the node label $i$. Furthermore, it is independent on $m$ and $m_0$ constructing parameters;
+	\item the inverse dependence of $k_i \sim 1/t_i$ is a clear signal of the fact that old nodes are supposed to be larger, also called "first-mover advantage" in business;
+	\item both $\beta = 1/2 < 1$ (sublinear growth) and the rate $dk_i/dt \sim 1/\sqrt{tt_i}$ underly a competing scenarios:
+	the existing nodes compete for the $m-$new stubs with a growing bunch of nodes, resulting in a sublinear growth, which drives to a decreasing rate of acquaintances. 
+\end{itemize}
+
+To validate the power-law nature of the probability of having a certain node degree, by exploiting \autoref{eq:BA_modki(t)} it is possible note that the nodes $i$ with a degree higher than $k$ are such that \[t_i < t \left(\frac{m}{k} \right) ^{1/\beta}. \] Thus, for $t >> m_0$, the (cumulative) probability of having a degree less than $k$ is \[P(k) = 1 - \left(\frac{m}{k} \right)^{1/\beta}, \] from which the probability of having a degree $k$ could be recovered, by differentiating $P(k)$ and substituting $\beta = 1/2$, $p_k = 2m^2k^{-3}$ \cite{barabasi::2016networkbook}. As desired, the distribution exhibits a long-tail nature with $\gamma = 1/\beta +1 = 3$. Alongside with the BA model simulations, the dependence between $\gamma \textnormal{ and } \beta$ demonstrate the deep relationship among the graph topology and the temporal degree evolution, respectively contained in $\gamma$ and $\beta$ parameters.
+
+Another feature present in \autoref{eq:BA_modki(t)} is that the degree distribution is independent on $t \textnormal{ and } N$ or a "stationary distribution". This result is the one expected, since the model aims at describing the real networks in general; thus, of rather different age and size.
+
+\section{The Origins of Preferential Attachment}
+Since preferential attachment plays a relevant role in guiding the dynamics of a real network, the goal is to recover the same $\Pi(k)$ as the one assumed in the Barabási-Albert model.
+It worths to introduce two classes of microscopic processes that generate it naturally \cite{barabasi::2016networkbook}:
+\textit{"local (or random) mechanisms"} representing the interplay between random events and some structural properties of the network; and
+\textit{"global (or optimized) mechanisms"} which take advantages of a cost-benefit analysis on the whole graph. 
+In the following, it would be reviewed the "Link Selection" and "Copying" Models which belongs to the random class; and, finally, the "Optimization" Model of the second one.
+
+\subsection{Local Mechanisms}
+\subsubsection{Link Selection}
+Assuming growth is at work, i.e. at each event time a new node is added, select randomly a edge and connect the new node to a vertex belonging to that edge.
+Thus, the probability $q_k$ that the selected node, already present in the graph, has degree $k$ is 
+\begin{equation}
+	q_k = \frac{1}{\langle k \rangle} \cdot kp_k
+\end{equation}
+where the first factor exploiting the normalization constraint $\sum_k q_k = 1$.
+Hence, it has the hoped form, being linear in the number of stubs ($k$) and in the frequence of the degree-k nodes ($p_k$). This displays an increasing of the chance of wiring to a degree $k$ node, by enhanching either the number of degrees or the presence of degree-k nodes itselves.
+
+\subsubsection{Copying Model}
+The idea is compute the probability of obtaining a connection of a degree-k node by mimicing the phenomenon of authors of a new webpage which copy links from existing webpages on the related topic \cite{Kleinberg:1999_WebAsAGraph}.
+
+By introducing a new node $n$ in the network, as before, the difference stands in the link selection.
+More in detail, selecting an existing node $u$ regardless of its degree, e.g. picking an arbitrary web document which topic is related to $n$, there are two possible way of connections:
+\begin{itemize}
+	\item Random (direct) connection: with a probability $p$, link $n$ to $u$;
+	\item Copying (undirect) connection: with likelihood $1-p$, wire $n$ to an neighboring node $v$ of $u$. Reprising the web example, the new webpage $n$, copying the link of $u$, connects with its target $v$.
+\end{itemize}
+
+As a constraint to recover a dependence on $k$ of $\Pi(k)$, fix that $v$ should have degree $k$, by considering $p_v = k/2L$.
+Hence, 
+\begin{equation}
+	\Pi(k) = \frac{p}{N} + \frac{k}{2L}(1-p)
+	\label{eq:Pik_recovering}
+\end{equation}
+which is linear in k, yielding the desired preferential attachment.
+The power of this approach is its "empirical" root which could be detected from citation networks to the social network of acquaintances.
+
+\subsection{Global Mechanisms}
+\subsection{Optimisation Mechanism}
+The principle of minimization of cost-benefits analysis in a economic market
+\cite{Shively:2012_OverviewOfB-CAnalysis} can lead to preferential attachment wheter a proper cost function is considered.
+
+For simplicity assume that the vertexes are laying in a unit square, e.g. routers in a square continent. As before, at each event time a new router $i$ is added, while an edge with an existing node $j$ is created according to the cost function \cite{barabasi::2016networkbook}
+\[
+	C_i = min_{j\in G(V,E)} \left(\delta d_{ij}+h_j\right).
+\]
+where $d_{ij}$ is the euclidean distance between the vertex $i$ and $j$; while $h_j$ is the number of hops from $j$ to a pre-defined "center" which embodies the best network performance, e.g. net ditribution hub. More clearly, $d_{ij}$ and $h_j$ represent the physical distance and "network-based" distance. Their summation describes the cost to be minimized for real results.
+
+Depending on $\delta \textnormal{ and } N$, there are $3$ network topologies:
+\begin{itemize}
+	\item \textbf{Star Network $(\delta < (1/2)^{1/2})$}: only $\delta d_{ij}$ drives the growth, thus, the new nodes connects with the central one forming a star;
+	\item \textbf{Random Network $(\delta \geq N^{1/2})$}: $h_j$ is the minimum quantity to be minimized. So, the new nodes connect to the nearest node;
+	\item \textbf{Scale-free Network $4(\leq \delta \leq N^{1/2})$}: in this intermediate regime scale-free topologies may be recovered as a result of Optimisation and Randomness. In particular, Optimisation creates a basin of attraction with size $s \sim k_j$ and centered in $j$, within all the appearing nodes $i$ wire with $j$. On the other hand, Randomness is the chance of choosing a specific basin.
+\end{itemize}
+ 
+
+s precisely because it can come from both rational choice and random
+actions [25]. Most complex systems are driven by processes that have a bit
+of both. Hence luck or reason, preferential attachment wins either way.
 
 
 
 
-\section{Barabási Model}
-
-
-\subsection{The Epidemiological Models}
+\chapter{The Epidemiological Models}
 \chapter{Results}
 \chapter{Conclusions}
 
@@ -618,11 +855,6 @@ On the another hand, the continuum formalism drives to \[p(k) = (\gamma-1)k_{min
 \bibliography{../bib/my_bibliography.bib}
 
 \end{document}
-
-
-
-
-
 
 
 
