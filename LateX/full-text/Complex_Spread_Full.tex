@@ -6,6 +6,7 @@
 \MakeOuterQuote{"}  %handle opening/closing quotation
 \usepackage{amssymb,amsmath,amsthm,amsfonts,bm}
 \usepackage{bookmark}% http://ctan.org/pkg/bookmark
+\usepackage{appendix}
 \usepackage{xspace}
 \usepackage{tabularx}
 \usepackage{indentfirst}
@@ -408,60 +409,84 @@ In chapter one, the models of this present work are going to be exposed. In part
 \end{itemize}	
 
 \chapter{The Network Models}
-As could be perceived, modeling a complex (social) phenomenon\footnote{The "social" nature has been only evoked for concreteness. Nevertheless, this in-depth presentation of models is interdisciplinary as Network Science itself} with a network has two main tasks. The first is the identification of the nodes, which is a fairly simple task. The second is to pinpoint the emergent correlations in order to connect the vertexes and reproduce the phenomenon. The latter one is the real challenge in network theory.
+As it could be perceived, modeling a complex (social) phenomenon\footnote{The "social" nature has been only evoked for concreteness. Nevertheless, this in-depth presentation of models is interdisciplinary as Network Science itself.}, as the epidemic spreading, in a network has two main tasks. The first is the identification of the nodes, which is a fairly simple task. The second is to pinpoint the emergent correlations in order to connect the vertexes and reproduce the phenomenon. The latter one is the real challenge in network theory.
 
 %Thus, the goal is to artificially reproduce the main topological features of the real networks. 
-Most of the real networks, however, do not show a comforting regularity such as the radial architecture of a spider net or the map of the main streets of Manhattan. Rather, their inner structure seems to be characterized by a certain degree of randomness, e.g. the internet network \cite{barabasi::2016networkbook}. Random network theory embraces this feature by constructing network models that are truly random. A review of these paradigmatic (Erdös-Rényi, Watts-Strogatz, Barabási-Albert) models is reported in the following sections. Ultimately, the newly proposed "Poissonian Small World" network (see \autoref{sec:ATechIntro}, \cite{Thurner::NetBasedExpl}) is presented.
+Many networks are characterized by strong constraints on the node degree which forces a satisfying regularity to be present, e.g. the radial architecture of a spider net or the map of the main streets of Manhattan.
+Inspired by this, a first insight, the pathogen is left to act on a graph, which node degrees are differing at most by one contact, e.g. "regular" Watts-Strogatz and Caveman model.
+Most of the real networks, however, do not show a comforting orderliness. 
+%add an image of spider net, Manhattan and Internet Network
+Rather, their inner structure seems to be characterized by a certain degree of randomness, e.g. the internet network \cite{barabasi::2016networkbook}. Random network theory embraces this feature by constructing network models that are truly random, e.g. Erdös-Rényi, Watts-Strogatz. Meanwhile, they are not able to capture the presence of hubs, alias the "Scale-Free" property. Thus, new models as to be proposed to generate those highly connected degree nodes, such as the Barabási-Albert.
+A review of these paradigmatic (Erdös-Rényi, Watts-Strogatz, Barabási-Albert, Caveman) models is reported in the following sections. Ultimately, the newly proposed "Poissonian Small World" network (see \autoref{sec:ATechIntro}, \cite{Thurner::NetBasedExpl}) is presented.
 
-\section{The Erdös-Rényi Model}
-The Erdös-Rényi model (ER) is the first attempt to formally describe a random network. Thus, the primitive hypothesis is that the nodes are linked together with a probability $p$. Formally,
+\section{Regular Networks}
+As briefly quoted, the networks characterized with a fixed number of neighbors per each node ($D = \langle k \rangle$) are typical of a certain class of system, e.g. the physics of matter.
+So, by trying to study a new phenomenon, it is fundamental to test its behavior on a controlled environment as the one provided by the regular networks.
+
+\subsection{Lattice Graph}
+In \autoref{sec:WS_Model}, there will be presented the "Watts-Strogatz" model which depending by an inner parameter $p$ can interpolate between a regular graph for $p = 0$, which has fixed node degree; and a random network ($p=1$).
+As a first insight of a disease spreading, $p=0$ is chosen and starting from a fully-connected network the average degree $D$ is halved at each time step. Thus, the infectivity of the pathogen $\beta$ is doubled, resulting in a costant $R_0$, i.e. the expected secondary cases.
+
+\subsection{Connected Caveman Graph}
+By analogy with the local interactions produced by the NPIs measures, it has been considered the "Caveman Model".
+The rationale is to consider as if one node, of the previously modeled networks, would be a family composed by a fixed number of people. This idea drives to the "coarse-graining" approach seen in the previous sections.
+In detail, the Caveman model enables to fix both the number of "caves"/families and the number of individual for each family. So, to connect each cave on a circle, one edge among two random nodes for each neighboring cave has been added and a WS-like "rewiring parameter" as been introduced to enable the "long-range" attachment.
+
+A naive expectation is that the epidemic spread slower and more stochastically, since the nodes are poorly connected with the "outside" rather than in the family.
+
+\section{Random Networks}
+\subsection{The Erdös-Rényi Model}
+%insert a reference image for ER model
+The Erdös-Rényi (ER) model was the first attempt to formally describe a random network. 
+In particular, these two mathematicians are the fathers of the random graph theory, obtained by merging graph theory with probability theory.
+Thus, the primitive hypothesis is that the nodes are linked together with a probability $p$. Formally,
 
 \begin{definition}[\textit{"Random Network"}]
 A random network $G(N,p)$ has N nodes where two nodes are connected with probability $p$.
-\end{definition}
+\end{definition} 
 
-The random model, thus, generated is called "Erdös-Rényi model". In fact, these two mathematicians are the fathers of the random graph theory, obtained by merging graph theory with probability theory.
-
-Due to the random nature, this model may have different realizations even with $N$, $p$ fixed parameters. Therefore, the number of links and the nodes degree distribution (see \autoref{sec:GraphTheory}) becomes vital informations to be considered.
+Due to its random nature, this model may have different realizations even with $N$, $p$ fixed parameters. Therefore, the number of links and the nodes degree distribution (see \autoref{sec:GraphTheory}) becomes vital informations to be considered.
 In particular, a specific realization could exhibit $L$ links with a probability
 \begin{equation}
 	\label{eq:probLrndNet}
 	p_L = p^L \cdot (1-p)^{ \binom{N}{2} - L } \cdot \binom{\binom{N}{2}}{L}.
 \end{equation}
-The \autoref{eq:probLrndNet} is the product of 3 terms: the probability to have $L$ edges; the probability not the having the remaining ones knowing that the total possible node pairs are \[ \binom{N}{2} = \frac{N(N-1)}{2} \]; the total combinations in the choice of the $L$ edges, since what counts is only to pick $L$ edges and not which ones.
-As expected, $p_L$ could be interpreted as $L$ successful connection attempt knowing that an edge is chosen with probability $p$ and the total pairs are $\frac{N(N-1)}{2}$. Thus, a Binomial distribution with the average number of links equal to
-\[ <L> = \sum_{L = 0}^{\frac{N(N-1)}{2}} p_L L = p\frac{N(N-1)}{2} \label{eq:meanL} \] and, thus, the average per node contacts \[ <k> = \frac{2<L>}{N} = p(N-1) \label{eq:meank}. \]
+The \autoref{eq:probLrndNet} is the product of $3$ terms: the probability to have $L$ edges; the probability not to have the remaining ones knowing that the total possible node pairs are \[ \binom{N}{2} = \frac{N(N-1)}{2}; \] the total combinations in the choice of the $L$ edges, since what counts is only to pick a number $L$ of edges and not which ones.
+As expected, $p_L$ could be interpreted as $L$ successful results knowing that an edge is chosen with probability $p$ and the total trials are $\frac{N(N-1)}{2}$ pairs. Thus, a Binomial distribution with the average number of links equal to
+\[ \langle L \rangle = \sum_{L = 0}^{\frac{N(N-1)}{2}} p_L L = p\frac{N(N-1)}{2} \label{eq:meanL} \] and, thus, the average per node contacts \[ \langle k\rangle = \frac{2\langle L \rangle}{N} = p(N-1) \label{eq:meank}. \]
 
-The two equations above highlight that $<L>$ and $<k>$ could be obtained by multiplying $p$ by the total number of available links and neighbors resp.\footnote{This is accordance with the mathematical definition of an average quantity.}. Alongside, as the network becomes denser, i.e. increasing $p$, also $<L>$ and $<k>$ would be enhanced.
-Moreover, by multiplying the expression by q, it is possible to obtain $\sigma_{<x>} = q \, \cdot <x>,$ where $x = L \textnormal{ or } k$.
+The two equations above highlight that $\langle L \rangle$ and $\langle k\rangle$ could be obtained by multiplying $p$ by the total number of available links and neighbors resp.\footnote{This is accordance with the formal definition of the "average"}. Alongside, as the network becomes denser, i.e. increasing $p$, also $\langle L \rangle$ and $\langle k\rangle$ would be enhanced.
+Moreover, by multiplying the expression by $q$, it is possible to obtain $\sigma_{x}:= \sigma_{\langle x\rangle} = q \, \cdot \langle x\rangle,$ where $x = L \textnormal{ or } k$.
 
-Similarly, the probability\footnote{By means of $p_k$, $<k>$ and $\sigma_{<k>}$ could be recovered.} of having k number of contacts is 
+Similarly, the probability of having k number of contacts is 
 \begin{equation}
 	\label{eq:probkrndNet}
 	p_k = p^k \cdot (1-p)^{ \binom{N-1}{2} - k } \cdot \binom{\binom{N-1}{2}}{k}.
 \end{equation}
 where $N-1$ are the total neighboring nodes differently from $\binom{N}{2}$, which were the total node pairs (cf. \autoref{eq:probLrndNet}).
+Another way to recover it is by means of $p_k$, $\langle k\rangle$ and $\sigma_{k}$
 
-Real network are sparse\footnote{Defining the "sparsity" of a network as the ratio $s : = <k>/N$, the internet-routers has $s \simeq 3.0 \cdot 10^{-5}$, since $N \simeq 200000 \text{ while } <k> \sim = 6$. Many others concrete example support this sparsity nature of real networks \cite{barabasi::2016networkbook}.}. Therefore, in the $<k> / N << 1$ limit\footnote{At least for $<k> \simeq 50 \text{ and } N \sim = 10^3$}, the \autoref{eq:probkrndNet} becomes the poissonian distribution with average $<k>$
+Real network are sparse. In fact, by defining the "sparsity" of a network as the ratio $s : = \langle k\rangle/N$, the internet-routers has $s \simeq 3.0 \cdot 10^{-5}$, since $N \simeq 200000 \text{ while } \langle k\rangle \simeq 6$. Many others concrete example support this sparsity nature of real networks \cite{barabasi::2016networkbook}. Therefore, in the $\langle k\rangle / N \ll 1$ limit\footnote{At least for $\langle k\rangle \simeq 50 \text{ and } N \simeq 10^3$}, the \autoref{eq:probkrndNet} becomes the poissonian distribution with average $\langle k\rangle$
 \begin{equation}
 	\label{eq:sparse_probk}
-	p_k = e^{-<k>} \frac{<k>^k}{k!}.
+	p_k = e^{-\langle k\rangle} \frac{\langle k\rangle^k}{k!}.
 \end{equation}
 
 Therefore, keeping in mind that the \autoref{eq:sparse_probk} is only valid in the sparse regime,
 \begin{itemize}
-	\item the explicit expressions of $<k> \simeq p\cdot N \textnormal{ and } \sigma_k = <k>^{1/2}$ assume a simpler form for a poissonian distribution. Moreover, as the binomial case, $<k> \textnormal{ and } \sigma_k$ increase if p increases, since the the network is becoming denser and, so, more spread in the node degrees.
-	\item it allows the same description for a pletora of networks with the same $<k>$, since the network characteristics does not depend on its size $N$.
+	\item the explicit expressions of $\langle k\rangle \simeq p\cdot N \textnormal{ and } \sigma_k = \langle k\rangle^{1/2}$ assume a simpler form for a poissonian distribution. Moreover, as the binomial case, $\langle k\rangle \textnormal{ and } \sigma_k$ increases if p increases, since the network is becoming denser and, so, more spread in the node degrees.
+	\item it allows the same description for a pletora of networks with the same $\langle k\rangle$, since the network characteristics does not depend on its size $N$.
 \end{itemize}
 
+\section{ER model Properties}
 \subsection{The "Small-World" Property}
 \label{sec:SWProp}
-A captivating argument, network science allows to study is the "Small-World phenomenon" or "six degrees of separation". The two quoted names comes, respectively, from a theme developed by the Hungarian writer Fridgyes Karinthy in a play called "Chains" ($1978$) and an empirical experiment injected by the psychologist S. Milgram in $1967$. In fact, the most famous version states that a person, e.g. Kevin Bacon, is linked to a random one, e.g. Andrea Scotti, through only few acquaintances: according to \href{https://oracleofbacon.org/movielinks.php}{Kevin Bacon Number}\footnote{https://oracleofbacon.org/movielinks.php} only $2$ common persons. More precisely, the distance between two randomly chosen nodes in a graph is small. Random networks account for this aspect as we are going to obtain shortly.
+A captivating argument, network science allows to study is the "Small-World (SW) phenomenon" or "six degrees of separation". The two quoted names comes, respectively, from a theme developed by the Hungarian writer Fridgyes Karinthy in a play called "Chains" ($1978$) and an empirical experiment injected by the psychologist S. Milgram in $1967$. In fact, the most famous version states that a person, e.g. Kevin Bacon, is linked to a random one, e.g. Andrea Scotti, through only few acquaintances: according to \href{https://oracleofbacon.org/movielinks.php}{Kevin Bacon Number}\footnote{https://oracleofbacon.org/movielinks.php} only by $2$ persons in common. So, the distance between two randomly chosen nodes in a graph is small. Random networks account for this phenomenon as we are going to deepen.
 
 On average, the expected number of nodes $N$ at a certain distance $d$ is
 \[N(d) \approx 1+ \langle k \rangle + \cdots + \langle k \rangle^d = \frac{\langle k \rangle^{d+1} -1 }{\langle k \rangle - 1},  \] 
 where it has been taken advantage of the geometric series, after noting that $``1"$ is the selected nodes, $\langle k \rangle$ are its neighbors, $\langle k \rangle^2 \approx \langle k \rangle (\langle k \rangle - 1)$ the next neighbors and so on.
-Thus, by considering that for a real network $\langle k \rangle << 1$ and that $N(d_{max}) \sim N$, 
+Thus, by considering that for a real network $\langle k \rangle \ll 1$ and that $N(d_{max}) \sim N$, 
 \[
 	d_{max} \sim \frac{\ln(N)}{\ln(\langle k \rangle)}
 \]
@@ -471,17 +496,18 @@ On the other hand, the above equation is more suitable in describing $\langle k 
 	\label{eq:SWrandnet}
 \end{equation} 
 is the formulation of the Karinthy's "Small-World phenomenon" obtained by considering that most of the nodes are contained within $\langle d \rangle$.
-Indeed, for a real network, $\ln(N) << N$ drives to a "smaller" average path length compared to the scaling with $N$, which is the typical scaling for a regular lattice\footnote{The common notion of distance is based on a regular lattice which do not shows the "Small-World" effect. Thus, this result could be perceived as a uncomfortable}.
+Indeed, for a real network, $\ln(N) \ll N$ drives to a "smaller" average path length compared to $N$, which is the typical scaling for a regular lattice\footnote{The common notion of physical distance is based on a regular lattice which do not shows the "Small-World" effect. At first glance, this result could be perceived as a uncomfortable.}
 Moreover, the denominator of the \autoref{eq:SWrandnet} implies that the denser it becomes the network, the closer the nodes aggregate.
-As a sociological example, the average distance of a random person, in the current century, would be derived by applying the \autoref{eq:SWrandnet} by fixing $N \sim 7\cdot 10^9$ and $\langle k \rangle \sim 10^3$ yielding $\langle k \rangle \sim 3.28$ which is a more reliable results than the "six degrees of separation".
+As a sociological example, the average distance of a random person, in the current century, would be derived by applying the \autoref{eq:SWrandnet} by fixing $N \sim 7\cdot 10^9$ and $\langle k \rangle \sim 10^3$ yielding $\langle k \rangle \sim 3.28$ which is a more reliable results than the "six degrees of separation" \cite{barabasi::2016networkbook}.
 
-\section{The Clustering Coefficient}
+\newpage
+\subsection{The Clustering Coefficient}
 As far as a social network is considered, it seems natural to introduce a measure of community membership which capture the possibility to join a local community, e.g. an association or a family. More generally, real networks are characterized by the clustering formation, which "simplify" the network by aggregating the nodes, called clusters, which present common characteristics. Proceeding as the "coarse graining" technique of Statistical Mechanics, it becomes appealing to take care of the emergent properties exhibited by the "coarse-grained" network. In the following section, it is introduced the degree of "clusterization" of a network.
 
-More precisely, the local clustering coefficient $C_i$ measures the density of link among the neighboring $i-th's$ nodes. To gain a rough intuition of its purpose, it worths to consider two opposite limits: 
+More precisely, the local clustering coefficient $C_i$ measures the chance of having a link among the neighbors of the $i-th$ node. To gain a rough intuition of its purpose, it worths to consider two opposite limits: 
 \begin{itemize}
-	\item $C_i = 0$ as there are no links among neighbors;
-	\item $C_i = 1$ as there are fully connected neighbors.
+	\item $C_i = 0$ as there are no links among neighbors of $i$;
+	\item $C_i = 1$ as there are fully connected neighbors of $i$.
 \end{itemize}
 
 Formally,
@@ -492,16 +518,15 @@ Formally,
 
 where $k_i \textnormal{ and } N$ are the amount of neighboring vertexes of $i$ and the total nodes respectively, \[ \langle L_i \rangle = p \cdot \frac{k_i(k_i-1)}{2} \quad \textnormal{ and } \quad \langle C \rangle := \frac{1}{N} \sum_{i = 1}^{N} C_i. \]
 
-The presence of a link among the two neighbors closes a triangle with the focal node, $C$ could also be interpreted as the normalized number of triangles centered in the selected node.
-This phenomenon is also known as "triadic closure".
-Thus, $C_i = \langle C \rangle$ is independent by the $i-th$ node degree and, fixing the average degree of a network, it scales with $1/N$: for real networks $p = \langle k \rangle / N$ is small (real networks are sparse) and drives to a smaller $C$ that the one observed. A model that naturally generates "triangle", would be a good candidate to enhance the clustering coefficient even for small $p$.
+The presence of a link among the two neighbors closes a triangle with the focal node $i$ ( "triadic closure"). Hence, $C_i$ could also be interpreted as the normalized number of triangles centered in the selected node. In addition, $C_i = \langle C \rangle$ is independent by the $i-th$ node degree and, fixing the average degree of a network, it scales with $1/N$: for real networks $p = \langle k \rangle / N$ is small (real networks are sparse) and drives to a smaller $C$ that the one observed. A model that naturally generates "triangle", would be a good candidate to enhance the clustering coefficient even for small $p$.
 
-\subsection{What Random Networks Can't Do}
+\section{What Random Networks Can't Do}
 
 The end of a general model development is to validate it against reality, as done in the concrete series of examples.
-Thus, by looking at a real social network, e.g. at a cocktail party, there is the co-presence of highly connected nodes, called \textit{"hubs"}, alongside with the less interacting ones. In particular, the ER graph does not account for the presence of high-degree nodes\cite{barabasi::2016networkbook}, since they are strongly damped by the factor term $1/k!$ in \autoref{eq:probkrndNet}. Indeed, real networks are sparse but have also strongly heterogeneous degrees. In other words, the average degree per unit node is small, while preserving a high heterogeneity of the intrinsic node degrees. Thus, sparse links and amount of them per each node.
+Thus, by looking at a real social network, e.g. at a cocktail party, there is the co-presence of highly connected nodes, called \textit{"hubs"}, alongside with the less interacting ones. In particular, the ER graph does not account for the presence of high-degree nodes\cite{barabasi::2016networkbook}, since they are strongly damped by the  factor term $1/k!$ in \autoref{eq:probkrndNet}. Indeed, real networks are sparse but have also strongly heterogeneous degrees. In other words, the average degree per unit node is small, while preserving a high variance of the intrinsic node degrees.
 
-Secondly, by looking at the evolution of the contact network underlying the quoted cocktail party, there could be identified 4 topological regimes starting from isolated individuals for $\langle k \rangle = 0$ and ending with a fully connected graph for $\langle k \rangle = N-1$ where $N$ are the total invited persons. Therefore, these regimes scan the formation path of a fully connected network, passing trough a rapid emergence of a giant component. This is in a one-to-one relation with a First-Order-Phase Transition treated in Statistical Mechanics. In detail, the formation of a ordered giant component could be compared with ice formation: the passage from disordered water molecules to an ordered structure.
+Secondly, by looking at the evolution of the contact network, e.g. the one underlying the previous cocktail party, there could be identified 4 topological regimes starting from isolated individuals for $\langle k \rangle = 0$ and ending with a fully connected graph for $\langle k \rangle = N-1$, where $N$ are the total invited persons. The ER model predicts the co-existence of a giant component, containing loops and cycles, and small components, which forms trees, for $1 < \langle k\rangle < \ln(N)$ - find a better description below. However, this is clearly at odds with reality since, as a concrete example, in a random electric power-grid some consumers should not get electric power \cite{barabasi::2016networkbook}. Many network, as the actor network, are in the connected regime; most are in the supercritical one while still connected.
+In particular, these regimes scan the formation path of a fully connected network, passing trough a rapid emergence of a giant component.
 \newline Schematically,
 \begin{itemize}[noitemsep]
 	\item Sub-critical Regime for $0 < \langle k \rangle < 1 \quad (p < 1/N)$ 
@@ -509,24 +534,26 @@ Secondly, by looking at the evolution of the contact network underlying the quot
 	\item Supercritical Regime for $\langle k \rangle > 1 \quad (p > 1/N)$: Single giant component formation
 	\item Connected Regime for $\langle k \rangle > \ln(N) \quad (p > \ln(N)/N)$
 \end{itemize}
-Thus, the ER model predicts the co-existence of a giant component, containing loops and cycles, and small components, which forms trees, for $1 < \langle k\rangle < \ln(N)$. This is clearly at odds with reality since, as a concrete example, in a random electric power-grid some consumers should not get electric power \cite{barabasi::2016networkbook}. Many network, as the actor network, are in the connected regime; most are in the supercritical one while still connected.
+This is in a one-to-one relation with a First-Order-Phase Transition treated in Statistical Mechanics. The formation of a ordered giant component could be compared with ice formation: the passage from disordered water molecules to an ordered structure.
 
 Thirdly, the real world networks exhibits a "Small-World" phenomenon not in agreement with the \autoref{eq:SWrandnet}. Hence, a new "Small-World" measure has to be proposed.
 
-Fourthly, plotting $C(k)$ while fixing $N$, the theoretical expectation is to grasp the independent nature of $C$ with respect to $k$. Nevertheless, the results is unsatisfactory, since $C$ decreases with the increasing of $k$ for a pletora of the real networks.
+Fourthly, fixing $N$, the theoretical expectation is to grasp the independent nature of $C$ with respect to $k$. Nevertheless, the results is unsatisfactory, since $C$ decreases with the increasing of $k$ for a pletora of the real networks.
+%put an image of this
 Furthermore, $C/\langle k \rangle (N)$, for high $N$, is higher that its theoretical expectation. Thus, a refined model is needed, to explain the high $C$ even at small $p$ (or high $N$).
 
 \section{Watts-Strogatz Model}
+\label{sec:WS_Model}
+%insert a reference image
 To face the problem of the "high $C$ at low edge probability (for now, redefined as $p_{ER}$)", while preserving the "Small-World" property, the mathematicians Duncan Watts and Steven Strogatz proposed in the $1998$ a hybrid model which interpolated between a regular lattice for $p = 0$ to a (pseudo-)random network model for $p = 1$. The new borne model is, thus, called "Watts-Strogatz (WS) model".
-Practically, the idea is to start with a grid-like network, where all the nodes have $\langle k \rangle$ neighbors; then, with probability $p$, a link is chosen and one of the endpoints, such as the "rightmost", is replaced with a random vertex. The underlying degree distribution, hence, narrows the nodes degrees since it passes from a one-block histogram centered in $\langle k \rangle$ to a poissonian distribution. Thus, nodes have barely different neighbors degree and no hubs are allowed.
-A further constraint is that no multiple edges can connect the same pair of vertexes, i.e. no multi-edges. In this way, the network obtained at $p = 1$ is not strictly random, since the degree of the each node $k_i = \geq  \langle k \rangle$ as a result "rightmost rewiring" technique \cite{Newman:2010_Net:AnIntro}. Indeed, in a true random graph the degrees span freely from $0$ to $N-1$. Furthermore, the presence of multiedges gives a correction of $1/N$ for big $N$. Thus, could be avoided for practical purposes.
+Practically, the idea is to start with a grid-like network, where all the nodes have $\langle k \rangle$ neighbors; then, with probability $p$, a link is chosen and one of the endpoints, e.g. the "rightmost", is replaced with a random vertex within the graph. The underlying degree distribution, hence, narrows the nodes degrees since it passes from a one-block histogram centered in $\langle k \rangle$ to a poissonian distribution. Thus, nodes have barely different neighbors degree and no hubs are allowed.
+A further constraint is that no multiple edges can connect the same pair of vertexes, i.e. no multi-edges. In this way, the network obtained at $p = 1$ is not strictly random, since the degree of the each node $k_i \geq  \langle k \rangle /2$ as a result "rightmost rewiring" technique \cite{Newman:2010_Net:AnIntro}. Indeed, in a true random graph the degrees span freely from $0$ to $N-1$. Furthermore, the presence of multiedges gives a correction of $1/N$ for big $N$, negligible in a real modeling scenario with big $N$.
 
-The rationale behind this operation is that by diminishing a little the clustering, i.e. destroying triangles, corresponds a significant reduction of the average path length. Therefore, a "long-range" interaction is produced, dropping the average path length, while preserving the "triadic closures". 
-It worths to highlight that the present $p$, called in this context the "rewiring parameter", is the "long-range" rewiring probability, while the ER model $p_{ER}$ is the probability of a edge formation either among neighbors ("short range" connection) as among distant nodes ("long range" connection). Thus, the "distant" connected vertexes are, on average, $p\cdot L$ where $L$ is the total number of links.
+The rationale of ER model is that by a little decrease of clustering (i.e. destroying triangles) corresponds a significant reduction in the average path length $\langle d \rangle$. Other way around, by connecting nodes in a "long-range" fashion, the overall "triadic closures" are still relevant. 
+
+It worths to highlight that the present $p$, called in this context the "rewiring parameter", is the "long-range" rewiring probability, while the ER model $p_{ER}$ is the probability of a edge formation either among neighbors ("short range" connection) or among distant nodes ("long range" connection). Thus, the "distant" connected vertexes are, on average, $p\cdot L$ where $L$ is the total number of links.
 In particular, a regular lattice is characterized by a high clustering (neighboring nodes are fully connected) but a high average path length; while a random network, as seen before, exhibits manifestly the "Small-World" property alongside with a low clustering coefficient especially, since triangles are rare for small $p$.
-Therefore, the parameter $p$ is introduce to fine tune the co-presence of the two kind of networks. In this way, it is possible to mimic for a range of $p$s the "Small-World" property, thanks to a low average path length, alongside with a high clustering coefficient.
-
-As reported in \cite{Menczer:2020_1stCoursNetSci}, there is a range of rewiring probabilities between $p \in (0.01,0.1)$ in which $\langle l \rangle_p \approx \langle l \rangle_{p=0} \textnormal{ and } C_p \approx C_{p=0}$ encoding the fact that the average path length and clustering coefficient of the WS model are, respectively, near the one of a pseudo-random network and the one of a lattice.
+Therefore, the parameter $p$ is introduce to fine tune the co-presence of the two kind of networks. As reported in \cite{Menczer:2020_1stCoursNetSci}, there is a range of rewiring probabilities $p \in (0.01,0.1)$ in which $\langle d \rangle_p \approx \langle d \rangle_{p=0} \textnormal{ and } C_p \approx C_{p=0}$ encoding the fact that the average path length and clustering coefficient of the WS model are, respectively, near the one of a pseudo-random network and the one of a lattice.
 
 Anyway, this model doesn't explain the presence of the hubs, since neglected by all the degree distributions, and the (inverse) dependence of $C(k)$ on the average network degree.
 
@@ -546,7 +573,7 @@ A degree sequence, thus, determines uniquely a degree distribution but the rever
 Additionaly, a method to wire the nodes has to be chosen. Especially, the configuration model wires the nodes randomly; thus, building a random network. For these reasons, the generated graph is also called "random network with a pre-defined degree sequence". 
 
 As done before, a practical way of constructing a network clarifies many ideas.
-As a first step, consider to have a set of nodes with an assigned degree sequence. Pictorially, this could be depicted as a node with a number of dangling stub as its degree. Thus, the number of isolated stubs are twice the sum of all the degrees. 
+As a first step, consider to have a set of nodes with an assigned degree sequence. Pictorially, this could be depicted as a node with a number of dangling stubs as its degree. Thus, the number of isolated stubs have to be twice the sum of all the degrees. 
 The network is, further, composed by the following iterative steps:
 \begin{itemize}
 	\item A pair of stubs is selected at random;
@@ -554,9 +581,9 @@ The network is, further, composed by the following iterative steps:
 \end{itemize}
 This tying technique is replicated until all the stubs are saturated and it is random by construct. Therefore, this method generates random networks with a fixed degree distribution.
 
-Since the number of stubs equals its degree, each node ends up having the desired degree. Thus, from the selected distribution, multiple (random) networks could be created; even, showing some peculiar properties, such as loops or multi-edges. Therefore, further constraints has to be imposed to obtain a specific topology, such as a connection only to "short-range" nodes. 
+Since the number of stubs equals the node degree, each node ends up having the desired degree. Thus, from the selected distribution, multiple (random) networks could be created; even, showing some peculiar properties, such as loops or multi-edges. Therefore, further constraints has to be imposed to obtain a specific topology, such as a connection only to "short-range" nodes. 
 
-The network is characterized by mainly two propertios:
+The network is characterized by mainly two properties:
 \begin{itemize}
 	\item the probability that a fixed node $i$ may connect to another one $j$ is
 		\begin{equation}
@@ -567,25 +594,28 @@ The network is characterized by mainly two propertios:
 	needed to exclude them \cite{Newman:2010_Net:AnIntro}. More importantly, arbitrarly rejecting self-loops or multi-links would result in a modification of the starting degree distribution, yielding the analytical calculations difficult. 
 \end{itemize}
 
-Obtaining different realizations of the same degree distribution could have a statistically interesting result. Indeed, let's suppose a certain feature, such as the clustering coefficient\footnote{The quoted measure is recalled only as an example, since for real network the clustering coefficient depends on different features than the degree distribution}, is independent on the other network characteristics rather than the degree distribution. By using this method, it would be possible to obtain an average and a standard deviation of all the predictions made by many configuration graphs. Thus, by comparing the result with the statistical predictions, it would be possible to validate the hypothesis that the feature of interest depends only on the degree distribution.
+The different realizations of the same degree distribution have a statistically objective. Indeed, let's suppose a certain feature, such as the presence of hubs, is independent on the other network characteristics rather than the degree distribution. By exploiting an ensamble of graphs, it would be possible to obtain an average and a standard deviation of that feature. Thus, by comparison with the real value, evaluate the unique dependence on the degree distribution.
 
-Subsequentely, a review of other approaches to artificially build a network is reported but not deepened, since not used in the following.
 Another method to generate a network from a fixed degree distribution is the "hidden parameter ($\eta$) method" which, in addition, do not form multi-edges and loops \cite{barabasi::2016networkbook} and allows to tune the average degree $\langle k \rangle$ modifying $\eta$.
-On the other hand, to recover a randomized version from the degree sequence, such as of a fixed real network, the "degree-preserving randomization" is the best help the theory provides. In this way, by just swapping two endpoint nodes at a time, it is possible to build an networks ensamble with the same degree distribution. So, check wheter a quantity depends only on the degree distribution itself or has a more involved structure.
+On the other hand, to recover a randomized version from the degree sequence, such as of a fixed real network, the "degree-preserving randomization" is the best help the theory provides. In this way, by just swapping two endpoint nodes at a time, it is possible to build an networks ensamble with the same degree distribution. So, check whether a quantity depends only on the degree distribution itself or has a more involved structure.
+In the following sections, only the Configuration Model is going to be used.
 
 \section{Poissonian Small-World Network}
-Social network are highly non trivial exhibiting a involved structure, including multilevel organization; weak ties between communities; and temporal aspects that suggest a degree of fluidity with stable social cores \cite{Thurner::NetBasedExpl}.
-As seen in the section \autoref{sec:ATechIntro}, however, the lockdown measures prevents the formation of highly connected nodes (hubs), which are representative of real network. Thus, a possible approach would be to use a poissonian small-world network with a SW-like rewiring parameter $p$ in order to grasp the heterogeneity in number of contacts (node degree); the "small-world phenomenon"; the clusterization of families alongside with their overlap and the $p$ fraction of individuals that are connected at "long-range" through leisure activities (by $p = 0$ these are prohibited).
+Social network are highly non trivial structure, by including a multilevel organization; weak ties between communities; and temporal aspects that suggest a degree of fluidity with stable social cores \cite{Thurner::NetBasedExpl}.
+As seen in the \autoref{sec:ATechIntro}, however, the lockdown measures prevents the formation of highly connected nodes (hubs), expected in a unconstrained (social) scenario. Thus, a possible approach would be to use a Watts-Strogatz network, which has a degree sequence drawn from a poissonian distribution, regardless on the magnitude of $\langle k \rangle / N$ ratio (differently from \autoref{sec:WS_Model}); while edges only connecting nearest neighboring nodes.
+This involved structure, called "Poissonian Small-World (PSW) Network" as in \cite{Thurner::NetBasedExpl}, enables to capture the heterogeneity in the number of contacts (node degree); the SW phenomenon and the clusterization of families alongside with their overlap. Moreover, the WS parameter $p$ represents the fraction of individuals that are connected at "long-range" through leisure activities ($p = 0$ these are prohibited).
 
-In order to realize this peculiar network, the starting point is to use configuration model with the degree sequence drawn from a poissonian distribution. To simulate a closed population, the nodes are assumed to be put on a circle: the last and the first labeled nodes are neighboring nodes. Hence, both the "Small-World" property (see "The emergence of the Small-World property" \autopageref{sec:SWProp}) and the heterogeneity on the node degrees could be grasped at the same time. In this way, with low values of the poissonian parameter $\mu$ is possible to take into consideration the lock-down scenario where the average per node degree of contacts is the household size $D \sim 2.5$ \cite{Thurner::NetBasedExpl}. The configuration model generates a random wiring of the links, producing "long-range" connections which spoil the locality of the community structures (families). Therefore, by an ad-hoc algorithm, the stubs are forced to attach to the nearest nodes in the circle according to their degree. In practice, the wiring algorithm iterates over few steps\footnote{Recall that the degree sequence is already fixed and drawn by a poissonian distribution}:
+In order to built a PSW network, the starting point is by using the configuration model with a degree sequence drawn from a poissonian distribution. To simulate a closed population, the nodes are assumed to be put on a circle: the last and the first of nodes of the degree sequence are assumed as neighbors. Hence, both the "SW" property (see "The emergence of the Small-World property" \autopageref{sec:SWProp}) and the heterogeneity on the node degrees could be embodied at the same time. 
+
+With low values of the poissonian parameter $\mu$ is possible to take into consideration the lock-down scenario where the average per node degree of contacts is the household size $D \sim 2.5$ \cite{Thurner::NetBasedExpl}. The configuration model generates a random wiring of the links, producing "long-range" connections which spoil the locality of the community structures (families). Therefore, by an ad-hoc algorithm, the stubs are forced to attach to the nearest nodes in the circle according to their degree. In practice, the wiring algorithm iterates over few steps\footnote{Recall that the degree sequence is already fixed and drawn by a poissonian distribution}:
 \begin{itemize}
 	\item choose the lowest degree $k_l$ node that has not already been saturated;
-	\item a even number of times $k_l \% 2$ on the clockwise and anti-clockwise nodes;
-	\item if the degree of the selected node is odd, wire one last time ($k_l - k_l \% 2 \, = 1$), say, anti-clockwise;
-	\item delete the endpoint nodes which have saturated their degree.
+	\item link a even number of times $k_l \% 2$ on the clockwise and anti-clockwise nodes;
+	\item if the degree of the selected node is odd, wire one last time ($k_l - k_l \% 2 \, = 1$), e.g. anti-clockwise;
+	\item delete, among the availabe nodes, both the chosen node and the target nodes which have saturated their degree.
 \end{itemize}
 
-More practically, fixed $[(1, 0), (6, 1), (0, 2), (2, 2), (4, 2), (7, 2), (8, 2), (9, 2), (5, 3), (3, 4)]$, i.e. a degree sequence labeled as the first entry with the reference node. 
+More practically, fixed $[(1, 0), (6, 1), (0, 2), (2, 2), (4, 2), (7, 2), (8, 2), (9, 3), (5, 3), (3, 4)]$, i.e. a degree sequence composed by (node,degree) tuples. 
 The edges $(i,j)$ are created by connecting $i \textnormal{ to }j$ and diminishing the degree of $j$ at each step:
 \begin{itemize}
 	\item node $1$ is left alone as $deg(1)=0$;
@@ -594,18 +624,13 @@ The edges $(i,j)$ are created by connecting $i \textnormal{ to }j$ and diminishi
 	\item $(2,0) \text{ (already present) and } (2,3)$;
 	\item $(4,3)\textnormal{ and }(4,5)$;
 	\item $(7,6)\textnormal{ (already present) and }(7,8)$; 
-	\item $(8,7) \textnormal{ (already present) and } (8,9)$
-	\item FINISH WHEN A PLOT OF A REALIZATION IS AVAILABLE
+	\item $(8,7) \textnormal{ (already present) and } (8,9)$;
+	\item $(9,3), (9,8) \textnormal{ (already present) and } (9,5)$ - "tunneling" nodes ;
+	\item $(5,4), (5,9) \textnormal{ (already present) and } (5,3)$;
+	\item node $3$ is left with $deg(3) = 1$, but this issue reduces with sparsity $\langle k \rangle \ll 1$.
 \end{itemize}
 
-Hence, the algorithm preserves the poissonian degree distribution, while enhance the local clustering of the nodes. However, is it possible to have "long-range" connection, since the nearest available vertexes could be already saturated; therefore, resulting in a distant linking. This "tunneling" nodes are neither "super-spreaders" (or hubs of the infection), as they are forbidden by the poissonian degree distribution; nor "super-infectors", which would be characterized by an higher infectivity rate $\beta$.
-
-\section{Connected Caveman Graph}
-By analogy with the local interactions produced by the NPIs measures, it has been considered the "Caveman Model".
-The rationale is to consider as if one node, of the previously modeled networks, would be a family composed by a fixed number of people. This idea drives to the "coarse-graining" approach seen in the previous sections.
-In detail, the Caveman model enables to fix both the number of "caves"/families and the number of individual for each family. So, to connect each cave on a circle, one edge among two random nodes for each neighboring cave has been added and a WS-like "rewiring parameter" as been introduced to enable the "long-range" attachment.
-
-A naive expectation is that the epidemic spread slower and more stochastically, since the nodes are poorly connected with the "outside" rather than in the family.
+Hence, the algorithm preserves the poissonian degree distribution, while enhancing the local clustering of the nodes. However, it is possible to have "long-range" connections ($(9,5)$), since the nearest available vertexes could be already saturated; therefore, resulting in a distant linking. This "tunneling" nodes are neither "super-spreaders" (or hubs of the infection), as they are forbidden by the poissonian degree distribution; nor "super-infectors", which would be characterized by an higher infectivity rate $\beta$.
 
 \section{Scale-Free Property}
 
@@ -613,46 +638,50 @@ A naive expectation is that the epidemic spread slower and more stochastically, 
 	A scale-free network is a network whose degree distribution follows a power law.
 \end{definition}
 
-Empirical evidence shows that the degree distribution of the majority of the real network, e.g. WWW, is poorly behaving as a poissonian distribution, due to the presence of high degrees nodes or "hubs" \cite{barabasi::2016networkbook}. Rather, a better approximation is obtained via a power law distribution of the kind $p_k \sim k^{-\gamma}$ which in log-log scale turns into the linear relation $\log(p_k) \sim -\gamma \log(k)$ where $\gamma$ is called the "degree exponent". As far a directed network is considered, as WWW, the $k$ has to be sub-divide into $k_{in} \textnormal{ and } k_{out}$, thus doubling the quoted relations.
-Therefore, by exhibiting a power-law distributions of degree nodes, these kind of networks are endowed with "scale-free" property which, in turn, makes them call "scale-free networks". In detail, the power-laws are long-tailed function; hence, describing a phenomenon that has not a reference scale. For example, the heights distribution of a sample population displays a peak at the average height, which is the reference scale for that population. Instead, a power-law distribution does not have a peak and allows also for outliers, e.g. 100ft tall individuals. So, a reference scale for a power-law is not naturally present as in an exponential bounded distribution, i.e. when there is a exponential or faster decay for high $k$, such as binomial/poissonian/Gaussian distributions.
+Empirical evidence shows that the degree distribution of the majority of the real network, e.g. WWW, is poorly behaving as a poissonian distribution, due to the presence of high degree nodes or "hubs" \cite{barabasi::2016networkbook}. Rather, a better approximation is obtained via a power law distribution of the kind $p_k \sim k^{-\gamma}$ which in log-log scale turns into the linear relation $\log(p_k) \sim -\gamma \log(k)$ where $\gamma$ is called the "degree exponent". As far a directed network is considered, as WWW, $k$ has to be sub-divide into $k_{in} \textnormal{ and } k_{out}$, thus doubling the quoted relations.
+Therefore, by exhibiting a power-law distributions of degree nodes, these kind of networks are endowed with "scale-free" property and, in turn, called "scale-free networks". In detail, the power-laws are long-tailed functions; hence, describing a phenomenon that has not a reference scale. For example, the heights distribution of a sample population displays a peak at the average height, which is the reference scale for that population. Instead, a power-law distribution does not have a peak and allows also for outliers, e.g. 100ft tall individuals. So, a reference scale for a power-law is not naturally present as in an "exponential bounded distribution" \cite{barabasi::2016networkbook}, i.e. when there is a exponential or faster decay for high $k$, such as binomial/poissonian/Gaussian distributions.
 
-In the following part, the discrete approach, assuming $k = 0,1,2\cdots$, is going to be developed; while only the continuum result would be reported. In fact, the discrete approach provides the ready-to-use formulas handle by a calculator which, by construction, uses discrete operations. On the other hand, the continuum approach is useful for analytically support of the calculation and could be obtained similarly to the discrete case.
-Formally, by exploiting the constraint on probabilities $p_k = C\cdot k^{-\gamma}$ \[\sum_{k=1}^{\infty} p_k = 1\], it is possible to recover the closed form
+In the following part, the discrete approach, assuming $k = 0,1,2\cdots$, is going to be developed; while only the continuum result would be reported. In fact, the discrete approach provides the ready-to-use formulas handle by a calculator which, by construction, performs discrete operations. On the other hand, the continuum approach is useful for analytically support the calculations and could be obtained similarly to the discrete case.
+Formally, by exploiting the constraint on probabilities $p_k = C\cdot k^{-\gamma}$ \[\sum_{k=1}^{\infty} p_k = 1,\] it is possible to recover the closed form \cite{barabasi::2016networkbook}
 \begin{equation}
 	p_k = \frac{1-p_0}{\zeta(\gamma)}k^{-\gamma}.
 	\label{eq:p_scalefree}
 \end{equation}
-where $p_0 = p_{k=0}$ which has been separately considered as the power-law diverges for $k=0$.
+where $p_0 = p_{k=0}$ has been separated, since the power-law diverges for $k=0$.
 
-On the another hand, the continuum formalism drives to \[p(k) = (\gamma-1)k_{min}^{\gamma-1}k^{-\gamma},\] since the the smallest value for the power law to hold is not $1$, as in the discrete approach, but $k_{min}$, the degree for which
+On the another hand, the continuum formalism drives to \[p(k) = (\gamma-1)k_{min}^{\gamma-1}k^{-\gamma},\] since the the smallest value for the power law to hold is not $1$, as in the discrete approach, but the minum degree for a node $k_{min}$. 
+
+Formally, $k_{min}$ is the degree for which
 \begin{equation}
 	\int_0^{k_{min}-1} p(k) dk \stackrel{!}{=} 1/N \qquad \textnormal{or} \qquad P(k_{min}-1) \stackrel{!}{=} 1/N.
 	\label{eq:kminrel}
 \end{equation}
 
-In the next part, the allowed maximum degree $k_max$ would be obtained either for a exponential bounded and a power-law distributions. Through this quantitative insight, it would be shown the dependence of $k_max$ on $N$, i.e. the size of the network. 
+In the next part, the allowed maximum degree $k_{max}$ would be obtained both for a exponential bounded and a power-law distributions. Through this quantitative insight, it would be shown the dependence of $k_{max}$ on $N$, i.e. the size of the network. 
 
-In particular, the exponential distribution for which \(\int_{k_min}^infty p(k) dk = 1\) holds, is \[ \lambda e^{\lambda k_{min}} e^{-\lambda k} \] and, using \autoref{eq:kminrel}, $k_min = 1$.
-Furthermore, $k_max$ is defined to be such that the at most one node $i$ could have a degree $k_i$ larger than $k_max$. In other words, the cumulative distribution for degrees greater than $k_{max}$ is $1/N$; and, hence, $k_{max}$ (or the "natural cutoff") is expected to be the size of the bigger hub.
+In particular, the exponential distribution for which \(\int_{k_{min}}^{\infty} p(k) dk = 1\) holds, is \[ p_k = \lambda e^{\lambda k_{min}} e^{-\lambda k} \] where, using \autoref{eq:kminrel}, $k_{min} = 1$.
+Furthermore, $k_{max}$ (or the "natural cutoff") is defined to be such that the at most one node $i$ could have a degree $k_i$ larger than $k_{max}$. \newline In other words, the cumulative distribution for degrees greater than $k_{max}$ is $1/N$; and, hence, $k_{max}$ is expected to be the size of the bigger hub.
+
 In formulas, 
 \begin{equation}
-	\int_{k_{max}}^{infty} p(k) dk = 1/N \implies k_{max} = k_{min} + \frac{\ln(N)}{\lambda}.
+	\int_{k_{max}}^{\infty} p(k) dk = 1/N \implies k_{max} = k_{min} + \frac{\ln(N)}{\lambda}.
 	\label{eq:Expkmax}	
 \end{equation}
-So, $k_{max}$ would not differ much with respect to $k_{min}$ since $\ln(N)$ would reduce much the size of the network $N$.
+So, $k_{max}$ would not differ much with respect to $k_{min}$ since $\ln(N)$ strongly reduces contribution due to the size of the graph $N$.
 For a Poisson distribution, more effort is needed but the same interpretation holds.
-Applying the same rationale to a scale-free network, 
+
+On the other hand, applying the same rationale to a scale-free network, 
 \begin{equation}
 	k_{max} = k_{min}\,N^{\frac{1}{\gamma-1}}.
 	\label{eq:SFkmax}
 \end{equation}
 In this case, there could be order of magnitude of difference between $k_{max}$ and $k_{min}$.
 Indeed, as a simple example, WWW forms a graph of on $N \sim 10^5$ documents with $\langle k \rangle \simeq 4.6$ and $\gamma = 2.1$ \cite{barabasi::2016networkbook}. 
-By assuming $\lambda = 1 \textnormal{ and recovering that }, k_{min} = 1$ using \autoref{eq:kminrel}, $k_max \sim 14$; while $k_{max} = 95.000$ for a scale-free network with $\gamma = 2.1$, e.g. WWW network. This short results reinforces the quoted insight that for the class of "exponentially decaying" distributions the hubs are strongly forbidden since the nodes have comparably the same degree. Instead, the highly connected nodes are naturally arising by increasing $N$ with an underlying power-law distribution.
+By assuming $\lambda = 1 \textnormal{ and recovering that }, k_{min} = 1$ using \autoref{eq:kminrel}, $k_{max} \sim 14$; while $k_{max} = 95.000$ for a scale-free network with $\gamma = 2.1$, e.g. WWW network. This short results reinforces the quoted insight that for the class of "exponentially bounded distributions" the hubs are strongly forbidden since the nodes have comparably the same degree. Instead, the highly connected nodes are naturally arising by increasing $N$ with an underlying power-law distribution.
 \label{sec:SFProperties}
 
-Not all the network are scale-free since the hubs are present only if nodes have unlimited degree capacity.
-In fact, there could be constraints, such as cost-benefit problem, which limit $k_max$ of the bigger node. In this overview, random network may be the best fit, e.g. national highways network, power grid of generator and switches, $\cdots$
+Not all the network are scale-free since the hubs are present only if nodes have unlimited degree capacities.
+In fact, there could be constraints, such as cost-benefit problem, which limit $k_{max}$ of the bigger node. In this overview, random network may be the best fit, e.g. national highways network, power grid of generators and switches, $\cdots$
 
 With all the previous effort a more quantitative approach to the explanation on the "scale-free" etymology could be ultimate.
 More precisely, defining the statistics momentums as
@@ -687,7 +716,7 @@ Hubs represent a one-hop bridge for many nodes, by centralizing the otherwise-di
 	\label{eq:USWdistance}
 \end{equation}
 \newline
-\textbf{Anomalous Regime ($\gamma = 2$)}: Due to $k_max \sim N$, the network is forced into a "wheel rim configuration", a central hub with spoke nodes. In this regime, the average path length is independent on the size of the graph.
+\textbf{Anomalous Regime ($\gamma = 2$)}: Due to $k_{max} \sim N$, the network is forced into a "wheel rim configuration", a central hub with spoke nodes. In this regime, the average path length is independent on the size of the graph.
 \newline
 \textbf{Ultra-Small World Regime ($2 < \gamma < 3$)}: By predicting a $\ln(\ln(N))$ trend of the average distance, \autoref{eq:USWdistance} guides to the concept of "ultra-small world phenomenon" as a slower growth than random network. Indeed, recalling the worldwide social network, \(\ln\ln(N) \sim 3 \text{ while } \ln(N) \sim 22\) more than few times higher than the expected "six degrees of separation".
 \newline
@@ -697,7 +726,7 @@ Hubs represent a one-hop bridge for many nodes, by centralizing the otherwise-di
 In this regime, the finiteness of the variance is understood, due to the light aggregation that the high-degree nodes could perform in these kind of networks.
 
 Moreover, recalling the root of "ultra-small world" \autoref{eq:SFkmax}, for $N \lesssim 10^2$ the path length distributions overlap in all the reported regimes and, so, converges to a Poisson distribution ($\gamma > 3)$ whose hubs are small to produce the "ultra-small world" phenomenon. In fact, to validate the power-law nature of a distribution, the nodes degree should be separated by 2-3 orders of magnitude. Hence, reverting the \autoref{eq:SFkmax},
-\[N = (\frac{k_{max}}{k_{min}})^\frac{1}{\gamma -1},\]
+\[N = \left(\frac{k_{max}}{k_{min}} \right)^\frac{1}{\gamma -1},\]
 which lucidly reproduce $N \sim 10^2$ for $\gamma = 2.1$ (WWW network).
 
 Thus, \(\langle d \rangle\) is changing with $\gamma$, as the smaller it is, the shorter would be the average distance; but also with $N$, as it is the "ab ovo" hypothesis for having big hubs.
@@ -758,6 +787,9 @@ At each event time, choose an initial vertex $v_i$ of $G_1^{(t-1)}$ and connect 
 Rephrasing it, connect $v_t$ with $v_i$ with a probability of $\frac{k_i}{2t-1}$ if the nodes are different; otherwise, $\frac{1}{2t-1}$. This method does not forbid the formation of multi-edges and loops, but constraints their number to be negligible as the network grows.
 The present technique referred to $m=1$ for an immediate perception. Whether $m > 1$ stubs are involved, add them one at the time, enabling their contribution to the hubs degree.
 
+\appendix
+\chapter{Appendix - Network Models}
+
 \section{Recovering Power-Law Distribution}
 Due to a new $m-$stubs node, the degree of a existing node $i$ changes at a rate
 \begin{equation}
@@ -767,7 +799,7 @@ Due to a new $m-$stubs node, the degree of a existing node $i$ changes at a rate
 \end{equation}
 Hence, for $t >> 1$, 
 \begin{equation}
-	k_i(t) = m (\frac{t}{t_i})^\beta
+	k_i(t) = m \left(\frac{t}{t_i}\right)^\beta
 	\label{eq:BA_modki(t)}
 \end{equation}
 where $\beta$, alias "dynamical exponent", has the value $\beta = 1/2$ \cite{barabasi::2016networkbook} and $t_i$ is the entering time for the node $i$.
@@ -796,13 +828,13 @@ In the following, it would be reviewed the "Link Selection" and "Copying" Models
 Assuming growth is at work, i.e. at each event time a new node is added, select randomly a edge and connect the new node to a vertex belonging to that edge.
 Thus, the probability $q_k$ that the selected node, already present in the graph, has degree $k$ is 
 \begin{equation}
-	q_k = \frac{1}{\langle k \rangle} \cdot kp_k
+	q_k = \frac{1}{\langle k \rangle} \cdot k p_k
 \end{equation}
 where the first factor exploiting the normalization constraint $\sum_k q_k = 1$.
-Hence, it has the hoped form, being linear in the number of stubs ($k$) and in the frequence of the degree-k nodes ($p_k$). This displays an increasing of the chance of wiring to a degree $k$ node, by enhanching either the number of degrees or the presence of degree-k nodes itselves.
+Hence, it has the hoped form, being linear in the number of stubs ($k$) and in the frequency of the degree-k nodes ($p_k$). This displays an increasing of the chance of wiring to a degree $k$ node, by enhancing either the number of degrees or the presence of degree-k nodes themselves.
 
 \subsubsection{Copying Model}
-The idea is compute the probability of obtaining a connection of a degree-k node by mimicing the phenomenon of authors of a new webpage which copy links from existing webpages on the related topic \cite{Kleinberg:1999_WebAsAGraph}.
+The idea is compute the probability of obtaining a connection of a degree-k node by mimicking the phenomenon of authors of a new webpage which copy links from existing webpages on the related topic \cite{Kleinberg:1999_WebAsAGraph}.
 
 By introducing a new node $n$ in the network, as before, the difference stands in the link selection.
 More in detail, selecting an existing node $u$ regardless of its degree, e.g. picking an arbitrary web document which topic is related to $n$, there are two possible way of connections:
@@ -821,27 +853,30 @@ which is linear in k, yielding the desired preferential attachment.
 The power of this approach is its "empirical" root which could be detected from citation networks to the social network of acquaintances.
 
 \subsection{Global Mechanisms}
-\subsection{Optimisation Mechanism}
+\subsection{Optimization Mechanism}
 The principle of minimization of cost-benefits analysis in a economic market
-\cite{Shively:2012_OverviewOfB-CAnalysis} can lead to preferential attachment wheter a proper cost function is considered.
+\cite{Shively:2012_OverviewOfB-CAnalysis} can lead to preferential attachment whether a proper cost function is considered.
 
 For simplicity assume that the vertexes are laying in a unit square, e.g. routers in a square continent. As before, at each event time a new router $i$ is added, while an edge with an existing node $j$ is created according to the cost function \cite{barabasi::2016networkbook}
 \[
 	C_i = min_{j\in G(V,E)} \left(\delta d_{ij}+h_j\right).
 \]
-where $d_{ij}$ is the euclidean distance between the vertex $i$ and $j$; while $h_j$ is the number of hops from $j$ to a pre-defined "center" which embodies the best network performance, e.g. net ditribution hub. More clearly, $d_{ij}$ and $h_j$ represent the physical distance and "network-based" distance. Their summation describes the cost to be minimized for real results.
+where $d_{ij}$ is the euclidean distance between the vertex $i$ and $j$; while $h_j$ is the number of hops from $j$ to a pre-defined "center" which embodies the best network performance, e.g. net distribution hub. More clearly, $d_{ij}$ and $h_j$ represent the physical distance and "network-based" distance. Their summation describes the cost to be minimized for real results.
 
 Depending on $\delta \textnormal{ and } N$, there are $3$ network topologies:
 \begin{itemize}
 	\item \textbf{Star Network $(\delta < (1/2)^{1/2})$}: only $\delta d_{ij}$ drives the growth, thus, the new nodes connects with the central one forming a star;
 	\item \textbf{Random Network $(\delta \geq N^{1/2})$}: $h_j$ is the minimum quantity to be minimized. So, the new nodes connect to the nearest node;
-	\item \textbf{Scale-free Network $4(\leq \delta \leq N^{1/2})$}: in this intermediate regime scale-free topologies may be recovered as a result of Optimisation and Randomness. In particular, Optimisation creates a basin of attraction with size $s \sim k_j$ and centered in $j$, within all the appearing nodes $i$ wire with $j$. On the other hand, Randomness is the chance of choosing a specific basin.
+	\item \textbf{Scale-free Network $(4 \leq \delta \leq N^{1/2})$}: in this intermediate regime scale-free topologies may be recovered as a result of optimization and randomness. In particular, optimization creates a basin of attraction with size $s \sim k_j$ and centered in $j$, within all the appearing nodes $i$ wire with $j$. On the other hand, Randomness is the chance of choosing a specific basin.
 \end{itemize}
  
 
 s precisely because it can come from both rational choice and random
 actions [25]. Most complex systems are driven by processes that have a bit
 of both. Hence luck or reason, preferential attachment wins either way.
+
+
+
 
 
 
