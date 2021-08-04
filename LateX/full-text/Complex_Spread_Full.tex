@@ -561,7 +561,7 @@ The presence of a link among the two neighbors closes a triangle with the focal 
 
 \subsection{Problems in Random Networks}
 
-By looking at a real social network, e.g. at a cocktail party, there is the co-presence of highly connected nodes, called \textit{"hubs"}, alongside with the less interacting ones. The ER graph does not account for the presence of high-degree nodes\cite{barabasi::2016networkbook}, since they are strongly damped by the  factor term $1/k!$ in \autoref{eq:probkrndNet}. Indeed, real networks are sparse but have also strongly heterogeneous degrees. In other words, the average degree per unit node is small, while preserving a high variance of the intrinsic node degrees.
+By looking at a real social network, e.g. at a cocktail party, there is the co-presence of highly connected nodes, called \textit{"hubs"}, alongside with the less interacting ones. The ER graph does not account for the presence of high-degree nodes\cite{barabasi::2016networkbook}, since they are strongly damped by the  factor term $1/k!$ in \autoref{eq:probkrndNet}. Indeed, real networks are sparse but have also strongly heterogeneous degrees, showing a high variance through node degrees.
 
 Secondly, by looking at the evolution of the contact network, e.g. the one underlying the previous cocktail party, there could be identified 4 topological regimes starting from isolated individuals for $\langle k \rangle = 0$ and ending with a fully connected graph for $\langle k \rangle = N-1$, where $N$ are the total invited persons. The ER model predicts the co-existence of a giant component, containing loops and cycles, and small components, which forms trees, for $1 < \langle k\rangle < \ln(N)$ - find a better description below. However, this is clearly at odds with reality since, as a concrete example, in a random electric power-grid some consumers should not get electric power \cite{barabasi::2016networkbook}. Many network, as the actor network, are in the connected regime; most are in the supercritical one while still connected.
 In particular, these regimes scan the formation path of a fully connected network, passing trough a rapid emergence of a giant component.
@@ -592,15 +592,15 @@ Furthermore, $C/\langle k \rangle (N)$, for high $N$, is higher that its theoret
     \end{subfigure}
 \end{figure}
 
-To face the problem of the "high $C$ at low edge probability (for now, redefined as $p_{ER}$)", while preserving the "Small-World" property, the mathematicians Duncan Watts and Steven Strogatz proposed in the $1998$ a hybrid model which interpolated between a regular lattice for $p = 0$ to a (pseudo-)random network model for $p = 1$. The new borne model is, thus, called "Watts-Strogatz (WS) model".
+To face the problem of the "high $C$ at low edge probability (for now, redefined as $p_{ER}$)", while preserving the "Small-World" property, the mathematicians Duncan Watts and Steven Strogatz proposed in the $1998$ a hybrid model which interpolated between a regular lattice for $p = 0$ to a random network model for $p = 1$. The new borne model is, thus, called "Watts-Strogatz (WS) model".
 Practically, the idea is to start with a grid-like network, where all the nodes have $\langle k \rangle$ neighbors; then, with probability $p$, a link is chosen and one of the endpoints, e.g. the "rightmost", is replaced with a random vertex within the graph. The underlying degree distribution, hence, narrows the nodes degrees since it passes from a one-block histogram centered in $\langle k \rangle$ to a poissonian distribution. Thus, nodes have barely different neighbors degree and no hubs are allowed.
-A further constraint is that no multiple edges can connect the same pair of vertexes, i.e. no multi-edges. In this way, the network obtained at $p = 1$ is not strictly random, since the degree of the each node $k_i \geq  \langle k \rangle /2$ as a result "rightmost rewiring" technique \cite{Newman:2010_Net:AnIntro}. Indeed, in a true random graph the degrees span freely from $0$ to $N-1$. Furthermore, the presence of multiedges gives a correction of $1/N$ for big $N$, negligible in a real modeling scenario with big $N$.
+A further constraint is that no multiple edges can connect the same pair of vertexes, i.e. no multi-edges. The presence of multiedges gives a correction of $1/N$ for big $N$, negligible in a real modeling scenario with big $N$.
 
 The rationale of ER model is that by a little decrease of clustering (i.e. destroying triangles) corresponds a significant reduction in the average path length $\langle d \rangle$. Other way around, by connecting nodes in a "long-range" fashion, the overall "triadic closures" are still relevant. 
 
 It worths to highlight that the present $p$, called in this context the "rewiring parameter", is the "long-range" rewiring probability, while the ER model $p_{ER}$ is the probability of a edge formation either among neighbors ("short range" connection) or among distant nodes ("long range" connection). Thus, the "distant" connected vertexes are, on average, $p\cdot L$ where $L$ is the total number of links.
 In particular, a regular lattice is characterized by a high clustering (neighboring nodes are fully connected) but a high average path length; while a random network, as seen before, exhibits manifestly the "Small-World" property alongside with a low clustering coefficient especially, since triangles are rare for small $p$.
-Therefore, the parameter $p$ is introduce to fine tune the co-presence of the two kind of networks. As reported in \cite{Menczer:2020_1stCoursNetSci}, there is a range of rewiring probabilities $p \in (0.01,0.1)$ in which $\langle d \rangle_p \approx \langle d \rangle_{p=0} \textnormal{ and } C_p \approx C_{p=0}$ encoding the fact that the average path length and clustering coefficient of the WS model are, respectively, near the one of a pseudo-random network and the one of a lattice.
+Therefore, the parameter $p$ is introduce to fine tune the co-presence of the two kind of networks. As reported in \cite{Menczer:2020_1stCoursNetSci}, there is a range of rewiring probabilities $p \in (0.01,0.1)$ in which $\langle d \rangle_p \approx \langle d \rangle_{p=0} \textnormal{ and } C_p \approx C_{p=0}$ encoding the fact that the average path length and clustering coefficient of the WS model are, respectively, near the one of a random network and the one of a lattice.
 
 Anyway, this model doesn't explain the presence of the hubs, since neglected by all the degree distributions, and the (inverse) dependence of $C(k)$ on the average network degree.
 
@@ -608,7 +608,7 @@ As a pedagogical spoiler, the (four) previous problems would be faced by modifyi
 Hence, a useful approach would be to start from the degree distribution rather than on imposing a fixed probability of wiring as for ER and WS models.
 
 \section{Configuration Model}
-To face the problem previously exposed, a practical starting point could be to reproduce the degree distribution by taking advantage of the configuration model 
+To face the problems previously exposed, a practical starting point could be to reproduce the degree distribution by taking advantage of the configuration model 
 \cite{Menczer:2020_1stCoursNetSci}. Indeed, it is possible to built a network from an arbitrary degree sequence which either could be drawn by a distribution or by a real network of interest.
 Precisely,
 \begin{definition}[\textit{"Degree Sequence"}]
@@ -656,8 +656,8 @@ In order to built a PSW network, the starting point is by using the configuratio
 With low values of the poissonian parameter $\mu$ is possible to take into consideration the lock-down scenario where the average per node degree of contacts is the household size $D \sim 2.5$ \cite{Thurner::NetBasedExpl}. The configuration model generates a random wiring of the links, producing "long-range" connections which spoil the locality of the community structures (families). Therefore, by an ad-hoc algorithm, the stubs are forced to attach to the nearest nodes in the circle according to their degree. In practice, the wiring algorithm iterates over few steps\footnote{Recall that the degree sequence is already fixed and drawn by a poissonian distribution}:
 \begin{itemize}
 	\item choose the lowest degree $k_l$ node that has not already been saturated;
-	\item link a even number of times $k_l \% 2$ on the clockwise and anti-clockwise nodes;
-	\item if the degree of the selected node is odd, wire one last time ($k_l - k_l \% 2 \, = 1$), e.g. anti-clockwise;
+	\item link a even number of times $\lfloor k_l /2 \rfloor$ on the clockwise and anti-clockwise nodes, where $\lfloor * \rfloor$ is the floor function of $*$;
+	\item if the degree of the selected node is odd, wire one last time ($k_l - \lfloor k_l /2 \rfloor \, = k_l \bmod(2) =  1$), e.g. anti-clockwise;
 	\item delete, among the available nodes, both the chosen node and the target nodes which have saturated their degree.
 \end{itemize}
 
@@ -695,7 +695,7 @@ Hence, the algorithm preserves the poissonian degree distribution, while enhanci
 	A scale-free network is a network whose degree distribution follows a power law.
 \end{definition}
 
-By plotting the degree distribution of the real networks, due to "hubs", a better approximation is obtained via a power-law distributions (PLDs) of the kind $p_k \sim k^{-\gamma}$\footnote{Usually, reported in the log-log scale linear version: $\ln(p_k) \sim -\gamma \ln(k)$.}  where $\gamma$ is called the "degree exponent". 
+By plotting the degree distribution of the real networks, due to "hubs", a better approximation is obtained via a power-law distributions (PLDs) of the kind\footnote{Usually, reported in the log-log scale linear version: $\ln(p_k) \sim -\gamma \ln(k)$.} $p_k \sim k^{-\gamma}$  where $\gamma$ is called the "degree exponent". 
 
 {\large \textbf{How a scale does (not) emerge}} \\
 The PLDs are long-tailed functions; hence, describing a phenomenon that has not a reference scale.
@@ -753,13 +753,12 @@ Thus, \(\langle d \rangle\) is changing with $\gamma$, as the smaller it is, the
 
 {\large \textbf{Growth and Preferential Attachment}} 
 
-Before deepening a models that naturally generate hubs (Albert-Barabási model and Linearized Chord Diagram), it is worth to review two important features without which it is impossible for hubs to emerge: growth and preferential attachment (see \autoref{App:RecPLD},\autoref{App:OriginOfPA}). Indeed, the explanation of the common similarities among graphs of broad origins (e.g. WWW, protein-protein interaction, social networks, $\cdots$), should be simple, but fundamental. The result of this investigation will change the methodology from describing a network’s topology to modeling the evolution of a complex system.
+Even with broad different origins, most real networks display two important features without which it is impossible for hubs to emerge \cite{barabasi::2016networkbook}: growth and preferential attachment (see \autoref{App:RecPLD},\autoref{App:OriginOfPA}). 
 
-Growth is an active process driven by the sequential increasing of the size of the network $N$ as per the addition of new nodes. Rather, a random network assume $N$ to be fixed. 
-
+In particular, growth is an active process driven by the sequential increasing of the size of the network $N$ as per the addition of new nodes. Rather, a random network assume $N$ to be fixed. \newline
 Furthermore, most real networks new nodes prefer to link to the more connected ones, a process called "preferential attachment". On the other hand, random networks wire randomly with other nodes.
 
-Ça va sans dire \label{cit:A.Marzo}, the model has to be dynamical and encode a "preferential" probability which changes every time ("event time") there is a modification of the topology. 
+Ça va sans dire \label{cit:A.Marzo}, the derided model, developed in \autoref{sec:BA_model}, has to be dynamical and encode a "preferential" probability which changes every time ("event time") there is a modification of the topology. 
 
 {\large \textbf{Final Remarks on Scale-Free}} \\
 It worths to recall that, in general, the hosted phenomenon (-a) is complex and affects the graph topology and, in turn, the degree distribution. Rebus sic stantibus \label{cit:D.Massa}, it is sufficient to establish a fair starting point, or EBDs or PLDs class, over which developing gradually ad-hoc features, rather then the meticulous fitting.
@@ -770,14 +769,13 @@ For a more detailed dissertation, see \autoref{sec:SFD_details}.
 \newpage
 \subsection{Barabási-Albert Model}
 \begin{figure}[ht]
-    \begin{subfigure}{\textwidth}
-        \includegraphics[scale = 0.4]{../images/Networks/Barabasi_Albert_Model}
-        \centering
-        \caption{Formation of a scale-free network \cite{Barabasi:2009_SF_DecadeBeyond}}
-        \label{fig:LCD_growth}
-    \end{subfigure}
+	\includegraphics[scale = 0.4]{../images/Networks/Barabasi_Albert_Model}
+	\centering
+	\caption{Formation of a scale-free network \cite{Barabasi:2009_SF_DecadeBeyond}}
+	\label{fig:LCD_growth}
 \end{figure}
 
+\label{sec:BA_model}
 To take advantage of the coexistence of both growth and preferential attachment in the real networks, it has been proposed a minimal model, the Barabási-Albert model \cite{barabasi::2016networkbook}:
 \begin{itemize}
 	\item start with $m_0$ nodes randomly connected and a degree at least equal to $1$;
@@ -795,6 +793,7 @@ Indeed, there are $3$ paradigmatic kinds of Preferential Attachments (PAs) by va
 Hence, only for $\alpha = 1$, a power-law distribution could be recovered, recalling that knowing the high-degree behavior is just a starting point to model the underlying phenomenon. 
 In addition, after $t$ event times, the network has gained $t$ new nodes for a total of $N = m_0 + t$ nodes and $m_0 + mt$ links.
 
+\newpage
 \subsection{Linearized Chord Diagram}
 Having in mind the general purpose and results, a more precise description would clarify two point left open, i.e. 
 \begin{itemize}
@@ -803,6 +802,7 @@ Having in mind the general purpose and results, a more precise description would
 \end{itemize}
 
 These problem are solved with the idea of sequentially adding nodes the past graph(s).
+
 Fixing $m=1$ for simplicity, start with the empty graph $G_{m}^t = G_1^0$.
 At each event time, choose an initial vertex $v_i$ of \\ $G_1^{(t-1)}$ and connect it to the new vertex $v_t$ with probability $p$ such that
 \begin{equation}
@@ -1032,7 +1032,7 @@ At first, we pruned a fully connected graph of $N = 1000$ nodes, by keeping fixe
 
 Since the aim is to understand the difference with respect to the "well-mixed" population model, we put in the same plot the number of total infected cases with the epidemics that spreads either on a specific network (in green) or in a "mean-field" fashion (in orange)\footnote{Moreover, the daily infected of the network (in blue) and of the mean-field (in magenta)}. More precisely, the "mean-field" approximation is a "D-neighbors-mean-field" where every node has $D$ nearest neighbors picked at random on the whole set of nodes. In this way, the hypothesis of the "well-mixed" population is recovered, i.e. everyone has the same probability to get in touch with an infected, and the spreading could be modeled with the exact same parameters ($\beta \textnormal{ and } \mu$) as the network epidemics.
 
-Then, we introduced the "rewiring probability" $p$ which enables the distant nodes to connect faster, thus, obtaining a Erdös-Rényi (E-R) graph with non-zero $p$. In this case, we could recover the "(pseudo) linearity" of the SIR infection, as it is shown in \ref{fig:pruning_p0.1}, using two similar methods of choosing the spreading parameters $\beta \textnormal{ and } \mu$:
+Then, we introduced the "rewiring probability" $p$ which enables the distant nodes to connect faster, thus, obtaining a Erdös-Rényi (ER) graph with non-zero $p$. In this case, we could recover the "(pseudo) linearity" of the SIR infection, as it is shown in \ref{fig:pruning_p0.1}, using two similar methods of choosing the spreading parameters $\beta \textnormal{ and } \mu$:
 \begin{itemize}
 	\item pick a series of $\beta \in [0,1]$ and $\mu \in [0,1]$ coefficients at random;
 	\item choosing $\mu \in [0,1]$ and fixing $p=0.1$. Then, as in the previous point, while halving D, the $\beta$ is doubled.
