@@ -1,11 +1,11 @@
 from definitions import parameters_net_and_sir, main
 from numba import config
 
-N = int(1e3); p_max = 0
+N = int(303); p_max = 0
 #print("Number of cpus used", config.NUMBA_DEFAULT_NUM_THREADS)
 
 'progression of net-parameters'
-folder = "B-A_Model"
+folder = "BA_Model"
 k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max \
   = parameters_net_and_sir(folder, p_max = p_max)
 

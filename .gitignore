@@ -129,13 +129,14 @@ dmypy.json
 .pyre/
 
 # custom ignored files
-
 LateX/images
 LateX/images_old
 dask-worker-space
 LateX/full-text/Complex_Spread_Full.log
 LateX/full-text/Complex_Spread_Full.toc
 
+
+LateX/full-text/Scrbook
 LateX/full-text/Old_Ver_To_Check/Complex_Spread_Full.aux
 LateX/full-text/Complex_Spread_Full.bbl
 LateX/full-text/Complex_Spread_Full.aux
@@ -150,6 +151,28 @@ LateX/full-text/Old_Ver_To_Check/Complex_Spread_Full.out
 LateX/full-text/Old_Ver_To_Check/Complex_Spread_Full.toc
 LateX/full-text/Old_Ver_To_Check/Complex_Spread_Full.synctex.gz
 CSSE_JHU/CSSEGISandData_1.7.csv
-CSSE_JHU/data_viz.ipynb
 CSSE_JHU/owid-covid-data.csv
 .vscode/launch.json
+LateX/UsefulArticles/
+AutoGen_Plots/complete_graph_sir.jpg
+AutoGen_Plots/ER_Epid_Threshold.jpg
+AutoGen_Plots/er_graph_sir.jpg
+LateX/full-text/Old_Ver_To_Check/Complex_Full_23.6::13.out
+LateX/full-text/Old_Ver_To_Check/Complex_Full_23.6::13.aux
+.gitignore
+LateX/full-text/Old_Ver_To_Check/Complex_Full_23.6::13.fdb_latexmk
+LateX/full-text/Old_Ver_To_Check/Complex_Full_23.6::13.fls
+.gitignore
+.gitignore
+LateX/full-text/Old_Ver_To_Check/Complex_Full_23.6::13.pdf
+LateX/full-text/Old_Ver_To_Check/Complex_Full_23.6::13.synctex.gz
+.gitignore
+.gitignore
+LateX/full-text/Title_page_Master_Physics.pdf
+LateX/full-text/Title_page_Master_Physics.synctex.gz
+LateX/full-text/Title_page_Master_Physics.tex
+LateX/full-text/Old_Ver_To_Check/Complex_Full_23.6::13.toc
+LateX/full-text/.vscode/settings.json
+LateX/full-text/References
+.gitignore
+LateX/.vscode/settings.json

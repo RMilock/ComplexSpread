@@ -7,7 +7,7 @@ from definitions import main, parameters_net_and_sir
 #import matplotlib.pylab as plt
 
 N = int(1e4); add_edges_only = True
-folder = f"NNO_Conf_Model_addE_{add_edges_only}" #add edges instead of rew
+folder = f"NNO_Conf_Model_addE_{add_edges_only}" #add edges instead of delete&rewiring
 
 k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max =  parameters_net_and_sir(folder = folder) 
 

@@ -13,7 +13,7 @@ def Gneigbors(i, mean, mf):
     tests = list(map(lambda x : int(x), tests)) #convert 35.0 into int
     return tests
 
-
+'''
 N = 20
 start_inf = 10
 
@@ -93,4 +93,8 @@ b = list(range(L, 2*L)) #2,3
 start = time.time()
 max_len = max(a, key=len)
 print("6: max", time.time()-start)
-print(max_len)
+print(max_len)'''
+from definitions import rhu
+D = rhu(1.5, 0, True)
+if D-1 > 0:
+    print("I'm inside")

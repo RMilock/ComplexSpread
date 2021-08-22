@@ -1,6 +1,7 @@
 from datetime import datetime
 import networkx as nx
 from networkx.algorithms import clique
+from networkx.algorithms.components.connected import number_connected_components
 from networkx.generators.community import caveman_graph
 import numpy as np
 import numpy.random as npr
@@ -42,7 +43,7 @@ def jsonKeys2int(x):
 def func_file_name(folder, adj_or_sir, N, D, p, R0 = -1, m = 0, N0 = 0, beta = 0.111, mu = 1.111):
   from definitions import rhu
   if adj_or_sir == "AdjMat":
-    if folder == "B-A_Model":
+    if folder == "BA_Model":
       name = f'{folder}_{adj_or_sir}_{N}_{rhu(D)}_{rhu(p,3)}_{m}_{N0}.png'
       #name = "".join(folder, "_%s_N%s_D%s_p%s_m%s_N0_%s" % (
       #adj_or_sir, N, rhu(D), rhu(p,3), m, N0),".png")  
@@ -775,9 +776,10 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
     avg_l = nx.average_shortest_path_length(G)
   else:  
     ls_cc = nx.connected_components(G)
+    print("ls_cc", ls_cc)
     max_cc = max(ls_cc, key = len)
     avg_l = nx.average_shortest_path_length(G.subgraph(max_cc))
-    str_SW = r"SW_{NC:%s-%s}"%(len(list(ls_cc)), len(max_cc))
+    str_SW = r"SW_{NC:%s-%s}"%(number_connected_components(G), len(max_cc))
 
   'find the major hub and the "ousiders", i.e. highly connected nodes'
   infos = G.degree()
@@ -837,17 +839,26 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
   else: print("len(long_range_edges)", length_long_range)
   folders = ["WS_Pruned"]
   if folder in folders: width = 0.2*N/max(1,len(long_range_edges))
-  if folder == "B-A_Model": 
+  if folder == "BA_Model": 
     width = 0.2*N/max(1,len(long_range_edges))
     #print("The edge width is", int(width*10)/10)
   if folder== "Caveman_Model":
     nx.draw(G, pos, node_color=list(partition.values()), node_size = 5, width = 0.5, with_labels = False)
-  else: nx.draw_circular(G, ax=ax, with_labels=False, font_size=20, node_size=25, width=width)
+  else: nx.draw_circular(G, ax=ax, with_labels=True, font_size=20, node_size=25, width=width)
 
   #ax.text(0,1,transform=ax.transAxes, s = "D:%s" % D)
 
+  'plot adjiacency matrix'
+  axs = plt.subplot(222)
+  adj_matrix = nx.adjacency_matrix(G).todense()
+  axs.matshow(adj_matrix, cmap=cm.get_cmap("Greens"))
+  #print("Adj_matrix is symmetric", np.allclose(adj_matrix, adj_matrix.T))
+
   'set xticks of the degree distribution to be centered'
   sorted_degree = np.sort([G.degree(n) for n in G.nodes()])
+
+  sorted_nd = sorted(list(G.degree()),key = lambda x: x[1])
+  print("\n sorted degrees in plot_save_net", sorted_nd)
 
   'degree distribution + possonian distr (check mean <-> D)'
   bins = np.arange(sorted_degree[0]-1,sorted_degree[-1]+2)
@@ -867,13 +878,11 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
   axs.set_xlabel('Degree', )
   axs.set_ylabel('Counts', )
   axs.set_xlim(bins[0],bins[-1]) 
+  if folder == "BA_Model": 
+    ax.set_xscale("log")
+    ax.set_yscale("log")
   axs.legend(loc = "best")
     
-  'plot adjiacency matrix'
-  axs = plt.subplot(222)
-  adj_matrix = nx.adjacency_matrix(G).todense()
-  axs.matshow(adj_matrix, cmap=cm.get_cmap("Greens"))
-  #print("Adj_matrix is symmetric", np.allclose(adj_matrix, adj_matrix.T))
   plt.subplots_adjust(top=0.85,
   bottom=0.09,  #0.088
   left=0.1,
@@ -887,9 +896,15 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
   string = "".join(("r\"$", string,"$\""))
   '''
 
-  if folder == "B-A_Model": 
-    plt.suptitle(r"$N:%s, D:%s(%s), k_{max}: %s, N_{3-out}: %s, m: %s, N_0: %s, p:%s$" % (
-    N, D, std_D, max_degree, count_outsiders, m, N0, rhu(p,3),  ))
+  if folder == "BA_Model": 
+    value = rhu(avg_l / np.log(np.log(N)) ,3)
+    string_format = str(value)[:5]
+    print(string_format)
+    if string_format == "0.000":
+      string_format = format(value, ".1e")
+
+    plt.suptitle(r"$N:%s, D:%s(%s), k_{max}: %s, N_{3-out}: %s, %s: %s, N_0: %s, p:%s$" % (
+    N, D, std_D, max_degree, count_outsiders, str_SW, value, N0, rhu(p,3),  ))
   else: 
     value = rhu(avg_l / np.log(N),3)
     string_format = str(value)[:5]
@@ -1821,7 +1836,7 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
           if regD % 2: regD += 1
           G = nx.connected_watts_strogatz_graph( n = N, k = regD, p = p, seed = 1 )
 
-        if folder == "B-A_Model":
+        if folder == "BA_Model":
           m, N0 = regD,regD; 
           G = nx.barabasi_albert_graph(N, m = regD) #bam(N, m = int(m), N0 = int(N0))
           
@@ -1875,7 +1890,7 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
           i = 1
           print("\nCreating solo-nodes to match the wanted D...")
           print("regD VS wanna-have D and num of edges", regD, D, len(G.edges()))
-          while(D <= np.mean([j for _,j in G.degree()])):
+          while(D < np.mean([j for _,j in G.degree()])):
             num_rm = 25
             if folder == "NN_Conf_Model": 
               edges = np.array([x for x in G.edges()])
@@ -1917,14 +1932,15 @@ def parameters_net_and_sir(folder = None, p_max = 0.3):
   'this should be deleted to have same params and make comparison more straight-forward'
   if folder == "WS_Epids": 
     'beta_prog = np.linspace(0.01,1,7); mu_prog = beta_prog'
-  if folder == "B-A_Model": 
+  if folder == "BA_Model": 
     'beta_prog = np.linspace(0.01,1,14); mu_prog = beta_prog'
     #k_prog = np.arange(1,11,1)
     p_prog = [0]; R0_min = 0; R0_max = 60  
-  if folder == "NN_Conf_Model_not_considered": 
+  if folder == "NN_Conf_Model": 
     'beta_prog = [0.05, 0.1, 0.2, 0.25]; mu_prog = beta_prog'
     # past parameters: beta_prog = np.linspace(0.01,1,8); mu_prog = beta_prog
-    #k_prog = np.arange(2,34,2)    
+    k_prog = np.hstack((np.arange(3,13,1),np.arange(14,42,5)))
+    R0_max = 100    
   if folder == "Caveman_Model": 
     'k_prog = np.arange(1,11,2)' #https://www.prb.org/about/ -> Europe householdsize = 3
     #beta_prog = np.linspace(0.001,1,6); mu_prog = beta_prog

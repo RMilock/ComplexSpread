@@ -29,7 +29,7 @@ def even_int(x):
   return int(x)
 
 for pruning in [False]: 
-  if pruning == True:
+  if pruning:
     folder = "WS_Pruned"
 
     'load a dic to save D-order parameter'
@@ -104,23 +104,20 @@ for pruning in [False]:
           print("\nThe total-time of one main-loop of one SIR is", dt.datetime.now()-start_time)
     
 
-  if pruning == False:
+  if not pruning:
+    from definitions import main
     'test != kind of '
     print("---I'm NOT pruning!")
-    'if p_prog has sequence save_it like ./R0_0-1/R0_0.087'
-    '''
-    p_prog = np.concatenate((np.array([0.001]), np.linspace(0.012,0.1,10)))
-    p_prog = [0,0.1]
-    mu_prog = np.linspace(0.99,1,6)
-    beta_prog = np.linspace(0.99,1,6)
-    k_prog = np.arange(2,18,2)
-    R0_min = 0.3; R0_max = 5
-    '''
+    
+    'progression of net-parameters'
     folder = "WS_Epids"
-    k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max =  parameters_net_and_sir(folder = folder, p_max = p_max) 
-    #p_prog = np.concatenate((np.array([0.001]), np.linspace(0.01,0.1,5)))
+    k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max \
+      = parameters_net_and_sir(folder, p_max = p_max)
 
-    total_iterations = 0
+    main(folder = folder, N = N, k_prog = k_prog, p_prog = p_prog, \
+      beta_prog = beta_prog, mu_prog = mu_prog, R0_min = R0_min, R0_max = R0_max)
+
+    '''total_iterations = 0
     for D, p, beta, mu in product(k_prog, p_prog, beta_prog, mu_prog):
         if  R0_min < beta*D/mu < R0_max:
           total_iterations += 1
@@ -132,14 +129,6 @@ for pruning in [False]:
             mu_prog, len(mu_prog),  R0_min, R0_max, total_iterations)
     save_log_params(folder = folder, text = text)    
     
-    '''
-    if os.path.exists("/home/hal21/MEGAsync/Tour_Physics2.0/Thesis/NetSciThesis/Project/Plots/Test/WS_Epids/WS_Epids_log_saved_nets.txt"):
-      with open( "/home/hal21/MEGAsync/Tour_Physics2.0/Thesis/NetSciThesis/Project/Plots/Test/WS_Epids/WS_Epids_log_saved_nets.txt", "r" ) as r:
-        nonempty_lines = [line.strip("\n") for line in r if line != "\n" if line[0] == N]
-        line_count = len(nonempty_lines)
-    else: line_count = 0
-    print("New AdjMat", line_count)
-    '''
     done_iterations = 0; saved_nets = []
     for D, p, beta, mu in product(k_prog, p_prog, beta_prog, mu_prog): 
         'With p = 1 and <k>/N ~ 0, degree distr is sim to a Poissonian'
@@ -151,4 +140,4 @@ for pruning in [False]:
           p = p, folder = folder, adj_or_sir="AdjMat", done_iterations=done_iterations)
           plot_save_nes(G = nx.connected_watts_strogatz_graph( n = N, k = D, p = p, seed = 1 ),
           p = p, folder = folder, adj_or_sir="SIR", beta = beta, mu = mu, done_iterations=done_iterations)
-          print("---")
+          print("---")'''

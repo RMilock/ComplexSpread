@@ -16,7 +16,7 @@ import os; import json
   <br>Ex., $D = 50 = N, <k> ~ 28$. For $N= 1000 \text{ and } D = 3 \textrm{ or } 8, 
   <k> \textrm{is acceptable.}$
 '''
-N = int(30);  folder = "NN_Conf_Model"
+N = int(10); folder = "NN_Conf_Model"
 
 '''
 ordp_pmbD_dic = NestedDict()
@@ -35,7 +35,8 @@ p_prog = [0]
 R0_min = 0.5; R0_max = 6
 '''
 
-k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max =  parameters_net_and_sir(folder = folder) 
+k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max \
+  = parameters_net_and_sir(folder)
 main(folder = folder, N = N, k_prog = k_prog, p_prog = p_prog, \
   beta_prog = beta_prog, mu_prog = mu_prog, R0_min = R0_min, R0_max = R0_max)
 
