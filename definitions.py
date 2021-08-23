@@ -1,17 +1,12 @@
 from datetime import datetime
 import networkx as nx
-from networkx.algorithms import clique
 from networkx.algorithms.components.connected import number_connected_components
 from networkx.generators.community import caveman_graph
 import numpy as np
 import numpy.random as npr
-import random
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm 
 import os #to create a folder
-from numba import njit, config, prange
-from multiprocessing import Pool
-
 
 ##THESE ARE THE DEFS BEFORE ENCOUTERING THE MASTER OF CS
 
@@ -88,13 +83,9 @@ def filter_out_k(arr, k = 0):
 #@njit(parallel = True)
 def pinff(j,daily_new_inf,current_state,future_state,beta):
   'If the contact is susceptible and not infected by another node in the future_state, try to infect it'
-  #print("I'm in pinff")
-  #for j in prange(len(tests)):
   if current_state[j] == 'S' and future_state[j] == 'S':  
     if npr.random_sample() < beta:
       future_state[j] = 'I'; daily_new_inf += 1   
-      #print("Ive infected", j, " ", future_state[j], " ", daily_new_inf)
-      #print("c & future_state\n", current_state, "\n", future_state)
     else:
         future_state[j] = 'S'
   return current_state, future_state, daily_new_inf
@@ -277,13 +268,6 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
 
   'Selects the seed of the disease'
   inf_list = random.sample(node_labels, start_inf)
-  #sir = {"S":{np.arange(node_labels)}}
-  #sir["I"] = random.choices(sir["S"],)
-
-  #if .pop(inf_list) exists. It's the right way. 
-  #sir = {"S":{np.arange(node_labels).pop(inf_list)}, "I":{*inf_list}, "R":{}}
-  #dic = {0: sir, 1: sir.copy()} 
-  #e.g. dic[1]["S"]
 
   inf_list = random.sample(node_labels, start_inf)  #without replacement, i.e. not duplicates
   if rhu(mean,0)-1 <= 0 and mf: #too slow for D = 1
@@ -299,7 +283,6 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
   cum_prevalence = [start_inf/N]
   num_susc = [N-start_inf]
 
-  
   'start and continue whenever there s 1 infected'
   while(len(inf_list)>0):        
     daily_new_inf = 0
@@ -351,7 +334,7 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
 
     'Saves the fraction of new daily infected (dni) and recovered in the current time-step'
     prevalence.append(daily_new_inf/float(N))
-    #prevalence.append(len(inf_list)/float(N))
+    #infected.append(len(inf_list)/float(N))
     #recovered.append(len(rec_list)/float(N))
     cum_prevalence.append(cum_prevalence[-1]+daily_new_inf/N)  
     #loop +=1;
@@ -375,7 +358,7 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
 
     'oneit_avg_R is the mean over the time of 1 sir. Then, avg over-all iterations'
     'Then, compute std_avg_R'
-    degrees = [j for i,j in G.degree()]
+    degrees = [j for _,j in G.degree()]
     D = np.mean(degrees)
     #print("R0, b,m,D", beta*D/mu, beta, mu, D)
     c = beta*D/(mu*num_susc[0])
@@ -548,7 +531,7 @@ def sirvec(G, mf = False, beta = 1e-3, mu = 0.05, start_inf = 10, seed = False):
   
   return prevalence, cum_prevalence
 
-def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_inf = 10,verbose = False):
+def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_inf = 10,verbose = False,):
   'def a function that iters numb_iter and make an avg of all the trajectories'
   from itertools import zip_longest
   from itertools import chain
@@ -651,14 +634,44 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
 
   'std_avg_traj != order_param (std(arr_dni)) since prevalence(dni/N) and dni = 0 are allowed'  
   print("\nNow compute the Std of the prevalence")
+
   for idx_cl in range(numb_idx_cl):    
     avg_traj[idx_cl] = np.mean(trajectories[idx_cl], axis = 0) #avg wrt index, e.g. all 0-indexes
     std_avg_traj[idx_cl] = np.std(trajectories[idx_cl], axis = 0, ddof = 1)
   #print("End idx_cl %s round"%idx_cl)
+    if idx_cl: #idx_cl(cum_prev) = 1
+      N, D, _ = N_D_std_D(G)
+      if not mf:
+        D2 = sum([j**2 for _,j in G.degree()]) / N
+        R0_net = D**2/(D2-D)
+      if mf: 
+        R0_net = 1/(1-D**(-1))
+      Rmbeta = mu/beta * R0_net
+      y_c = 1 - Rmbeta / D
+      #avg_susceptible = [1-x for x in avg_traj[idx_cl]]
+      avg_susceptible = avg_traj[idx_cl]
+      flag = True
+      for i in np.arange(len(avg_susceptible)-1):
+        if flag:
+          #print(avg_susceptible[-2], y_c, avg_susceptible[-1])
+          if avg_susceptible[i] <= y_c <= avg_susceptible[i+1]:
+              print("limit", Rmbeta/D)
+              y1 = avg_susceptible[i+1]; x1 = np.where(avg_susceptible == avg_susceptible[i+1])
+              dy = y1 - avg_susceptible[i]; dt = 1
+              m = dy/dt
+              t_c =  1/m * (y_c - y1) + x1
+              #t_c = t_c[0][0]
+              flag = False
+              print(
+                avg_susceptible, "\n",
+                avg_susceptible[i+1],y_c, avg_susceptible[i], x1, np.where(avg_susceptible == avg_susceptible[i]), t_c, y_c, mu, beta)
+              print("End of t_c")
+          else: t_c = 0
   
   #if not mf: return avg_R, std_avg_R, avg_ordp, std_avg_ordp, plot_trajectories, avg_traj, std_avg_traj
-  if not mf: return avg_ordp, std_avg_ordp, plot_trajectories, avg_traj, std_avg_traj
-  return plot_trajectories, avg_traj, std_avg_traj
+  if not mf: return avg_ordp, std_avg_ordp, plot_trajectories, avg_traj, std_avg_traj, \
+                    R0_net, t_c, y_c
+  return plot_trajectories, avg_traj, std_avg_traj, t_c, y_c
 
 def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter = 200):
 
@@ -671,12 +684,13 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
   'Inf and Cum_Infected from Net_Sir; Recovered from MF_SIR'
   print("\nNetwork-SIR loading...")
   #old ver: add avg_R_net, std_avg_R_net, 
-  avg_ordp_net, std_avg_ordp_net, trajectories, avg_traj, std_avg_traj \
-  = itermean_sir(G, mf = False, beta = beta, mu = mu, start_inf  = start_inf, numb_iter=numb_iter)
+  avg_ordp_net, std_avg_ordp_net, trajectories, avg_traj, std_avg_traj, R0_net, t_c, y_c = \
+    itermean_sir(G, mf = False, beta = beta, mu = mu, start_inf  = start_inf, numb_iter=numb_iter,)
   
   print("Final avg_ordp_net", avg_ordp_net)
-  print("\nMF-SIR loading...")  
-  mf_trajectories, mf_avg_traj, mf_std_avg_traj = itermean_sir(G, mf = True, mu = mu, beta = beta, start_inf = start_inf, numb_iter = numb_iter)
+  print("\nMF-SIR loading...")
+  mf_trajectories, mf_avg_traj, mf_std_avg_traj, mf_t_c, y_c = \
+    itermean_sir(G, mf = True, mu = mu, beta = beta, start_inf = start_inf, numb_iter = numb_iter,)
   'plotting the many realisations'    
   colors = ["paleturquoise","wheat","lightgreen", "thistle"]
   
@@ -693,9 +707,9 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
           np.max(trajectories[1][j]), mf_trajectories[1][j],
           np.max(trajectories[0][j]) ), axis = None ) )'''
 
-  ax.plot(mf_avg_traj[0], label="MF::NewDailyInf", \
+  ax.plot(mf_avg_traj[0], label="MF:NewDailyInf", \
     color = "darkviolet") #prevalence
-  ax.plot(avg_traj[0], label="Net::NewDailyInf", \
+  ax.plot(avg_traj[0], label="Net:NewDailyInf", \
     color = "tab:blue") #prevalence
 
   'define a string_format to choose the best way to format the std of the mean'
@@ -704,16 +718,28 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
   if string_format == "0.0":
     string_format = format(value, ".1e")
 
-  ax.plot(mf_avg_traj[1], label=r"MF::Cum_NDI (%s%%$\pm$%s%%)"\
+  ax.plot(mf_avg_traj[1], label=r"MF:Cum_NDI (%s%%$\pm$%s%%)"\
     % (np.round(mf_avg_traj[1][-1]*100,1), string_format ), \
-    color = "tab:orange" ) #mf::cd_inf, np.round(mf_std_avg_traj[1][-1]*100,1)
-  ax.plot(avg_traj[1], label=r"Net::Cum_NDI (%s%%$\pm$%s%%)" %
+    color = "tab:orange" ) #mf:cd_inf, np.round(mf_std_avg_traj[1][-1]*100,1)
+  ax.plot(avg_traj[1], label=r"Net:Cum_NDI (%s%%$\pm$%s%%)" %
     (np.round(avg_traj[1][-1]*100,1), np.round(std_avg_traj[1][-1]*100,1) ), \
-    color = "tab:green") #net::cd_inf
+    color = "tab:green") #net:cd_inf
 
   'plot horizontal line to highlight the initial infected'
   ax.axhline(start_inf/N, color = "r", ls="dashed", \
-    label = "Start_Inf/N (%s%%) "% np.round(start_inf/N*100,1))
+            label = "Start_Inf/N (%s%%) "% np.round(start_inf/N*100,1))
+  
+  label = r"Net:$t_c,y_c$" + f"= ({rhu(t_c)}d,{rhu(y_c,2)})"
+  if t_c > 0: 
+    ax.plot(t_c, y_c, color = "#003312", marker = "*", markersize = 20, mec = "black",
+            label = label)
+  else: ax.plot(0, linewidth = 0, label = label)
+  
+  label = r"MF:$t_c,y_c$" + f"= ({rhu(mf_t_c)}d,{rhu(y_c,2)})"
+  if mf_t_c > 0: ax.plot(mf_t_c, y_c, color = "orange", marker = "*", markersize = 20, mec = "black",
+            label = label )
+  else: ax.plot(0, linewidth = 0, label = label)
+
 
   locs, _ = plt.yticks()
   ax.set_yticks(locs[1:-1])
@@ -740,10 +766,10 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
               bbox_to_anchor=(1, 1), edgecolor="grey", loc='upper right') #add: leg = 
   else: 
     handles, labels = plt.gca().get_legend_handles_labels()
-    order = [2,3,0,1,4]
+    order = [2,3,0,1,4,5,6]
     ax.legend([handles[idx] for idx in order],[labels[idx] for idx in order],loc="best"); 'set legend in the "best" mat plot lib location'
 
-  return avg_ordp_net, std_avg_ordp_net#, avg_R_net, std_avg_R_net,
+  return avg_ordp_net, std_avg_ordp_net, R0_net#, avg_R_net, std_avg_R_net,
 
 def rhu(n, decimals=0, integer = False): #round_half_up
     import math
@@ -996,7 +1022,7 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
       'plot sir'
       print("\nThe model has N: %s, D: %s(%s), beta: %s, mu: %s, p: %s, R0: %s" % 
       (N,rhuD2,rhu(std_D,2),rhu(beta,3),rhu(mu,3),rhu(p,3),rhu(R0,3)) )
-      avg_ordp_net, std_avg_ordp_net = \
+      avg_ordp_net, std_avg_ordp_net, R0_net = \
         plot_sir(G, ax=ax, folder = folder, beta = beta, mu = mu, start_inf = start_inf, 
                 numb_iter = numb_iter)
       plt.subplots_adjust(
@@ -1010,10 +1036,15 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
       string_format = str(np.round(std_avg_ordp_net,3))[:5]
       if string_format == "0.000":
         string_format = format(std_avg_ordp_net, ".1e")
+      
+      R0_sign = "<"
+      if R0 > R0_net: R0_sign = ">"
       plt.suptitle(r"$R_0:%s, OrdPar:%s(%s), D_{%s}:%s(%s), p:%s, \beta:%s, \mu:%s$"
-      % (rhu(R0,3),rhu(avg_ordp_net,3), string_format, N, rhuD2, rhu(std_D,2),
+      % (f"{rhu(R0,3)}"+R0_sign+f"{rhu(R0_net,3)}",rhu(avg_ordp_net,3), string_format, N, rhuD2, rhu(std_D,2),
         rhu(p,3), rhu(beta,3), rhu(mu,3), ))
       #plt.show()
+      plt.grid(color='grey', linestyle='--', linewidth = 1.5)
+
       plt.savefig( file_path )
       print("time 1_plot_save_sir:", dt.datetime.now()-start_time) 
 
@@ -1065,9 +1096,9 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
       'WARNING: here suptitle has beta // mu but the dict is ordp[p][mu][beta][D] = [std_D, ordp, std_ordp]'
       'since in the article p and mu are fixed!'
       if folder == "WS_Pruned":
-        plt.suptitle(r"$Average Std(Daily New Infected) :: p%s,\beta:%s,\mu:%s$"%(rhu(p,3),rhu(beta,3),rhu(mu,3))) 
-        #plt.suptitle(f"$Average Std(Daily New Infected) :: p:{rhu(p,3)},\beta{beta,3}:,\mu:{rhu(mu,3)}")
-      else: plt.suptitle(r"$Average Std(Daily New Infected) :: p%s,\beta:%s,\mu:%s$"%(rhu(p,3),rhu(beta,3),rhu(mu,3)))
+        plt.suptitle(r"$Average Std(Daily New Infected) \, : \, p%s,\beta:%s,\mu:%s$"%(rhu(p,3),rhu(beta,3),rhu(mu,3))) 
+        #plt.suptitle(f"$Average Std(Daily New Infected) : p:{rhu(p,3)},\beta{beta,3}:,\mu:{rhu(mu,3)}")
+      else: plt.suptitle(r"$Average Std(Daily New Infected) \, : \, p%s,\beta:%s,\mu:%s$"%(rhu(p,3),rhu(beta,3),rhu(mu,3)))
       ax.set_xlabel("Avg_Degree [Indivs]")
       ax.set_ylabel("Std(NDI)")
       
@@ -1085,13 +1116,13 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
       ax.errorbar(x,y, xerr = xerr, yerr = yerr, color = "tab:blue", marker = "*", linestyle = "-",
          markersize = 30, mfc = "tab:red", mec = "black", linewidth = 3, label = "Avg_Std(NDI)")
       ax.legend(fontsize = 35)
+      ax.grid(color='grey', linestyle='--', linewidth = 0.5)
 
       plt.subplots_adjust(
       top=0.91,
       bottom=0.122,
       left=0.080,
       right=0.99)
-
 
       #plt.show()
       
@@ -1120,8 +1151,6 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
       with open(ordp_file, 'w') as file:
         file.write(pp_ordp_pmbD_dic) # use `json.loads` to do the reverse
       
-      
-
   if os.path.exists(log_path):
     'sort line to have the new ones at first'
     sorted_lines = []
@@ -1192,19 +1221,6 @@ def pow_max(N, num_iter = "all"):
     return i-1
   return int(num_iter)
 
-'no needed anymore -- delete it'
-def ws_sir(G, folder, p, saved_nets, done_iterations, pruning = False, infos = False, beta = 0.001, mu = 0.16, start_inf = 10):    
-  'round_half_up D for a better approximation of nx.c_w_s_graph+sir'
-  N = G.number_of_nodes()
-  rhuD = rhu(np.sum([j for (i,j) in G.degree() ]) / G.number_of_nodes())
-  if infos == True: check_loops_parallel_edges(G); infos_sorted_nodes(G, num_sorted_nodes = False)
-
-  if "N%s_D%s_p%s"% (N,rhuD,rhu(p,3)) not in saved_nets: 
-    plot_save_net(G = G, folder = folder, p = p, done_iterations = done_iterations)
-    saved_nets.append("N%s_D%s_p%s" % (N,rhuD,rhu(p,3)))
-    print("saved nets", saved_nets)
-  plot_save_sir(G = G, folder = folder, beta = beta, mu = mu, p = p, start_inf = start_inf, done_iterations = done_iterations )
-
 '===Configurational Model'
 def pois_pos_degrees(D, N, L = int(2e3)):
   'Draw N degrees from a Poissonian sequence with lambda = D and length L'
@@ -1212,23 +1228,22 @@ def pois_pos_degrees(D, N, L = int(2e3)):
   print("NN_Starting D", D)
   pos_degrees = np.random.choice(degs, N)
 
-  print("len(deg<0) in deg", len([x for x in degs if x < 0]))
+  print("len(deg==0) in deg", len([x for x in degs if x == 0]))
   #print("len(s) in pos_degrees", len([x for x in pos_degrees if x == 0]))
   return pos_degrees
 
 def config_pois_model(N, D, seed = 123, folder = None):
   '''create a network with the node degrees drawn from a poissonian with even sum of degrees'''
-  #seed = int(np.random.random_sample()*100)
+  
   np.random.seed(seed)
   degrees = pois_pos_degrees(D,N) #poiss distr with deg != 0
   print("\nseed1 %s, sum(degrees) %s" % (seed, np.sum(degrees)%2))
   'change seed to have a even sum of the degrees'
   while(np.sum(degrees)%2 != 0):
-    seed+=1# int(np.random.random_sample()*100) #1
+    seed+=1
     np.random.seed(seed)
     print("\nseed2 %s" % (seed))
     degrees = pois_pos_degrees(D,N)
-  #print("Degree sum:", np.sum(degrees), "with seed:", seed)
 
   print("\nNetwork Created but w/o standard neighbors wiring!")
   G = nx.configuration_model(degrees, seed = seed)
@@ -1241,6 +1256,7 @@ def config_pois_model(N, D, seed = 123, folder = None):
   return G
 
 '===def of net functions'
+'addition of distant nodes'
 def long_range_edge_add(G, p = 0, time_int = False):
   from itertools import chain
   import random
@@ -1266,6 +1282,7 @@ def long_range_edge_add(G, p = 0, time_int = False):
   remove_loops_parallel_edges(G, False)
   if time_int: print(f"Time for add edges over ddistr:", dt.datetime.now()-start_time)
 
+'connection by hand of a net'
 def connect_net(G, conn_flag): #set solo_nodes = False to have D < 1 nets
   if conn_flag:
     import networkx as nx
@@ -1390,6 +1407,7 @@ def NN_pois_net(N, folder, ext_D, p = 0, conn_flag = True):
 
   return G
 
+'This kind of network is similar to a WS'
 def NNOverl_pois_net(N, ext_D, p, add_edges_only = False):
   #Nearest Neighbors Overlapping
   from itertools import chain
@@ -1500,7 +1518,7 @@ def remove_loops_parallel_edges(G, remove_loops = True):
   return G.remove_edges_from(lpe)
 
 def replace_edges_from(G,list_edges=[]):
-  '''def:: "replace" existing edges, since built-in method only adds'''
+  '''def: "replace" existing edges, since built-in method only adds'''
   present_edges = [x for x in G.edges()]
   G.remove_edges_from(present_edges)
   if list_edges!=[]: return G.add_edges_from(list_edges)
