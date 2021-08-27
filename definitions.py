@@ -61,29 +61,23 @@ def plot_params():
   BIGGER_SIZE = 40
 
   plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
-  plt.rc('axes', titlesize=BIGGER_SIZE)     # fontsize of the axes title
-  plt.rc('axes', labelsize=BIGGER_SIZE)    # fontsize of the x and y labels
-  plt.rc('xtick', labelsize=MEDIUM_SIZE)    # fontsize of the xtick labels
-  plt.rc('ytick', labelsize=MEDIUM_SIZE)    # fontsize of the ytick labels
+  plt.rc('axes', titlesize=BIGGER_SIZE, labelsize=BIGGER_SIZE, labelpad = 20)     # fontsize of the axes title
+  #plt.rc('axes', labelsize=BIGGER_SIZE)    # fontsize of the x and y labels
+  plt.rc('xtick', labelsize=MEDIUM_SIZE, direction="in")    # fontsize of the xtick labels
+  plt.rc('ytick', labelsize=MEDIUM_SIZE, direction="in")    # fontsize of the ytick labels
   plt.rc('legend', fontsize=MEDIUM_SIZE)    # legend fontsize
   plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
-  plt.rc('axes', labelpad = 20)
+  #plt.rc('axes', labelpad = 20)
   plt.rc('xtick.major', pad = 16)
-  plt.rcParams["figure.figsize"] = [24,14]
+  plt.rc('ytick.major', pad = 16)
+  plt.rcParams["figure.figsize"] = [32,14]
+  plt.rc("grid", color = "gray",ls="--", lw=1)
+  #plt.rc("tick_params", labelsize = MEDIUM_SIZE, direction="in", pad=10)
   #plt.rcParams['xtick.major.pad']='16'
 
-#@njit(parallel = True)
-def filter_out_k(arr, k = 0):
-  filtered = np.array([np.float64(x) for x in np.arange(0)])
-  for i in np.arange(arr.size):
-      if arr[i] == k:
-        filtered = np.append(filtered, arr[i])
-  return filtered
-
-def sir(G, flag, mf = False, beta = 1e-3, mu = 0.05, seed = False, start_inf = 10):
+def sir(G, mf = False, beta = 1e-3, mu = 0.05, seed = False, start_inf = 10):
   'If mf == False, the neighbors are not fixed;' 
   'If mf == True, std mf by choosing @ rnd the num of neighbors'
-  print("mu, beta", mu, beta)
 
   import random
   #here's the modifications of the "test_ver1"
@@ -102,11 +96,11 @@ def sir(G, flag, mf = False, beta = 1e-3, mu = 0.05, seed = False, start_inf = 1
 
   inf_list = [] #infected node list @ each t
 
-  dni = [0] #it was dni = [] # = len(inf_list)/N, i.e. frac of daily infected for every t
+  dni_cases = [fr_stinf] #it was dni_cases = [] # = len(inf_list)/N, i.e. frac of daily infected for every t
   dni_totcases = [fr_stinf]
   dni_susceptible = [1-fr_stinf]
 
-  pos_dni = [] #arr to computer Std(daily_new_inf(t)) for daily_new_inf(t)!=0
+  pos_dni_cases = [] #arr to computer Std(daily_new_inf(t)) for daily_new_inf(t)!=0
 
   'Initial Codnitions'
   current_state = ['S' for i in node_labels] 
@@ -143,7 +137,7 @@ def sir(G, flag, mf = False, beta = 1e-3, mu = 0.05, seed = False, start_inf = 1
             future_state[j] = 'I'; daily_new_inf += 1
     
     #"+" to join lists
-    if daily_new_inf != 0: pos_dni = pos_dni+[daily_new_inf]
+    if daily_new_inf != 0: pos_dni_cases = pos_dni_cases+[daily_new_inf]
 
     'Recovery Phase: only the prev inf nodes (=inf_list) recovers with probability mu'
     'not the new infected'    
@@ -163,44 +157,30 @@ def sir(G, flag, mf = False, beta = 1e-3, mu = 0.05, seed = False, start_inf = 1
     rec_list = [i for i, x in enumerate(current_state) if x == 'R']
 
     'Saves the fraction of new daily infected (dni) and recovered in the current time-step'
-    prevalence.append(len(inf_list)/float(N))
-    recovered.append(len(rec_list)/float(N))
-    susceptible.append(1-prevalence[-1]-recovered[-1])
+    #prevalence.append(len(inf_list)/float(N))
+    #recovered.append(len(rec_list)/float(N))
+    #susceptible.append(1-prevalence[-1]-recovered[-1])
 
-    dni.append(daily_new_inf/float(N))        
+    dni_cases.append(daily_new_inf/float(N))        
     dni_totcases.append(dni_totcases[-1]+daily_new_inf/float(N))            
     #totcases.append(totcases[-1]+prevalence[-1]-prevalence[-2]+recovered[-1]-recovered[-2])
     dni_susceptible.append(1-dni_totcases[-1])
 
   'Order Parameter (op) = Std(Avg_dni(t)) s.t. dni(t)!=0 as a func of D'
-  if not mf and op:
+  if not mf:
     ddof = 0
-    if len(pos_dni) > 1: ddof = 1
-    if pos_dni == []: pos_dni = [0]
-    oneit_avg_dni = np.mean(pos_dni)
-    'op = std_dni'
-    op = np.std( pos_dni, ddof = ddof )
-    if len(pos_dni) > 1:
-      if len([x for x in pos_dni if x == 0]) > 0: 
-        raise Exception("Error There's 0 dni: dni, arr_daily, std", daily_new_inf, pos_dni, op)
+    if len(pos_dni_cases) > 1: ddof = 1
+    if pos_dni_cases == []: pos_dni_cases = [0]
+    'op = std_dni_cases'
+    op = np.std( pos_dni_cases, ddof = ddof )
+    if len(pos_dni_cases) > 1:
+      if len([x for x in pos_dni_cases if x == 0]) > 0: 
+        raise Exception("Error There's 0 dni_cases: dni_cases, arr_daily, std", daily_new_inf, pos_dni_cases, op)
 
-    'R0 is not a good estimates of the epidemic. Try with its average'
-    'oneit_avg_R is the mean over the time of 1 sir. Then, avg over-all iterations'
-    'Then, compute std_avg_R'
-    #print("R0, b,m,D", beta*D/mu, beta, mu, D)
-    c = beta*D/(mu*dni_susceptible[0])
-    oneit_avg_R = c*np.mean(dni_susceptible)
-    ddof = 0
-    if len(dni_susceptible) > 1: ddof = 1
-    std_oneit_avg_R = c*np.std(dni_susceptible, ddof = 1)
-    #print("num_su[0], np.sum(dni_susceptible), len(prev), oneit_avg_R2", \
-    #  dni_susceptible[0],np.sum(dni_susceptible), len(dni), oneit_avg_R)
+    
+    return op, dni_susceptible, dni_cases, dni_totcases
 
-    #return oneit_avg_R, std_oneit_avg_R, oneit_avg_dni, op, dni, dni_totcases
-    return oneit_avg_dni, op, dni, dni_totcases
-
-  return dni_susceptible, dni, dni_totcases, R0_nets
-
+  return dni_susceptible, dni_cases, dni_totcases
 
 def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_inf = 10,verbose = False,):
   'def a function that iters numb_iter and make an avg of all the trajectories'
@@ -211,7 +191,7 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
   import datetime as dt
   import copy
 
-  #mi servono solo gli infetti...quidni numb_idx_cl = 2, prev and cum_prev
+  #mi servono solo gli infetti...quidni numb_idx_cl = 2, prev and ndi_totcases
   numb_idx_cl = 2; counts = [[],[]]; max_len = 0 
 
   'here avg are "means" among all the iterations'
@@ -219,22 +199,19 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
   trajectories = [[] for _ in range(numb_idx_cl)]
   avg_traj= [[] for _ in range(numb_idx_cl)]
   std_avg_traj = [[] for _ in range(numb_idx_cl)]
-  
-  #avg_R = 0; std_avg_R = 0; list_avg_R = []; 
-  avg_ordp = 0; list_ordp = [] #ordp = std(dni s.t. dni!=0)
+  avg_ordp = 0; list_ordp = [] #ordp = std(dni_cases s.t. dni_cases!=0)
   start_time = dt.datetime.now()
 
   'find the maximum time of 1 scenario among numb_iter ones'
   for i in range(numb_iter):
     if not (i+1) % 50: onesir_start_time = dt.datetime.now()
     if not mf:
-      _, std_dni, prev, cum_prev \
+      std_dni, _, ndi_cases, ndi_totcases \
         = sir(G, beta = beta, mu = mu, start_inf = start_inf, mf = mf)
       list_ordp.append(std_dni)
-    else: prev, cum_prev = sir(G, beta = beta, mu = mu, start_inf = start_inf, mf = mf)
+    else: _, ndi_cases, ndi_totcases = sir(G, beta = beta, mu = mu, start_inf = start_inf, mf = mf)
     
-    #print("prev", len(prev), prev, "\ncum_prev", len(cum_prev), cum_prev)
-    tmp_traj = prev, cum_prev
+    tmp_traj = ndi_cases, ndi_totcases
     if not (i+1) % 50: 
       'only printing here'
       time_1sir = dt.datetime.now()-onesir_start_time
@@ -247,16 +224,11 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
 
     'append tmp_traj and search for the max time of one epidemic'
     for idx_cl in range(numb_idx_cl):     #save only infected right? In fact, idx_cl = 0
-      #if idx_cl == 0: print("\ntmp_traj", tmp_traj) 
       trajectories[idx_cl].append(tmp_traj[idx_cl])
       max_len = len(max(trajectories[idx_cl], key=len))
-      #print("trajectories", trajectories[idx_cl], "max len", max_len)
     
   'Only for nets: compute mean and std of avg_R and std_dni'
   if not mf:
-    #avg_R = sum(list_avg_R) / float(len(list_avg_R))
-    #std_avg_R = np.sqrt(std_avg_R)
-
     'order parameter with std'
     avg_ordp = sum(list_ordp) / float(len(list_ordp))
     std_avg_ordp = np.std(list_ordp, ddof = 1)
@@ -273,20 +245,9 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
       'create a max-len list repeating the last element'
       'Varying idx_cl, traj[idx][i] has the != len wrt trj[0][i] since its increasing, fel, with +=last_el_list'
       'traj[classes to be considered, e.g. infected = 0][precise iteration we want, e.g. "-1"]'
-      #print("max_len", max_len, len(trajectories[idx_cl][i]), len(last_el_list), len(trajectories[0][i]) )
-      #print(last_el_list, type(last_el_list[0]),type(trajectories[idx_cl][i][0]))
-      #new idea:
       old = trajectories[idx_cl][i].copy()
       last_el_list = [trajectories[idx_cl][i][-1]]*(max_len-len(trajectories[idx_cl][i]))
       trajectories[idx_cl][i] = list(chain(old,last_el_list))
-      
-      #print("max_len", max_len, len(old), len(last_el_list) )
-      #print("trajectiories", i, idx_cl, old, trajectories[idx_cl][i], len(trajectories[idx_cl][i]))
-      #if last_el_list != []: print(last_el_list)
-
-      #old one
-      #last_el_list = [trajectories[idx_cl][i][-1] for _ in range(max_len-len(trajectories[idx_cl][i]))]
-      #trajectories[idx_cl][i] = np.append(trajectories[idx_cl][i], last_el_list)
       
       if verbose:
         print("\niteration(s):", i, "idx_cl ", idx_cl)
@@ -299,7 +260,6 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
         print("avg", avg_traj)
 
       length = len(trajectories[idx_cl][i]) #should be max_len
-
       if length != max_len: raise Exception("Error: %s not max_len %s of %s-th it" % (length,max_len,i))
     if i == 199: print("End of avg_traj on 200 scenarios")
 
@@ -310,66 +270,39 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
     avg_traj[idx_cl] = np.mean(trajectories[idx_cl], axis = 0) #avg wrt index, e.g. all 0-indexes
     std_avg_traj[idx_cl] = np.std(trajectories[idx_cl], axis = 0, ddof = 1)
   #print("End idx_cl %s round"%idx_cl)
-    if idx_cl: #idx_cl(cum_prev) = 1
+    'compute p(t) s.t. D(1-p(t))lambda = Rc_net'
+    if idx_cl: #idx_cl(ndi_totcases) = 1
       N, D, _ = N_D_std_D(G)
+      R0 = D*beta/mu
       if not mf:
         D2 = sum([j**2 for _,j in G.degree()]) / N
-        R0_net = D**2/(D2-D)
+        Rc_net = D**2/(D2-D)
       if mf: 
-        R0_net = 1/(1-D**(-1))
-      Rmbeta = mu/beta * R0_net
-      y_c = 1 - Rmbeta / D
-      #avg_susceptible = [1-x for x in avg_traj[idx_cl]]
-      avg_susceptible = avg_traj[idx_cl]
-      flag = True
-      for i in np.arange(len(avg_susceptible)-1):
-        if flag:
-          #print(avg_susceptible[-2], y_c, avg_susceptible[-1])
-          if avg_susceptible[i] <= y_c <= avg_susceptible[i+1]:
-              print("limit", Rmbeta/D)
-              y1 = avg_susceptible[i+1]; x1 = np.where(avg_susceptible == avg_susceptible[i+1])
-              dy = y1 - avg_susceptible[i]; dt = 1
-              m = dy/dt
-              t_c =  1/m * (y_c - y1) + x1
-              #t_c = t_c[0][0]
-              flag = False
-              print(
-                avg_susceptible, "\n",
-                avg_susceptible[i+1],y_c, avg_susceptible[i], x1, np.where(avg_susceptible == avg_susceptible[i]), t_c, y_c, mu, beta)
-              print("End of t_c")
-          else: t_c = 0
-
-      N, D, _ = N_D_std_D(G)
-      if not mf:
-        D2 = sum([j**2 for _,j in G.degree()]) / N
-        R0_net = D**2/(D2-D)
-      if mf: 
-        R0_net = 1/(1-D**(-1))
-      Rmbeta = mu/beta * R0_net
-      y_c = 1 - Rmbeta / D
-      dni_totcases = np.array(dni_totcases)#[1-x for x in avg_traj[idx_cl]]
-      flag = True
+        D = int(D)
+        Rc_net = 1/(1-D**(-1))
+      RcR0 = Rc_net / R0
+      p_c = 1 - RcR0
+      dni_totcases = np.array(avg_traj[idx_cl])#[1-x for x in avg_traj[idx_cl]]
+      t_c = 0
       for i in np.arange(len(dni_totcases)-1):
-        if flag:
-          #print(dni_totcases[-2], y_c, dni_totcases[-1])
-          if dni_totcases[i] <= y_c <= dni_totcases[i+1]:
-              print("limit", Rmbeta/D, y_c)
-              y1 = dni_totcases[i+1]; x1 = np.where(dni_totcases == dni_totcases[i+1])[0][0]
-              dy = y1 - dni_totcases[i]; dt = 1
-              m = dy/dt
-              t_c =  1/m * (y_c - y1) + x1
-              #t_c = t_c[0][0]
-              flag = False
-              print(
-                "\n dni_[i], yc, dni[i+1],x1, np.where, tc, mu, beta",
-                dni_totcases[i],y_c, dni_totcases[i+1], x1, np.where(dni_totcases == dni_totcases[i])[0][0], t_c, mu, beta)
-              print("End of t_c")
-          else: t_c = 0
-  
+        if dni_totcases[i] <= p_c <= dni_totcases[i+1]:
+          print("limit", RcR0, p_c)
+          y1 = dni_totcases[i+1]; x1 = np.where(dni_totcases == dni_totcases[i+1])[0][0]
+          dy = y1 - dni_totcases[i]; dt = 1
+          m = dy/dt
+          t_c =  1/m * (p_c - y1) + x1
+          #t_c = t_c[0][0]
+          print(
+            "\n dni_totalcases[i], yc, dni[i+1],x1, np.where, tc, mu, beta",
+            dni_totcases[i],p_c, dni_totcases[i+1], x1, np.where(dni_totcases == dni_totcases[i])[0][0], t_c, mu, beta)
+          print("End of t_c")
+        #else: t_c = 0
+
   #if not mf: return avg_R, std_avg_R, avg_ordp, std_avg_ordp, plot_trajectories, avg_traj, std_avg_traj
-  if not mf: return avg_ordp, std_avg_ordp, plot_trajectories, avg_traj, std_avg_traj, \
-                    R0_net, t_c, y_c
-  return plot_trajectories, avg_traj, std_avg_traj, t_c, y_c
+  if not mf: 
+    return avg_ordp, std_avg_ordp, plot_trajectories, avg_traj, std_avg_traj, \
+                    Rc_net, t_c, p_c
+  return plot_trajectories, avg_traj, std_avg_traj, t_c, p_c
 
 def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter = 200):
 
@@ -382,29 +315,23 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
   'Inf and Cum_Infected from Net_Sir; Recovered from MF_SIR'
   print("\nNetwork-SIR loading...")
   #old ver: add avg_R_net, std_avg_R_net, 
-  avg_ordp_net, std_avg_ordp_net, trajectories, avg_traj, std_avg_traj, R0_net, t_c, y_c = \
+  avg_ordp_net, std_avg_ordp_net, trajectories, avg_traj, std_avg_traj, Rc_net, t_c, p_c = \
     itermean_sir(G, mf = False, beta = beta, mu = mu, start_inf  = start_inf, numb_iter=numb_iter,)
   
   print("Final avg_ordp_net", avg_ordp_net)
   print("\nMF-SIR loading...")
-  mf_trajectories, mf_avg_traj, mf_std_avg_traj, mf_t_c, y_c = \
+  mf_trajectories, mf_avg_traj, mf_std_avg_traj, mf_t_c, mf_p_c = \
     itermean_sir(G, mf = True, mu = mu, beta = beta, start_inf = start_inf, numb_iter = numb_iter,)
+
   'plotting the many realisations'    
   colors = ["paleturquoise","wheat","lightgreen", "thistle"]
   
   for j in range(numb_iter):
     ax.plot(trajectories[0][j], color = colors[0]) #net_New_Daily_Cases
-    ax.plot(mf_trajectories[0][j], color = colors[3]) #net_cum_dni
+    ax.plot(mf_trajectories[0][j], color = colors[3]) #net_dni_totcases
     ax.plot(mf_trajectories[1][j], color = colors[1]) #mf_Sum_New_Daily_Cases
-    ax.plot(trajectories[1][j], color = colors[2]) #mf_cum_dni
+    ax.plot(trajectories[1][j], color = colors[2]) #mf_dni_totcases
     
-    ''' mv legend above the over-all max of the plots
-    if R0 <= 2 and folder == "NNR_Conf_Model":
-      'to set legend above the plot'
-      y_max = np.max( np.concatenate((
-          np.max(trajectories[1][j]), mf_trajectories[1][j],
-          np.max(trajectories[0][j]) ), axis = None ) )'''
-
   ax.plot(mf_avg_traj[0], label="MF:NewDailyInf", \
     color = "darkviolet") #prevalence
   ax.plot(avg_traj[0], label="Net:NewDailyInf", \
@@ -416,10 +343,10 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
   if string_format == "0.0":
     string_format = format(value, ".1e")
 
-  ax.plot(mf_avg_traj[1], label=r"MF:Cum_NDI (%s%%$\pm$%s%%)"\
+  ax.plot(mf_avg_traj[1], label=r"MF:TotalCases (%s%%$\pm$%s%%)"\
     % (np.round(mf_avg_traj[1][-1]*100,1), string_format ), \
     color = "tab:orange" ) #mf:cd_inf, np.round(mf_std_avg_traj[1][-1]*100,1)
-  ax.plot(avg_traj[1], label=r"Net:Cum_NDI (%s%%$\pm$%s%%)" %
+  ax.plot(avg_traj[1], label=r"Net:TotalCases (%s%%$\pm$%s%%)" %
     (np.round(avg_traj[1][-1]*100,1), np.round(std_avg_traj[1][-1]*100,1) ), \
     color = "tab:green") #net:cd_inf
 
@@ -427,47 +354,47 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
   ax.axhline(start_inf/N, color = "r", ls="dashed", \
             label = "Start_Inf/N (%s%%) "% np.round(start_inf/N*100,1))
   
-  label = r"Net:$t_c,y_c$" + f"= ({rhu(t_c)}d,{rhu(y_c,2)})"
+  label = r"Net:$t_c,p_c$" + f" = ({rhu(t_c)}d,{rhu(p_c,2)})"
   if t_c > 0: 
-    ax.plot(t_c, y_c, color = "#003312", marker = "*", markersize = 20, mec = "black",
+    ax.plot(t_c, p_c, color = "#003312", marker = "*", markersize = 20, mec = "black",
             label = label)
   else: ax.plot(0, linewidth = 0, label = label)
   
-  label = r"MF:$t_c,y_c$" + f"= ({rhu(mf_t_c)}d,{rhu(y_c,2)})"
-  if mf_t_c > 0: ax.plot(mf_t_c, y_c, color = "orange", marker = "*", markersize = 20, mec = "black",
+  label = r"MF:$t_c,p_c$" + f" = ({rhu(mf_t_c)}d,{rhu(mf_p_c,2)})"
+  if mf_t_c > 0: ax.plot(mf_t_c, mf_p_c, color = "orange", marker = "*", markersize = 20, mec = "black",
             label = label )
   else: ax.plot(0, linewidth = 0, label = label)
 
-
+  import matplotlib.pylab as plt
   locs, _ = plt.yticks()
   ax.set_yticks(locs[1:-1])
   ax.set_yticklabels(np.round(locs[1:-1],2))
 
-  'plot labels'
+  #'plot labels'
   ax.set_xlabel('Time[1day]')
   ax.set_ylabel('Indivs/N')
+
+  'plotting figsize depending on legend'
+  folders = ["NoNR_Conf_Model","WS_Pruned"]
+  R0 = beta*D/mu
   
   'set legend above the plot if R_0 in [0,2] in the NNR_Config_Model'
-  folders = ["NoNR_Conf_Model"] #"WS_Epids"]
-  degrees = [j for i,j in G.degree()]
-  D = np.mean(degrees)
-  R0 = beta*D/mu
   if R0 <= 3 and folder in folders:
-    ax_ymin, ax_ymax = ax.get_ylim()
-    set_ax_ymin = 1.5*ax_ymin
-    set_ax_ymax = 2*ax_ymax
-    ax.set_ylim(ax_ymin, set_ax_ymax)
+    #ax_ymin, ax_ymax = ax.get_ylim()
+    #set_ax_ymin = 1.5*ax_ymin
+    #set_ax_ymax = 2*ax_ymax
+    #ax.set_ylim(ax_ymin, set_ax_ymax)
 
     handles, labels = plt.gca().get_legend_handles_labels()
-    order = [2,3,0,1,4]
+    order = [2,3,0,1,4,5,6]
     ax.legend([handles[idx] for idx in order],[labels[idx] for idx in order],
-              bbox_to_anchor=(1, 1), edgecolor="grey", loc='upper right') #add: leg = 
+              bbox_to_anchor=(1, 1), edgecolor="grey", loc='upper left') #add: leg = 
   else: 
     handles, labels = plt.gca().get_legend_handles_labels()
     order = [2,3,0,1,4,5,6]
     ax.legend([handles[idx] for idx in order],[labels[idx] for idx in order],loc="best"); 'set legend in the "best" mat plot lib location'
 
-  return avg_ordp_net, std_avg_ordp_net, R0_net#, avg_R_net, std_avg_R_net,
+  return avg_ordp_net, std_avg_ordp_net, Rc_net
 
 def rhu(n, decimals=0, integer = False): #round_half_up
     import math
@@ -503,7 +430,7 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
     print("ls_cc", ls_cc)
     max_cc = max(ls_cc, key = len)
     avg_l = nx.average_shortest_path_length(G.subgraph(max_cc))
-    str_SW = r"SW_{NC:%s-%s}"%(number_connected_components(G), len(max_cc))
+    str_SW = r"SW_{C:%s-%s}"%(number_connected_components(G), len(max_cc))
 
   'find the major hub and the "ousiders", i.e. highly connected nodes'
   infos = G.degree()
@@ -534,26 +461,7 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
   'plot G, adj_mat, degree distribution'
   plt.figure(figsize = (20,20)) #20,20
 
-  ax = plt.subplot(221)
-  '''xmin, xmax = ax.get_xlim()
-  ymin, ymax = ax.get_ylim()
-  print("\nThese are the xlim %s, ylim %s" % ((xmin,xmax),(ymin,ymax)))
-
-  xbmin, xbmax = ax.get_xbound()
-  ybmin, ybmax = ax.get_ybound()
-  print("\nThese are the xblim %s, yblim %s" % ((xbmin,xbmax),(ybmin,ybmax)) )'''
-
-  #ax.set_xlim(xmin = 0, xmax = 1)
-  #ax.set_ylim(ymin = 0, ymax = 1)
-
-
-  '''
-  if p == 0 and folder[:3] == "WS_":
-    scaled_G = nx.connected_watts_strogatz_graph( n = N, k = 500, p = p, seed = 1 ) 
-  elif p >= 0.1 and folder[:3] == "WS_":
-    scaled_G = nx.connected_watts_strogatz_graph( n = N, k = 2, p = p, seed = 1 )
-  '''
-  
+  ax = plt.subplot(221)  
   'start with degree distribution'
   'set edges width according to how many "long_range_edges'
   width = 0.8
@@ -568,7 +476,7 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
     #print("The edge width is", int(width*10)/10)
   if folder== "Caveman_Model":
     nx.draw(G, pos, node_color=list(partition.values()), node_size = 5, width = 0.5, with_labels = False)
-  else: nx.draw_circular(G, ax=ax, with_labels=True, font_size=20, node_size=25, width=width)
+  else: nx.draw_circular(G, ax=ax, with_labels=False, font_size=20, node_size=25, width=width)
 
   #ax.text(0,1,transform=ax.transAxes, s = "D:%s" % D)
 
@@ -582,7 +490,7 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
   sorted_degree = np.sort([G.degree(n) for n in G.nodes()])
 
   sorted_nd = sorted(list(G.degree()),key = lambda x: x[1])
-  print("\n sorted degrees in plot_save_net", sorted_nd)
+  #print("\n sorted degrees in plot_save_net", sorted_nd)
 
   'degree distribution + possonian distr (check mean <-> D)'
   bins = np.arange(sorted_degree[0]-1,sorted_degree[-1]+2)
@@ -712,35 +620,47 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
         N = N, D = D, R0 = R0, p = p, beta = beta, mu = mu)
       
       file_path = my_dir + r0_folder + file_name
-      
+
       'plot all'
-      _, ax = plt.subplots(figsize = (24,14))
+      _, ax = plt.subplots()
       #if vertical: _, ax = plt.subplots(figsize = (24,20)) #init = (24,14); BA_Model = (20,20) should change also the subplots_adjust!!!
- 
+      
       'plot sir'
       print("\nThe model has N: %s, D: %s(%s), beta: %s, mu: %s, p: %s, R0: %s" % 
       (N,rhuD2,rhu(std_D,2),rhu(beta,3),rhu(mu,3),rhu(p,3),rhu(R0,3)) )
-      avg_ordp_net, std_avg_ordp_net, R0_net = \
+      avg_ordp_net, std_avg_ordp_net, Rc_net = \
         plot_sir(G, ax=ax, folder = folder, beta = beta, mu = mu, start_inf = start_inf, 
                 numb_iter = numb_iter)
+
+
+      right = 0.99
+      folders = ["WS_Pruned"]
+      if folder in folders and R0 <= 3: right = 0.78
       plt.subplots_adjust(
       top=0.920,
       bottom=0.12, #if vertical, bottom=0.10,
-      left=0.08, # if vertical, left=0.10,
-      right=0.99,
+      left=0.06, # if vertical, left=0.10,
+      right=right, #0.99
       hspace=0.2,
       wspace=0.2)
 
       string_format = str(np.round(std_avg_ordp_net,3))[:5]
       if string_format == "0.000":
         string_format = format(std_avg_ordp_net, ".1e")
+
+      if not nx.is_connected(G): connect_net(G, True)
+      avg_pl = nx.average_shortest_path_length(G)
+      delta = (1-avg_pl)/avg_pl # To Giuseppe & Dario with esteem
+      R0pl = R0/avg_pl 
       
-      R0_sign = "<"
-      if R0 > R0_net: R0_sign = ">"
-      plt.suptitle(r"$R_0:%s, OrdPar:%s(%s), D_{%s}:%s(%s), p:%s, \beta:%s, \mu:%s$"
-      % (f"{rhu(R0,3)}"+R0_sign+f"{rhu(R0_net,3)}",rhu(avg_ordp_net,3), string_format, N, rhuD2, rhu(std_D,2),
-        rhu(p,3), rhu(beta,3), rhu(mu,3), ))
-      #plt.show()
+      R0_sign = "<"; R0pl_sign = "<"
+      if R0 > Rc_net: R0_sign = ">"
+      if R0pl > Rc_net/avg_pl: R0pl_sign = ">"
+      plt.suptitle(r"$R_0:%s, R_0(\delta=%s):%s, OrdPar:%s(%s), D_{%s}:%s(%s), p:%s, \beta:%s, \mu:%s$"
+      % (
+        f"{rhu(R0,3)}"+R0_sign+f"{rhu(Rc_net,3)}", rhu(avg_pl,1),
+        f"{rhu(R0/avg_pl,3)}"+R0pl_sign+f"{rhu(Rc_net/avg_pl,3)}",      
+        rhu(avg_ordp_net,3), string_format, N, rhuD2, rhu(std_D,2), rhu(p,3), rhu(beta,3), rhu(mu,3),))
       plt.grid(color='grey', linestyle='--', linewidth = 1.5)
 
       plt.savefig( file_path )
@@ -749,14 +669,6 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
       with open(log_path, mode) as text_file: #write only 1 time
         text_file.write(file_name + "\n")            
       plt.close()
-
-      'overwrite overy update in std_inf to look @ it in run-time'
-      '''plt.subplots_adjust(top=0.91,
-      bottom=0.182,
-      left=0.124,
-      right=0.93,
-      hspace=0.2,
-      wspace=0.2)'''
 
       del my_dir
       from definitions import my_dir; import json; from definitions import NestedDict
@@ -797,8 +709,8 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
         plt.suptitle(r"$Average Std(Daily New Infected) \, : \, p%s,\beta:%s,\mu:%s$"%(rhu(p,3),rhu(beta,3),rhu(mu,3))) 
         #plt.suptitle(f"$Average Std(Daily New Infected) : p:{rhu(p,3)},\beta{beta,3}:,\mu:{rhu(mu,3)}")
       else: plt.suptitle(r"$Average Std(Daily New Infected) \, : \, p%s,\beta:%s,\mu:%s$"%(rhu(p,3),rhu(beta,3),rhu(mu,3)))
-      ax.set_xlabel("Avg_Degree [Indivs]")
-      ax.set_ylabel("Std(NDI)")
+      ax.set_xlabel("Avg Degree D [Indivs]")
+      ax.set_ylabel("STD(NDI)")
       
       if folder == "WS_Pruned":
         fix_pmb = ordp_pmbD_dic[p][mu]
@@ -821,16 +733,7 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
       bottom=0.122,
       left=0.080,
       right=0.99)
-
-      #plt.show()
       
-      '''
-      ordp_path = my_dir() + folder + "/OrdParam/"
-      ordp_path_fig = my_dir() + folder + "/OrdParam/p%s/beta_%s/" % (rhu(p,3),rhu(beta,3))
-      if not os.path.exists(ordp_path): os.makedirs(ordp_path_fig)
-      plt.savefig("".join((ordp_path,"%s_ordp_p%s_beta%s_mu%s.png" \
-        % (folder, rhu(p,3),rhu(beta,3),rhu(mu,3)))))
-      '''
       if folder == "WS_Pruned":
         ordp_path = f"{my_dir()}{folder}/OrdParam/p{rhu(p,3)}/mu{rhu(mu,3)}/"
         if not os.path.exists(ordp_path): os.makedirs(ordp_path)
@@ -877,6 +780,7 @@ def plot_save_nes(
   beta = 0.3, mu = 0.3, my_print = True, pos = None, 
   partition = None, dsc_sorted_nodes = False, done_iterations = 1, 
   chr_min = 0, ordp_pmbD_dic = 0): #save new_entrys
+
   'save net only if does not exist in the .txt. So, to overwrite all just delete .txt'
   from definitions import already_saved_list, func_file_name, N_D_std_D
   N,D,_ = N_D_std_D(G)
@@ -980,7 +884,7 @@ def long_range_edge_add(G, p = 0, time_int = False):
   remove_loops_parallel_edges(G, False)
   if time_int: print(f"Time for add edges over ddistr:", dt.datetime.now()-start_time)
 
-'connection by hand of a net'
+'forcing connection of a net'
 def connect_net(G, conn_flag): #set solo_nodes = False to have D < 1 nets
   if conn_flag:
     import networkx as nx
@@ -1194,7 +1098,7 @@ def infos_sorted_nodes(G, num_sorted_nodes = False):
     if num_sorted_nodes == True:  
       num_sorted_nodes = len(nodes) 
       for i in range(cut_off):
-        if i == 0: print("Triplets of (nodes, neighbors(%s), degree) sorted by descedning degree:" % i)
+        if i == 0: print("Triplets of (nodes, neighbors(%s), degree) sorted by descending degree:" % i)
         print( dsc_sorted_nodes[i] )
 
     if num_sorted_nodes == False: num_sorted_nodes = 0
