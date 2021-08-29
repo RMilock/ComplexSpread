@@ -71,7 +71,7 @@ def plot_params():
   plt.rc('xtick.major', pad = 16)
   plt.rc('ytick.major', pad = 16)
   plt.rcParams["figure.figsize"] = [32,14]
-  plt.rc("grid", color = "gray",ls="--", lw=1)
+  #plt.rc("grid", color = "gray",ls="--", lw=1)
   #plt.rc("tick_params", labelsize = MEDIUM_SIZE, direction="in", pad=10)
   #plt.rcParams['xtick.major.pad']='16'
 
@@ -96,7 +96,7 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, seed = False, start_inf = 10):
 
   inf_list = [] #infected node list @ each t
 
-  dni_cases = [fr_stinf] #it was dni_cases = [] # = len(inf_list)/N, i.e. frac of daily infected for every t
+  dni_cases = [0] #it was dni_cases = [] # = len(inf_list)/N, i.e. frac of daily infected for every t
   dni_totcases = [fr_stinf]
   dni_susceptible = [1-fr_stinf]
 
@@ -280,6 +280,7 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
       if mf: 
         D = int(D)
         Rc_net = 1/(1-D**(-1))
+
       RcR0 = Rc_net / R0
       p_c = 1 - RcR0
       dni_totcases = np.array(avg_traj[idx_cl])#[1-x for x in avg_traj[idx_cl]]
@@ -325,17 +326,20 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
 
   'plotting the many realisations'    
   colors = ["paleturquoise","wheat","lightgreen", "thistle"]
-  
+  ax.grid(color = "grey", ls = "--", lw = 1)
+  ax2 = ax.twinx()
+
   for j in range(numb_iter):
-    ax.plot(trajectories[0][j], color = colors[0]) #net_New_Daily_Cases
+    ax2.plot(trajectories[0][j], color = colors[0]) #net_New_Daily_Cases
     ax.plot(mf_trajectories[0][j], color = colors[3]) #net_dni_totcases
-    ax.plot(mf_trajectories[1][j], color = colors[1]) #mf_Sum_New_Daily_Cases
+    ax2.plot(mf_trajectories[1][j], color = colors[1]) #mf_New_Daily_Cases
     ax.plot(trajectories[1][j], color = colors[2]) #mf_dni_totcases
-    
-  ax.plot(mf_avg_traj[0], label="MF:NewDailyInf", \
-    color = "darkviolet") #prevalence
-  ax.plot(avg_traj[0], label="Net:NewDailyInf", \
-    color = "tab:blue") #prevalence
+  
+  width_totc = 3
+  ax2.plot(mf_avg_traj[0], label="MF:NewDailyInf", \
+    color = "darkviolet", lw = width_totc) #prevalence
+  ax2.plot(avg_traj[0], label="Net:NewDailyInf", \
+    color = "tab:blue", lw = width_totc) #prevalence
 
   'define a string_format to choose the best way to format the std of the mean'
   value = mf_std_avg_traj[1][-1]
@@ -345,37 +349,38 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
 
   ax.plot(mf_avg_traj[1], label=r"MF:TotalCases (%s%%$\pm$%s%%)"\
     % (np.round(mf_avg_traj[1][-1]*100,1), string_format ), \
-    color = "tab:orange" ) #mf:cd_inf, np.round(mf_std_avg_traj[1][-1]*100,1)
+    color = "tab:orange", lw = width_totc) #mf:cd_inf, np.round(mf_std_avg_traj[1][-1]*100,1)
   ax.plot(avg_traj[1], label=r"Net:TotalCases (%s%%$\pm$%s%%)" %
     (np.round(avg_traj[1][-1]*100,1), np.round(std_avg_traj[1][-1]*100,1) ), \
-    color = "tab:green") #net:cd_inf
+    color = "tab:green", lw = width_totc) #net:cd_inf
 
   'plot horizontal line to highlight the initial infected'
   ax.axhline(start_inf/N, color = "r", ls="dashed", \
             label = "Start_Inf/N (%s%%) "% np.round(start_inf/N*100,1))
   
   label = r"Net:$t_c,p_c$" + f" = ({rhu(t_c)}d,{rhu(p_c,2)})"
+  ms = 40
   if t_c > 0: 
-    ax.plot(t_c, p_c, color = "#003312", marker = "*", markersize = 20, mec = "black",
+    ax.plot(t_c, p_c, color = "#003312", marker = "*", markersize = ms, mec = "black",
             label = label)
   else: ax.plot(0, linewidth = 0, label = label)
   
   label = r"MF:$t_c,p_c$" + f" = ({rhu(mf_t_c)}d,{rhu(mf_p_c,2)})"
-  if mf_t_c > 0: ax.plot(mf_t_c, mf_p_c, color = "orange", marker = "*", markersize = 20, mec = "black",
+  if mf_t_c > 0: ax.plot(mf_t_c, mf_p_c, color = "orange", marker = "*", markersize = ms, mec = "black",
             label = label )
   else: ax.plot(0, linewidth = 0, label = label)
 
   import matplotlib.pylab as plt
-  locs, _ = plt.yticks()
-  ax.set_yticks(locs[1:-1])
-  ax.set_yticklabels(np.round(locs[1:-1],2))
+  locs = ax.get_yticks()
+  #ax.set_yticks(locs[1:-1])
+  #ax.set_yticklabels(np.round(locs[1:-1],2))
 
   #'plot labels'
   ax.set_xlabel('Time[1day]')
   ax.set_ylabel('Indivs/N')
 
   'plotting figsize depending on legend'
-  folders = ["NoNR_Conf_Model","WS_Pruned"]
+  folders = ["NoNR_Conf_Model",]
   R0 = beta*D/mu
   
   'set legend above the plot if R_0 in [0,2] in the NNR_Config_Model'
@@ -390,8 +395,14 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
     ax.legend([handles[idx] for idx in order],[labels[idx] for idx in order],
               bbox_to_anchor=(1, 1), edgecolor="grey", loc='upper left') #add: leg = 
   else: 
-    handles, labels = plt.gca().get_legend_handles_labels()
-    order = [2,3,0,1,4,5,6]
+    lines, labels = ax.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    handles = lines + lines2
+    labels = labels + labels2
+
+    #handles, labels = plt.gca().get_legend_handles_labels()
+    order = [2,0,1,5,6,3,4]
+    print("handles, labels", handles, labels)
     ax.legend([handles[idx] for idx in order],[labels[idx] for idx in order],loc="best"); 'set legend in the "best" mat plot lib location'
 
   return avg_ordp_net, std_avg_ordp_net, Rc_net
@@ -403,7 +414,7 @@ def rhu(n, decimals=0, integer = False): #round_half_up
     if integer: return int(res)
     return res
   
-def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = False, partition = None, pos = None):
+def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = False, partition = None, pos = None):
   import os.path
   from definitions import my_dir, func_file_name
   from functools import reduce
@@ -424,13 +435,13 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
 
   if nx.is_connected(G): 
     str_SW = r"SW_{C}"
-    avg_l = nx.average_shortest_path_length(G)
+    avg_pl = nx.average_shortest_path_length(G)
   else:  
     ls_cc = nx.connected_components(G)
     print("ls_cc", ls_cc)
     max_cc = max(ls_cc, key = len)
-    avg_l = nx.average_shortest_path_length(G.subgraph(max_cc))
-    str_SW = r"SW_{C:%s-%s}"%(number_connected_components(G), len(max_cc))
+    avg_pl = nx.average_shortest_path_length(G.subgraph(max_cc))
+    str_SW = r"SW_{#c-max:%s-%s}"%(number_connected_components(G), len(max_cc))
 
   'find the major hub and the "ousiders", i.e. highly connected nodes'
   infos = G.degree()
@@ -490,7 +501,7 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
   sorted_degree = np.sort([G.degree(n) for n in G.nodes()])
 
   sorted_nd = sorted(list(G.degree()),key = lambda x: x[1])
-  #print("\n sorted degrees in plot_save_net", sorted_nd)
+  #print("\n sorted degrees in save_net", sorted_nd)
 
   'degree distribution + possonian distr (check mean <-> D)'
   bins = np.arange(sorted_degree[0]-1,sorted_degree[-1]+2)
@@ -509,6 +520,7 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
   axs.plot(bins, y * hist_mean / pois_mean, "bo--", lw = 2, label = "Poissonian Distr")
   axs.set_xlabel('Degree', )
   axs.set_ylabel('Counts', )
+  axs.grid(color = "grey", ls = "--", lw = 1)
   axs.set_xlim(bins[0],bins[-1]) 
   if folder == "BA_Model": 
     ax.set_xscale("log")
@@ -529,7 +541,8 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
   '''
 
   if folder == "BA_Model": 
-    value = rhu(avg_l / np.log(np.log(N)) ,3)
+    value = rhu(avg_pl / np.log(np.log(N)) ,3)
+    str_SW = "".join((r"U",str_SW))
     string_format = str(value)[:5]
     print(string_format)
     if string_format == "0.000":
@@ -538,7 +551,7 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
     plt.suptitle(r"$N:%s, D:%s(%s), k_{max}: %s, N_{3-out}: %s, %s: %s, N_0: %s, p:%s$" % (
     N, D, std_D, max_degree, count_outsiders, str_SW, value, N0, rhu(p,3),  ))
   else: 
-    value = rhu(avg_l / np.log(N),3)
+    value = rhu(avg_pl / np.log(N),3)
     string_format = str(value)[:5]
     print(string_format)
     if string_format == "0.000":
@@ -573,7 +586,7 @@ def plot_save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
     for line in sorted_lines:
       r.write(line)
 
-def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 10, numb_iter = 50):
+def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 10, numb_iter = 50):
   import os.path
   from definitions import my_dir, func_file_name, N_D_std_D
   import datetime as dt
@@ -633,8 +646,8 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
                 numb_iter = numb_iter)
 
 
-      right = 0.99
-      folders = ["WS_Pruned"]
+      right = 0.95
+      folders = ["WS_Prunedsss"]
       if folder in folders and R0 <= 3: right = 0.78
       plt.subplots_adjust(
       top=0.920,
@@ -648,23 +661,31 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
       if string_format == "0.000":
         string_format = format(std_avg_ordp_net, ".1e")
 
-      if not nx.is_connected(G): connect_net(G, True)
-      avg_pl = nx.average_shortest_path_length(G)
-      delta = (1-avg_pl)/avg_pl # To Giuseppe & Dario with esteem
+      #if not nx.is_connected(G): connect_net(G, True)
+      delta = r"\delta_C"
+      #comps = [nx.average_shortest_path_length(s) for c in nx.connected_components(G) 
+      #for s in G.subgraph(c)]
+      #print(comps)
+      
+      avg_pl = max([  
+        nx.average_shortest_path_length(C) for C in (G.subgraph(c).copy() for c in nx.connected_components(G))])
+
+      if not nx.is_connected(G): 
+        delta = r"\delta_{mc}"
+      #delta = (1-avg_pl)/avg_pl # To Giuseppe & Dario with esteem
       R0pl = R0/avg_pl 
       
       R0_sign = "<"; R0pl_sign = "<"
       if R0 > Rc_net: R0_sign = ">"
       if R0pl > Rc_net/avg_pl: R0pl_sign = ">"
-      plt.suptitle(r"$R_0:%s, R_0(\delta=%s):%s, OrdPar:%s(%s), D_{%s}:%s(%s), p:%s, \beta:%s, \mu:%s$"
+      plt.suptitle(r"$R_0:%s, R_0(%s=%s):%s, OrdPar:%s(%s), D_{%s}:%s(%s), p:%s, \beta:%s, \mu:%s$"
       % (
-        f"{rhu(R0,3)}"+R0_sign+f"{rhu(Rc_net,3)}", rhu(avg_pl,1),
+        f"{rhu(R0,3)}"+R0_sign+f"{rhu(Rc_net,3)}", delta, rhu(avg_pl,1),
         f"{rhu(R0/avg_pl,3)}"+R0pl_sign+f"{rhu(Rc_net/avg_pl,3)}",      
         rhu(avg_ordp_net,3), string_format, N, rhuD2, rhu(std_D,2), rhu(p,3), rhu(beta,3), rhu(mu,3),))
-      plt.grid(color='grey', linestyle='--', linewidth = 1.5)
 
       plt.savefig( file_path )
-      print("time 1_plot_save_sir:", dt.datetime.now()-start_time) 
+      print("time 1_save_sir:", dt.datetime.now()-start_time) 
 
       with open(log_path, mode) as text_file: #write only 1 time
         text_file.write(file_name + "\n")            
@@ -705,12 +726,9 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
 
       'WARNING: here suptitle has beta // mu but the dict is ordp[p][mu][beta][D] = [std_D, ordp, std_ordp]'
       'since in the article p and mu are fixed!'
-      if folder == "WS_Pruned":
-        plt.suptitle(r"$Average Std(Daily New Infected) \, : \, p%s,\beta:%s,\mu:%s$"%(rhu(p,3),rhu(beta,3),rhu(mu,3))) 
-        #plt.suptitle(f"$Average Std(Daily New Infected) : p:{rhu(p,3)},\beta{beta,3}:,\mu:{rhu(mu,3)}")
-      else: plt.suptitle(r"$Average Std(Daily New Infected) \, : \, p%s,\beta:%s,\mu:%s$"%(rhu(p,3),rhu(beta,3),rhu(mu,3)))
+      plt.suptitle(r"Average SD(Daily New Infected) : $p:%s,\beta:%s,\mu:%s$"%(rhu(p,3),rhu(beta,3),rhu(mu,3)))
       ax.set_xlabel("Avg Degree D [Indivs]")
-      ax.set_ylabel("STD(NDI)")
+      ax.set_ylabel("SD(Cases)")
       
       if folder == "WS_Pruned":
         fix_pmb = ordp_pmbD_dic[p][mu]
@@ -723,10 +741,13 @@ def plot_save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0
       yerr = [fix_pmb[i][2] for i in x]
 
       #print("y", y)
+      ax.grid(color='grey', linestyle='--', linewidth = 1)
       ax.errorbar(x,y, xerr = xerr, yerr = yerr, color = "tab:blue", marker = "*", linestyle = "-",
          markersize = 30, mfc = "tab:red", mec = "black", linewidth = 3, label = "Avg_Std(NDI)")
+      D_c = 1 + 2*beta/(mu*(1+p))
+      ax.axvline(x = D_c, color = "maroon", lw = 4, ls = "--", 
+                 label = "".join((r"$D_{c-fuse \, model}$",f": {rhu(D_c,3)}")) )
       ax.legend(fontsize = 35)
-      ax.grid(color='grey', linestyle='--', linewidth = 0.5)
 
       plt.subplots_adjust(
       top=0.91,
@@ -775,7 +796,7 @@ def already_saved_list(folder, adj_or_sir, chr_min, my_print = True, done_iterat
   if my_print: print(f"\nThe already saved {adj_or_sir} are", saved_list)
   return saved_list
 
-def plot_save_nes(
+def save_nes(
   G, p, folder, adj_or_sir, R0_max = 12, m = 0, N0 = 0, 
   beta = 0.3, mu = 0.3, my_print = True, pos = None, 
   partition = None, dsc_sorted_nodes = False, done_iterations = 1, 
@@ -797,11 +818,11 @@ def plot_save_nes(
     print("I'm saving", file_name)
     #infos_sorted_nodes(G, num_sorted_nodes = True)
     if adj_or_sir == "AdjMat": 
-      plot_save_net(G = G, pos = pos, partition = partition, m = m, N0 = N0, 
+      save_net(G = G, pos = pos, partition = partition, m = m, N0 = N0, 
       folder = folder, p = p, done_iterations = done_iterations)
       infos_sorted_nodes(G, num_sorted_nodes = 0)
     if adj_or_sir == "SIR": 
-      plot_save_sir(G, folder = folder, beta = beta, mu = mu, p = p, R0_max = R0_max, 
+      save_sir(G, folder = folder, beta = beta, mu = mu, p = p, R0_max = R0_max, 
       done_iterations = done_iterations, ordp_pmbD_dic = ordp_pmbD_dic)
 
 def save_log_params(folder, text):
@@ -1393,7 +1414,7 @@ class NestedDict(dict):
 '===main, i.e. automatize common part for different nets'
 def main(folder, N, k_prog, p_prog, beta_prog, mu_prog, 
   R0_min, R0_max, epruning = False):
-  from definitions import save_log_params, plot_save_nes, \
+  from definitions import save_log_params, save_nes, \
     NestedDict, jsonKeys2int, my_dir
   from itertools import product
   import networkx as nx
@@ -1528,12 +1549,12 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
 
         import datetime as dt
         start_time = dt.datetime.now()       
-        plot_save_nes(G, m = m, N0 = N0, pos = pos, partition = partition,
+        save_nes(G, m = m, N0 = N0, pos = pos, partition = partition,
         p = p, folder = folder, adj_or_sir="AdjMat", done_iterations=done_iterations)
         print("\nThe end-time of 1 generation of one AdjMat plot is", dt.datetime.now()-start_time)
 
         start_time = dt.datetime.now()       
-        plot_save_nes(G, m = m, N0 = N0,
+        save_nes(G, m = m, N0 = N0,
         p = p, folder = folder, adj_or_sir="SIR", R0_max = R0_max, beta = beta, mu = mu, 
         ordp_pmbD_dic = ordp_pmbD_dic, done_iterations=done_iterations)
         print("\nThe end-time of the generation of one SIR plot is", dt.datetime.now()-start_time)
@@ -1546,7 +1567,7 @@ def parameters_net_and_sir(folder = None, p_max = 0.3):
   #k_prog = np.concatenate(([1.0],np.arange(2,20,2)))
   k_prog = np.arange(1,13) #poisssonian: np.arange(1,60,2)
   p_prog = [0, 0.1, 0.3] #0.2 misses
-  beta_prog = [0.05,0.1,0.2,0.3]; mu_prog = [0.14, 0.16, 0.2, 0.25]#, 0.33,0.5]
+  beta_prog = [0.05,0.1,0.2,0.3]; mu_prog = [0.14, 0.16, 0.2, 0.25, 0.8]#, 0.33,0.5]
   R0_min = 0; R0_max = 30
 
   'this should be deleted to have same params and make comparison more straight-forward'
