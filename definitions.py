@@ -71,6 +71,7 @@ def plot_params():
   plt.rc('xtick.major', pad = 16)
   plt.rc('ytick.major', pad = 16)
   plt.rcParams["figure.figsize"] = [32,14]
+  plt.rc('axes',edgecolor='k')
   #plt.rc("grid", color = "gray",ls="--", lw=1)
   #plt.rc("tick_params", labelsize = MEDIUM_SIZE, direction="in", pad=10)
   #plt.rcParams['xtick.major.pad']='16'
@@ -328,18 +329,14 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
   colors = ["paleturquoise","wheat","lightgreen", "thistle"]
   ax.grid(color = "grey", ls = "--", lw = 1)
   ax2 = ax.twinx()
-
+  ax3 = ax.twiny()
   for j in range(numb_iter):
-    ax2.plot(trajectories[0][j], color = colors[0]) #net_New_Daily_Cases
-    ax.plot(mf_trajectories[0][j], color = colors[3]) #net_dni_totcases
-    ax2.plot(mf_trajectories[1][j], color = colors[1]) #mf_New_Daily_Cases
-    ax.plot(trajectories[1][j], color = colors[2]) #mf_dni_totcases
+    ax.plot(mf_trajectories[1][j], color = colors[1]) #MF_dni_totcases
+    ax.plot(trajectories[1][j], color = colors[2]) #NET_dni_totcases
+    ax2.plot(trajectories[0][j], color = colors[0], lw = 0) #NET_dni_cases
+    ax2.plot(mf_trajectories[0][j], color = colors[3], lw = 0) #MF_dni_cases
   
   width_totc = 3
-  ax2.plot(mf_avg_traj[0], label="MF:NewDailyInf", \
-    color = "darkviolet", lw = width_totc) #prevalence
-  ax2.plot(avg_traj[0], label="Net:NewDailyInf", \
-    color = "tab:blue", lw = width_totc) #prevalence
 
   'define a string_format to choose the best way to format the std of the mean'
   value = mf_std_avg_traj[1][-1]
@@ -347,63 +344,101 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
   if string_format == "0.0":
     string_format = format(value, ".1e")
 
-  ax.plot(mf_avg_traj[1], label=r"MF:TotalCases (%s%%$\pm$%s%%)"\
+  ax3.plot(mf_avg_traj[1], label=r"MF:TotalCases (%s%%$\pm$%s%%)"\
     % (np.round(mf_avg_traj[1][-1]*100,1), string_format ), \
     color = "tab:orange", lw = width_totc) #mf:cd_inf, np.round(mf_std_avg_traj[1][-1]*100,1)
-  ax.plot(avg_traj[1], label=r"Net:TotalCases (%s%%$\pm$%s%%)" %
+  ax3.plot(avg_traj[1], label=r"Net:TotalCases (%s%%$\pm$%s%%)" %
     (np.round(avg_traj[1][-1]*100,1), np.round(std_avg_traj[1][-1]*100,1) ), \
     color = "tab:green", lw = width_totc) #net:cd_inf
 
   'plot horizontal line to highlight the initial infected'
   ax.axhline(start_inf/N, color = "r", ls="dashed", \
             label = "Start_Inf/N (%s%%) "% np.round(start_inf/N*100,1))
+
+  ax2.plot(mf_avg_traj[0], label="MF:NewDailyInf", \
+    color = "darkviolet", lw = width_totc) #prevalence
+  ax2.plot(avg_traj[0], label="Net:NewDailyInf", \
+    color = "tab:blue", lw = width_totc) #prevalence
   
   label = r"Net:$t_c,p_c$" + f" = ({rhu(t_c)}d,{rhu(p_c,2)})"
   ms = 40
   if t_c > 0: 
-    ax.plot(t_c, p_c, color = "#003312", marker = "*", markersize = ms, mec = "black",
+    ax3.plot(t_c, p_c, color = "#003312", marker = "*", markersize = ms, mec = "black",
             label = label)
-  else: ax.plot(0, linewidth = 0, label = label)
+  else: ax3.plot([], marker = "*", mfc = "#003312", mec = "k", ms = ms - 10, label = label)
   
   label = r"MF:$t_c,p_c$" + f" = ({rhu(mf_t_c)}d,{rhu(mf_p_c,2)})"
-  if mf_t_c > 0: ax.plot(mf_t_c, mf_p_c, color = "orange", marker = "*", markersize = ms, mec = "black",
-            label = label )
-  else: ax.plot(0, linewidth = 0, label = label)
+  if mf_t_c > 0: ax3.plot(mf_t_c, mf_p_c, color = "orange", marker = "*", markersize = ms, mec = "black",
+            label = label)
+  else: ax3.plot([], marker = "*", mfc = "orange", mec = "k", ms = ms - 10, label = label)
 
+  'exclude first and last yticks'
   import matplotlib.pylab as plt
   locs = ax.get_yticks()
-  #ax.set_yticks(locs[1:-1])
-  #ax.set_yticklabels(np.round(locs[1:-1],2))
+  ax.set_yticks(locs[1:-1])
+  ax.set_yticklabels(np.round(locs[1:-1],2), color='#003312')
+
+  locs = ax2.get_yticks()
+  ax2.set_yticks(locs[1:-1])
+  ax2.set_yticklabels(np.round(locs[1:-1],3), color='darkblue')
+
+  ax3.set_xticklabels([])
+  #ax3.set_yticklabels([])
+
+
+  '''
+  #Usually, matplotlib uses 12 ticks: 0th @ start- 1st = min; 10th = max; 11 @ end axes
+  step = max - min / 10
+  new_locs = list(np.linspace(min+step,max, 10))
+  new_locs[:0] = [min]
+  ax2.set_yticks(new_locs)
+  ax2.set_yticklabels(np.round(new_locs,2), color='#0a0535') # "darkblue"
+
+  try with already existing locs:
+  new_locs = list(np.linspace(locs[2],locs[-2], len(locs[2:-1])))
+  new_locs[:0] = [locs[1]]
+  print("locs", locs, locs[1:-1], new_locs)
+  ax2.set_yticks(new_locs)
+  ax2.set_yticklabels(np.round(new_locs,2), color='#0a0535') # "darkblue"'''
 
   #'plot labels'
   ax.set_xlabel('Time[1day]')
   ax.set_ylabel('Indivs/N')
 
   'plotting figsize depending on legend'
-  folders = ["NoNR_Conf_Model",]
+  folders = ["WS_Pruned"]
   R0 = beta*D/mu
   
   'set legend above the plot if R_0 in [0,2] in the NNR_Config_Model'
-  if R0 <= 3 and folder in folders:
+  if R0 <= -3 and folder in folders:
     #ax_ymin, ax_ymax = ax.get_ylim()
     #set_ax_ymin = 1.5*ax_ymin
     #set_ax_ymax = 2*ax_ymax
     #ax.set_ylim(ax_ymin, set_ax_ymax)
 
     handles, labels = plt.gca().get_legend_handles_labels()
-    order = [2,3,0,1,4,5,6]
+    order = [5,0,2,3,0,4,1]
     ax.legend([handles[idx] for idx in order],[labels[idx] for idx in order],
-              bbox_to_anchor=(1, 1), edgecolor="grey", loc='upper left') #add: leg = 
+              bbox_to_anchor=(1, 1), edgecolor="black", framealpha = 0, loc='upper left') #add: leg = 
   else: 
-    lines, labels = ax.get_legend_handles_labels()
-    lines2, labels2 = ax2.get_legend_handles_labels()
-    handles = lines + lines2
-    labels = labels + labels2
+    ax2.set_zorder(0.5)
+    ax3.set_zorder(ax2.get_zorder()+1)
+    ax.patch.set_visible(False)
 
-    #handles, labels = plt.gca().get_legend_handles_labels()
-    order = [2,0,1,5,6,3,4]
-    print("handles, labels", handles, labels)
-    ax.legend([handles[idx] for idx in order],[labels[idx] for idx in order],loc="best"); 'set legend in the "best" mat plot lib location'
+    handles, labels = ax.get_legend_handles_labels()
+    handles2, labels2 = ax2.get_legend_handles_labels()
+    handles3, labels3 = ax3.get_legend_handles_labels()
+    handles = handles + handles2 + handles3
+    labels = labels + labels2 + labels3
+
+    order = [3,4,2,1,0,6,5]
+    #print("handles, labels", handles, labels)
+    loc = "best"
+    if "WS_Pruned" in folders: loc = "center right"
+    leg = ax3.legend([handles[idx] for idx in order],[labels[idx] for idx in order],
+              edgecolor="black", shadow = True, framealpha = 1, loc=loc)
+    leg.set_zorder(ax3.get_zorder()+1)
+
 
   return avg_ordp_net, std_avg_ordp_net, Rc_net
 
@@ -470,7 +505,7 @@ def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = Fals
   plot_params()
 
   'plot G, adj_mat, degree distribution'
-  plt.figure(figsize = (20,20)) #20,20
+  plt.figure(figsize = (20,20), ) #20,20
 
   ax = plt.subplot(221)  
   'start with degree distribution'
@@ -533,12 +568,6 @@ def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = Fals
   right=0.963,
   hspace=0.067, #0.067
   wspace=0.164) #0.164
-
-  '''
-  if you need to automatize the procedure. Try with,
-  string = string.strip("".join((folder,"_")))
-  string = "".join(("r\"$", string,"$\""))
-  '''
 
   if folder == "BA_Model": 
     value = rhu(avg_pl / np.log(np.log(N)) ,3)
