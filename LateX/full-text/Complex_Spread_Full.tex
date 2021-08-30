@@ -208,44 +208,14 @@ So, inspired by \cite{Thurner::NetBasedExpl}, the aim of this project is to anal
 
 \section{A Technical Introduction}
 \label{sec:ATechIntro}
-At $8 \, \textnormal{May} \, 2020$, none of the affected COVID-19 states have reached "herd immunity" but still they reached the "epidemic peak" due to the containment restrictions on social contacts. One paradigmatic example is the case of Austria, for which the total infected cases at the first peak were $0.16\%$ of the total population, remarkably low with respect to the SARS-COV-2 "herd-immunity" level that are supposed to be at $0.8\%$ (\cite{Zingano:2021_HI_hom_pop}) of the entire (susceptible) population. A graphical representation of the cases could be found in \autoref{fig:NDI}, \autoref{fig:CNDI} produced by \href{https://ourworldindata.org/coronavirus/country/austria}{Austria New Daily Infected}.
-
-\begin{figure}[htpb]
-	\centering
-	\begin{subfigure}{.5\textwidth}
-	  \centering
-	  \includegraphics[width=\textwidth]{OWiD/Austria_NDI.png}
-	  \caption{Austria until 8.5.2020}
-	  %\label{fig:lab1}
-	\end{subfigure}%
-	\begin{subfigure}{.5\textwidth}
-	  \centering
-	  \includegraphics[width=\textwidth]{OWiD/USA_NDI.png}
-	  \caption{USA until 8.5.2020}
-	  %\label{fig:lab2}
-	\end{subfigure}
-	\caption{Daily Number Of Cases}
-	\label{fig:NDI}
-\end{figure}
-
+At $8 \, \textnormal{May} \, 2020$, none of the affected COVID-19 states have reached "herd immunity" but still they reached the "epidemic peak" due to the containment restrictions on social contacts. One paradigmatic example is the case of Austria, for which the total infected cases at the first peak were $0.16\%$ of the total population, remarkably low with respect to the SARS-COV-2 "herd-immunity" level that are supposed to be at $0.8\%$ (\cite{Zingano:2021_HI_hom_pop}) of the entire (susceptible) population. A graphical representation of the cases could be found in \autoref{fig:USA-AUT-ITAtotalcasesOWID}, \autoref{fig:USA-AUT-ITAtotalcasesOWID} produced by \href{https://ourworldindata.org/coronavirus/country/austria}{Austria New Daily Infecte}.
 \begin{figure}[htbp]
 	\centering
-	\begin{subfigure}{.5\textwidth}
-	  \centering
-	  \includegraphics[width=\textwidth]{OWiD/Austria_CNDI.png}
-	  \caption{Austria until 8.5.2020}
-	  \label{fig:lab1}
-	\end{subfigure}%
-	\begin{subfigure}{.5\textwidth}
-	  \centering
-	  \includegraphics[width=\textwidth]{OWiD/USA_CNDI.png}
-	  \caption{USA until 8.5.2020}
-	  \label{fig:lab2}
-	\end{subfigure}
-	\caption{Cumulative Daily Number Of Cases}
-	\label{fig:CNDI}
+	\includegraphics[width = \textwidth]{Introduction/COVID-RealStates.png}
+	\caption{Normalized number of total cases until 8.5.2020. In the legend, there are reported the percentage of "$max / totp$" where "$max$" is the total cases at the end, while "$totp$" is the total population for each state according to \cite{PopulationEstimate}}
+	\label{fig:USA-AUT-ITAtotalcasesOWID}
 \end{figure}
-The most striking observation is that the number of total cases (\autoref{fig:CNDI}), after early-stages when Non-Pharmaceutical-Interventions (NPIs), i.e. lockdown, were at work, exhibits a (quasi-)linear growth for an extended time interval in contrast with the "S-shaped" logistic curve predicted by the standard compartmental models. The extension of the linear regime depends on the onset of the measures; while for early stages, as it was the case for many countries \cite{Thurner::NetBasedExpl} ($8 \, \textnormal{May} \, 2020$), an exponential growth dominates the spreading of the disease.
+The most striking observation is that the number of total cases (\autoref{fig:USA-AUT-ITAtotalcasesOWID}), after early-stages when Non-Pharmaceutical-Interventions (NPIs), i.e. lockdown, were at work, exhibits a (quasi-)linear growth for an extended time interval in contrast with the "S-shaped" logistic curve predicted by the standard compartmental models. The extension of the linear regime depends on the onset of the measures; while for early stages, as it was the case for many countries \cite{Thurner::NetBasedExpl} ($8 \, \textnormal{May} \, 2020$), an exponential growth dominates the spreading of the disease.
 By taking care of the modification of the underlying social network structure, in this present thesis, we want to (qualitatively) recover the spreading trends for the states that have or have not applied the NPIs measures. \newline
 Specifically, an infection may occur for two reasons:
 \begin{enumerate}
@@ -1092,7 +1062,7 @@ After having collected $C(t) \text{ and } P(t)$ also for the "Annealed Mean-Fiel
 
 \section*{Annealed Mean-Field Network}
 \label{sec:Annealed_MF_Network}
-As a benchmark of the network results, it has been introduced the "annealed-mean-field" network. %For now, it is enough to know that the SIR model allows the susceptible nodes to be infected at a rate $\beta$ and the infected to recover at a rate $\mu$ (see \autoref{ch:sir-models}).
+As a benchmark of the network results, it has been introduced the "annealed-mean-field" network to properly simulate a homogeneous mixing with a fixed degree per node $D$. %For now, it is enough to know that the SIR model allows the susceptible nodes to be infected at a rate $\beta$ and the infected to recover at a rate $\mu$ (see \autoref{ch:sir-models}).
 The definition of a AMFN will be given through the practical implementation of a SIR spreading over it, i.e. using a bottom-up approach.
 Indeed, the mean-field SIR model is obtain, at every time-step $t$, with the following scheme: 
 \begin{itemize}
@@ -1105,7 +1075,7 @@ With this procedure, whenever the target infected node, e.g. $I_2$, is chosen to
 
 As promised, a AMFN is defined as a (directed) random network whose $D$ links are randomly chosen by each node where the agent lays down. With this technique, the phenomenon is well mixed emulating a "mean-field" approximation.
 
-The spreading on network resembles the mean-field model whenever either $R_0$ or the long-range connections $p \cdot N$ are high enough to allow the disease, reaching the epidemic state rapidly. Indeed, the comparison between mean-field and network spreading regards the fraction of total infected nodes and not how the nodes are infected: for the mean-field case the neighbors are chosen randomly along the circle; while they are fixed for the chosen network case. For this reason, there could an accordance in the measures considered.
+The spreading on network resembles the mean-field model, alias AMFN in our case, whenever either $R_0$ or the long-range connections $p \cdot N$ are high enough to allow the disease, reaching the epidemic state rapidly. Indeed, the comparison between mean-field and network spreading regards the fraction of total infected nodes and not how the nodes are infected: for the mean-field case the neighbors are chosen randomly along the circle; while they are fixed for the chosen network case. For this reason, there could an accordance in the measures considered.
 
 \section*{(Quasi-)Linear Contagion}
 In order to analyze a linear behavior of $P(t)$, it worths recall that $R_{0c} := \beta D_c / \mu = 1$ is the critical basic reproduction number, which separates the exponential growth ($R_0 > 1$) from the exponential decay ($R_0 < 1$) of the number of infected. The critical degree $D_c = \frac{\mu}{\beta \langle k \rangle}$ and $C(t) \propto R^{t/d}$. So, as the epidemic is fixed, the above behavior are recovered, respectively, for $D > D_c$ and $D<D_c$. For $D=D_c$ \cite{Thurner::NetBasedExpl}, the number of infected will behave critically, i.e. $P(t) \propto t^{\alpha}$, where $\alpha \in (1,2)$ for a simply connected (no multiedges or loops) short-range network embedded in dimension $2$. More in detail, $\alpha \sim 2$ for a network resembling a regular lattice in $2$ dimensions, since $C(t) \propto t^2$ is proportional to the covered area of the infection front; while $\alpha \sim 1$ for a tree or a collection of 1-dimensional chains, as the front spreads linearly as a flame along a fuse, i.e. $C(t) \propto t$. In between these regimes, the specific $\alpha$ is influenced and shaped by non-pharmaceutical interventions (NPIs).
@@ -1128,6 +1098,10 @@ where $SD$ is the "standard deviation".
 \\As anticipated, a linear growth is possible only if the new daily cases are constants, since $P(t) \sim t^{\alpha}$. For the "S-shaped" curve, resembling a logistic curve, a bump in the daily infected occurs producing an enhancement of the $SD$. Hence, a SD deviating from zero signals the presence of a nonlinear increase of the cumulative positive cases, $P(t)$ \cite{Thurner::NetBasedExpl}. Finally, $D_c$ depends on the set of parameters $p, \beta, \mu$ \cite{Thurner::NetBasedExpl} and, eventually $N$.
 
 Also $R_0$ should be modified as it represents only the initial strength of the pathogen without considering the underlying topology, e.g. the "long-range" contacts $pN$. In other words, equal $R_0$s could drive to completely different scenarios (see the next chapter).
+
+To sum up, it is going to be analyzed the graphic of the epidemiological quantities, such as $P(t)$ and $C(t)$, simulated via an heterogeneous SIR model on networks (Regular graph, Watts-Strogatz model, Poissonian SW Network, Caveman model and a Barabási-Albert Model) and benchmarked with the homologous $P(t)$ and $C(t)$ on a AMFN. In these plots, there are also reported the standard $R_0 := \beta D / \mu$ alongside with the $R_0(\delta) := R_0 /\delta$ where $\delta:=\langle d \rangle $ is the average path length.
+
+Aside of this, it is reported the dependence of $SD(C(t))$ on $D$, in order to characterize the (quasi-linear) behavior of $P(t)$ with an $SD(C(t)) \sim 0$; while the exponential curves with a standard deviation $SD$ sensibly different from $0$.
 
 \subsection*{Analytical critical degree}
 In Statistical Mechanics, the dimensionality of a system is crucial to legitimate the mean-field approximation: the Ising Model is well modeled by a mean-field in a dimension $d \geq 4$ as it captures its phase transition.
@@ -1248,9 +1222,37 @@ This estimate express the critical degree, i.e. the average number of contact un
 In the "Results" chapter, $D_c$ for different simulation is reported but only for poissonian small-world network, it approximates the point where the $SD(C(t))$ start increasing.
 
 %$R_0$ try to modify it with $clust coefficient^{-1} or avg path length^{-1}$, i.e. an average estimate of the "openness" of the network.
+\chapter{MISSING TIPS}
+\begin{enumerate}
+	\item frame to black, shadow legend sim 0.8, if $R_0 \leq 1$ put legend aside; 
+	\item scrivi per bene la parte su $R_0$ nuovo che si propone come aggiornamento del vecchio;
+	\item plots capitoli precedenti controlla il copyright;
+	\item inserisci i plots della JHU;
+	\item rifai il $NN Conf Model$ affinché si propaghi in un'unica direzione come il fuse model;
+	\item sistema grafici autogenerati;
+	\item riscala tutto per il massimo totcases, può essere una buona idea per avere un enanchement della sottiletta in WS-pruned D = 2?
+	\item nell'introduzione ci sono ancora i ??
+	\item forse anche $R_0$ è mal definito 
+\end{enumerate}
 
 \chapter{Results}
 \label{ch:Results}
+In this chapter, it is going to be discussed the results obtained by the simulations of the heterogeneous SIR model compared with the theoretical framework previously developed.
+The networks, in the following, are all composed by $N = 1000$ nodes and the simulations are performed over the CPUs of \cite{GoogleColab}.
+
+\subsection{Regular Graph}
+Starting from a fully connected graph, i.e. $D = 999$, a pruning scheme is introduced to clarify whether the spreading would have changed by fixing $R_0$, while dividing $D$ and doubling $\beta$: $R_0 = const = D/k * \beta*k / \mu$ where $k$ goes from 1 to the maximum power of $2$ s.t. $D/k > 1$.
+Practically, to generate a fully-connected graph it has been used a "Watts-Strogatz" algorithm with $p = 0$. Since this algorithm works only with even $D$, all the uneven $D$ where, arbitrarily, rounded to the nearestest even integer, e.g. $125 \to 124$. In this way, the reaching of the endpoint of $D = 2$ is faster.
+
+According to \cite{Liu::2021_Review_SContactPattern} (2021), the most relevant studies \footnote{These works are extracted from PubMed, Medline, Embase and Google Scholar} on social contact patterns report $2-5$ average contacts per day during the lockdown, i.e. nearly the household size. This estimate is, roughly, $5$ times less than the pre-COVID-19 ones of $7-29$ average contacts per day. On the other hand, Mossong et Al. (\cite{Mossong:2008_preCOVID-europe_SCP}) (2008), based on $8$ european states, reported a pre-COVID-19 average of $13$ contacts per day, while Leung et Al. \cite{Leung:2017_HKSocialCP} (2017) find an average per day contacts of $8$ individuals for the abitants of Hong Kong. Moreover, the quoted surveys have taken into consideration individuals of different ages, with the further possibility of determine how society could be clustered by age, e.g. elderly are likely in contact with children.
+The present thesis does not aim at guessing a balanced average of contacts per day but, anyway, its purpose is to emulate a typical social network. Thus, the main plots are going to be focused on the $D < 30$ regime; while little room is going to be left for $D > 30$ as it can be the case for leisure activities, e.g. exhibitions or discotheques. Since COVID-19 spreads over face-to-face interactions, the latter case is crucial for the re-opening of the crowded activities.
+
+The following plots show, for fixed $\mu = 0.25$, the growth in the total cases as $D \in [2,\cdots,124]$ and $\beta$, respectevely, halved and doulbed.
+
+
+
+
+
 \chapter{Conclusions}
 
 
@@ -1476,9 +1478,6 @@ Furthermore, the work focused on analyzing the network spreading on a fully-conn
 
 Moreover, the critical average degree $D_c$ \footnote{$D_c$ as reported in \cite{Thurner::NetBasedExpl} describes a "first-order-phase transition" between exponential and linear growth of an epidemic} , is going to be recovered for the quoted network topologies. A final up-to-date point, would be to use a Graph Neural Network architecture, based on the previously described scenarios and networks, in order the make epidemics forecasting. For this purpose, a relevant reference, is \cite{Davahli::USA_predicting_COVID19}
 
-
-
-
 \section{The Epidemiological Models}
 
 \section{Goals Outline}
@@ -1583,7 +1582,12 @@ If a nets lacks degree of correlation, i.e. $e_{ij}=q_iq_j$, the probability $p_
 Typo under $(10.50)$ multiply by $kp_k$ not $k-1)p_k$
 
 \chapter{Results}
-
+\begin{itemize}
+	\item CHECK K = 0 (AND INSERT A TREE PLOT);
+	\item \(r_d = 1-(1-\beta)^{d}\sim d \beta\) only if \(\beta<<1\);
+	\item Say "No natural essence in lock-down". So, at the same level, we want to study the topologies to best fit the containment of the disease;
+	\item 
+\end{itemize}
 
 \chapter{Conclusion}
 
