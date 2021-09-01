@@ -330,6 +330,7 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
   ax.grid(color = "grey", ls = "--", lw = 1)
   ax2 = ax.twinx()
   ax3 = ax.twiny()
+
   for j in range(numb_iter):
     ax.plot(mf_trajectories[1][j], color = colors[1]) #MF_dni_totcases
     ax.plot(trajectories[1][j], color = colors[2]) #NET_dni_totcases
@@ -363,12 +364,12 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
   label = r"Net:$t_c,p_c$" + f" = ({rhu(t_c)}d,{rhu(p_c,2)})"
   ms = 40
   if t_c > 0: 
-    ax3.plot(t_c, p_c, color = "#003312", marker = "*", markersize = ms, mec = "black",
+    ax3.plot(t_c, p_c, color = "#003312", marker = "*", markersize = ms - 10, mec = "black",
             label = label)
   else: ax3.plot([], marker = "*", mfc = "#003312", mec = "k", ms = ms - 10, label = label)
   
   label = r"MF:$t_c,p_c$" + f" = ({rhu(mf_t_c)}d,{rhu(mf_p_c,2)})"
-  if mf_t_c > 0: ax3.plot(mf_t_c, mf_p_c, color = "orange", marker = "*", markersize = ms, mec = "black",
+  if mf_t_c > 0: ax3.plot(mf_t_c, mf_p_c, color = "orange", marker = "*", markersize = ms - 10, mec = "black",
             label = label)
   else: ax3.plot([], marker = "*", mfc = "orange", mec = "k", ms = ms - 10, label = label)
 
@@ -755,9 +756,9 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
 
       'WARNING: here suptitle has beta // mu but the dict is ordp[p][mu][beta][D] = [std_D, ordp, std_ordp]'
       'since in the article p and mu are fixed!'
-      plt.suptitle(r"Average SD(Daily New Infected) : $p:%s,\beta:%s,\mu:%s$"%(rhu(p,3),rhu(beta,3),rhu(mu,3)))
+      plt.suptitle("Average SD(Daily New Cases) : "+r"$p:%s,\beta:%s,\mu:%s$"%(rhu(p,3),rhu(beta,3),rhu(mu,3)))
       ax.set_xlabel("Avg Degree D [Indivs]")
-      ax.set_ylabel("SD(Cases)")
+      ax.set_ylabel("Avg_SD(Cases)")
       
       if folder == "WS_Pruned":
         fix_pmb = ordp_pmbD_dic[p][mu]
@@ -772,9 +773,12 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
       #print("y", y)
       ax.grid(color='grey', linestyle='--', linewidth = 1)
       ax.errorbar(x,y, xerr = xerr, yerr = yerr, color = "tab:blue", marker = "*", linestyle = "-",
-         markersize = 30, mfc = "tab:red", mec = "black", linewidth = 3, label = "Avg_Std(NDI)")
-      D_c = 1 + 2*beta/(mu*(1+p))
+         markersize = 30, mfc = "tab:red", mec = "black", linewidth = 3, label = "Avg_SD(Cases)")
+      D_cf = 1 + 2*R_cnet*beta/(mu*(1+p))
+      D_cer
       ax.axvline(x = D_c, color = "maroon", lw = 4, ls = "--", 
+                 label = "".join((r"$D_{c-fuse \, model}$",f": {rhu(D_c,3)}")) )
+      ax.axvline(x = D_c, color = "dark blue", lw = 4, ls = "--", 
                  label = "".join((r"$D_{c-fuse \, model}$",f": {rhu(D_c,3)}")) )
       ax.legend(fontsize = 35)
 
