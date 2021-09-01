@@ -183,7 +183,7 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, seed = False, start_inf = 10):
 
   return dni_susceptible, dni_cases, dni_totcases
 
-def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_inf = 10,verbose = False,):
+def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-2, mu = 0.05, start_inf = 10,verbose = False,):
   'def a function that iters numb_iter and make an avg of all the trajectories'
   from itertools import zip_longest
   from itertools import chain
@@ -205,16 +205,20 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
 
   'find the maximum time of 1 scenario among numb_iter ones'
   for i in range(numb_iter):
+    'generate 1 sir'
     if not (i+1) % 50: onesir_start_time = dt.datetime.now()
+    
+    'save in a list std_dni to compute the ordp'
     if not mf:
       std_dni, _, ndi_cases, ndi_totcases \
         = sir(G, beta = beta, mu = mu, start_inf = start_inf, mf = mf)
       list_ordp.append(std_dni)
     else: _, ndi_cases, ndi_totcases = sir(G, beta = beta, mu = mu, start_inf = start_inf, mf = mf)
     
+    'save the 1 sir generated'
     tmp_traj = ndi_cases, ndi_totcases
     if not (i+1) % 50: 
-      'only printing here'
+      'time stamp'
       time_1sir = dt.datetime.now()-onesir_start_time
       time_50sir = dt.datetime.now()-start_time
       print("Total time for %s its of max-for-loop %s. Time for 1 sir %s" % (i+1, time_50sir, time_1sir))
@@ -226,7 +230,8 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
     'append tmp_traj and search for the max time of one epidemic'
     for idx_cl in range(numb_idx_cl):     #save only infected right? In fact, idx_cl = 0
       trajectories[idx_cl].append(tmp_traj[idx_cl])
-      max_len = len(max(trajectories[idx_cl], key=len))
+  
+  max_len = len(max(trajectories[0], key=len))
     
   'Only for nets: compute mean and std of avg_R and std_dni'
   if not mf:
@@ -249,7 +254,6 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
       old = trajectories[idx_cl][i].copy()
       last_el_list = [trajectories[idx_cl][i][-1]]*(max_len-len(trajectories[idx_cl][i]))
       trajectories[idx_cl][i] = list(chain(old,last_el_list))
-      
       if verbose:
         print("\niteration(s):", i, "idx_cl ", idx_cl)
         print("last el extension", last_el_list)
@@ -264,13 +268,20 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-3, mu = 0.05, start_i
       if length != max_len: raise Exception("Error: %s not max_len %s of %s-th it" % (length,max_len,i))
     if i == 199: print("End of avg_traj on 200 scenarios")
 
+  def rescale_wrt_ymax(ls):
+    ls = np.array(ls)
+    max_y = np.max(ls)
+    print(max_y)
+    return list(ls/max_y)
+
+  for idx_cl in range(numb_idx_cl):
+    trajectories[idx_cl] = rescale_wrt_ymax(trajectories[idx_cl])
+
   'std_avg_traj != order_param (std(arr_dni)) since prevalence(dni/N) and dni = 0 are allowed'  
   print("\nNow compute the Std of the prevalence")
-
   for idx_cl in range(numb_idx_cl):    
     avg_traj[idx_cl] = np.mean(trajectories[idx_cl], axis = 0) #avg wrt index, e.g. all 0-indexes
     std_avg_traj[idx_cl] = np.std(trajectories[idx_cl], axis = 0, ddof = 1)
-  #print("End idx_cl %s round"%idx_cl)
     'compute p(t) s.t. D(1-p(t))lambda = Rc_net'
     if idx_cl: #idx_cl(ndi_totcases) = 1
       N, D, _ = N_D_std_D(G)
@@ -325,19 +336,21 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
   mf_trajectories, mf_avg_traj, mf_std_avg_traj, mf_t_c, mf_p_c = \
     itermean_sir(G, mf = True, mu = mu, beta = beta, start_inf = start_inf, numb_iter = numb_iter,)
 
-  'plotting the many realisations'    
-  colors = ["paleturquoise","wheat","lightgreen", "thistle"]
+  'plotting the many realisations'  
+  colors = ["paleturquoise","weath","limegreen", "thistle"]
+  if R0 <= 1: colors = ["paleturquoise","wheat","lightgreen", "thistle"] #"coral","limegreen"
   ax.grid(color = "grey", ls = "--", lw = 1)
   ax2 = ax.twinx()
   ax3 = ax.twiny()
 
+  lw_traj = 1
   for j in range(numb_iter):
-    ax.plot(mf_trajectories[1][j], color = colors[1]) #MF_dni_totcases
-    ax.plot(trajectories[1][j], color = colors[2]) #NET_dni_totcases
+    ax.plot(mf_trajectories[1][j], color = colors[1], lw = lw_traj) #MF_dni_totcases
+    ax.plot(trajectories[1][j], color = colors[2], lw = lw_traj) #NET_dni_totcases
     ax2.plot(trajectories[0][j], color = colors[0], lw = 0) #NET_dni_cases
     ax2.plot(mf_trajectories[0][j], color = colors[3], lw = 0) #MF_dni_cases
   
-  width_totc = 3
+  lw_totc = 4
 
   'define a string_format to choose the best way to format the std of the mean'
   value = mf_std_avg_traj[1][-1]
@@ -345,21 +358,22 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
   if string_format == "0.0":
     string_format = format(value, ".1e")
 
+  lw_totc, ls_totc = 4, "solid"
   ax3.plot(mf_avg_traj[1], label=r"MF:TotalCases (%s%%$\pm$%s%%)"\
     % (np.round(mf_avg_traj[1][-1]*100,1), string_format ), \
-    color = "tab:orange", lw = width_totc) #mf:cd_inf, np.round(mf_std_avg_traj[1][-1]*100,1)
+    color = "tab:orange", lw = lw_totc, ls = ls_totc) #mf:cd_inf, np.round(mf_std_avg_traj[1][-1]*100,1)
   ax3.plot(avg_traj[1], label=r"Net:TotalCases (%s%%$\pm$%s%%)" %
     (np.round(avg_traj[1][-1]*100,1), np.round(std_avg_traj[1][-1]*100,1) ), \
-    color = "tab:green", lw = width_totc) #net:cd_inf
+    color = "tab:green", lw = lw_totc, ls = ls_totc) #net:cd_inf
 
   'plot horizontal line to highlight the initial infected'
   ax.axhline(start_inf/N, color = "r", ls="dashed", \
             label = "Start_Inf/N (%s%%) "% np.round(start_inf/N*100,1))
 
-  ax2.plot(mf_avg_traj[0], label="MF:NewDailyInf", \
-    color = "darkviolet", lw = width_totc) #prevalence
-  ax2.plot(avg_traj[0], label="Net:NewDailyInf", \
-    color = "tab:blue", lw = width_totc) #prevalence
+  ax2.plot(mf_avg_traj[0], label="MF:DailyNewInf", \
+    color = "darkviolet", lw = lw_totc) #prevalence
+  ax2.plot(avg_traj[0], label="Net:DailyNewInf", \
+    color = "tab:blue", lw = lw_totc) #prevalence
   
   label = r"Net:$t_c,p_c$" + f" = ({rhu(t_c)}d,{rhu(p_c,2)})"
   ms = 40
@@ -403,7 +417,7 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
   ax2.set_yticklabels(np.round(new_locs,2), color='#0a0535') # "darkblue"'''
 
   #'plot labels'
-  ax.set_xlabel('Time[1day]')
+  ax.set_xlabel('Time-steps')
   ax.set_ylabel('Indivs/N')
 
   'plotting figsize depending on legend'
@@ -411,34 +425,27 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
   R0 = beta*D/mu
   
   'set legend above the plot if R_0 in [0,2] in the NNR_Config_Model'
-  if R0 <= -3 and folder in folders:
-    #ax_ymin, ax_ymax = ax.get_ylim()
-    #set_ax_ymin = 1.5*ax_ymin
-    #set_ax_ymax = 2*ax_ymax
-    #ax.set_ylim(ax_ymin, set_ax_ymax)
+  ax2.set_zorder(0.5)
+  ax3.set_zorder(ax2.get_zorder()+1)
+  ax.patch.set_visible(False)
 
-    handles, labels = plt.gca().get_legend_handles_labels()
-    order = [5,0,2,3,0,4,1]
-    ax.legend([handles[idx] for idx in order],[labels[idx] for idx in order],
-              bbox_to_anchor=(1, 1), edgecolor="black", framealpha = 0, loc='upper left') #add: leg = 
-  else: 
-    ax2.set_zorder(0.5)
-    ax3.set_zorder(ax2.get_zorder()+1)
-    ax.patch.set_visible(False)
+  handles, labels = ax.get_legend_handles_labels()
+  handles2, labels2 = ax2.get_legend_handles_labels()
+  handles3, labels3 = ax3.get_legend_handles_labels()
+  handles = handles + handles2 + handles3
+  labels = labels + labels2 + labels3
 
-    handles, labels = ax.get_legend_handles_labels()
-    handles2, labels2 = ax2.get_legend_handles_labels()
-    handles3, labels3 = ax3.get_legend_handles_labels()
-    handles = handles + handles2 + handles3
-    labels = labels + labels2 + labels3
-
-    order = [3,4,2,1,0,6,5]
-    #print("handles, labels", handles, labels)
-    loc = "best"
-    if "WS_Pruned" in folders: loc = "center right"
+  order = [3,4,2,1,0,6,5]
+  #print("handles, labels", handles, labels)
+  loc = "best"
+  #if "WS_Pruned" in folders: loc = "center right"
+  if R0 >= 1:
     leg = ax3.legend([handles[idx] for idx in order],[labels[idx] for idx in order],
-              edgecolor="black", shadow = True, framealpha = 1, loc=loc)
-    leg.set_zorder(ax3.get_zorder()+1)
+              edgecolor="black", shadow = False, framealpha = 0.6, loc=loc)
+  elif folder in folders:
+    leg = ax3.legend([handles[idx] for idx in order],[labels[idx] for idx in order],
+              bbox_to_anchor=(1.07, 1), edgecolor="black", shadow = False, framealpha = 0.6, loc='upper left')
+  leg.set_zorder(ax3.get_zorder()+1)
 
 
   return avg_ordp_net, std_avg_ordp_net, Rc_net
@@ -677,8 +684,8 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
 
 
       right = 0.95
-      folders = ["WS_Prunedsss"]
-      if folder in folders and R0 <= 3: right = 0.78
+      folders = ["WS_Pruned"]
+      if folder in folders and R0 <= 1: right = 0.73
       plt.subplots_adjust(
       top=0.920,
       bottom=0.12, #if vertical, bottom=0.10,
@@ -774,12 +781,12 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
       ax.grid(color='grey', linestyle='--', linewidth = 1)
       ax.errorbar(x,y, xerr = xerr, yerr = yerr, color = "tab:blue", marker = "*", linestyle = "-",
          markersize = 30, mfc = "tab:red", mec = "black", linewidth = 3, label = "Avg_SD(Cases)")
-      D_cf = 1 + 2*R_cnet*beta/(mu*(1+p))
-      D_cer
-      ax.axvline(x = D_c, color = "maroon", lw = 4, ls = "--", 
-                 label = "".join((r"$D_{c-fuse \, model}$",f": {rhu(D_c,3)}")) )
-      ax.axvline(x = D_c, color = "dark blue", lw = 4, ls = "--", 
-                 label = "".join((r"$D_{c-fuse \, model}$",f": {rhu(D_c,3)}")) )
+      D_cfus = 1 + 2*Rc_net*beta/(mu*(1+p))
+      D_cer = 1 + Rc_net*beta/mu
+      ax.axvline(x = D_cfus, color = "maroon", lw = 4, ls = "--", 
+                 label = "".join((r"$D_{c-fuse \, model}$",f": {rhu(D_cfus,3)}")) )
+      ax.axvline(x = D_cer, color = "darkblue", lw = 4, ls = "--", 
+                 label = "".join((r"$D_{c-ER \, model}$",f": {rhu(D_cer,3)}")) )
       ax.legend(fontsize = 35)
 
       plt.subplots_adjust(
@@ -791,6 +798,7 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
       if folder == "WS_Pruned":
         ordp_path = f"{my_dir()}{folder}/OrdParam/p{rhu(p,3)}/mu{rhu(mu,3)}/"
         if not os.path.exists(ordp_path): os.makedirs(ordp_path)
+
         plt.savefig("".join((ordp_path,"%s_ordp_p%s_mu%s.png" % (folder, rhu(p,3),rhu(mu,3)))))
       else: 
         ordp_path = my_dir() + folder + "/OrdParam/p%s/beta%s/" % (rhu(p,3),rhu(beta,3))
