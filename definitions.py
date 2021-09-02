@@ -71,7 +71,7 @@ def plot_params():
   plt.rc('xtick.major', pad = 16)
   plt.rc('ytick.major', pad = 16)
   plt.rcParams["figure.figsize"] = [32,14]
-  plt.rc('axes',edgecolor='k')
+  plt.rc('axes', edgecolor='black', lw = 1.2)
   #plt.rc("grid", color = "gray",ls="--", lw=1)
   #plt.rc("tick_params", labelsize = MEDIUM_SIZE, direction="in", pad=10)
   #plt.rcParams['xtick.major.pad']='16'
@@ -97,9 +97,10 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, seed = False, start_inf = 10):
 
   inf_list = [] #infected node list @ each t
 
-  dni_cases = [0] #it was dni_cases = [] # = len(inf_list)/N, i.e. frac of daily infected for every t
-  dni_totcases = [fr_stinf]
-  dni_susceptible = [1-fr_stinf]
+  dni_cases = [fr_stinf] #it was dni_cases = [] # = len(inf_list)/N, i.e. frac of daily infected for every t
+  dni_totcases = [fr_stinf] #  dni_totcases = [fr_stinf]
+  dni_susceptible = [1-fr_stinf] #  dni_susceptible = [1-fr_stinf] 
+
 
   pos_dni_cases = [] #arr to computer Std(daily_new_inf(t)) for daily_new_inf(t)!=0
 
@@ -192,7 +193,7 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-2, mu = 0.05, start_i
   import datetime as dt
   import copy
 
-  #mi servono solo gli infetti...quidni numb_idx_cl = 2, prev and ndi_totcases
+  #mi servono solo gli infetti...quidni numb_idx_cl = 2, prev and dni_totcases
   numb_idx_cl = 2; counts = [[],[]]; max_len = 0 
 
   'here avg are "means" among all the iterations'
@@ -210,13 +211,23 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-2, mu = 0.05, start_i
     
     'save in a list std_dni to compute the ordp'
     if not mf:
-      std_dni, _, ndi_cases, ndi_totcases \
+      std_dni, _, dni_cases, dni_totcases \
         = sir(G, beta = beta, mu = mu, start_inf = start_inf, mf = mf)
       list_ordp.append(std_dni)
-    else: _, ndi_cases, ndi_totcases = sir(G, beta = beta, mu = mu, start_inf = start_inf, mf = mf)
+    else: _, dni_cases, dni_totcases = sir(G, beta = beta, mu = mu, start_inf = start_inf, mf = mf)
     
+    def rescale_wrt_ymax(ls):
+      #print("ls", ls)
+      max_y = max(ls)
+      if not max_y: return max_y, ls
+      rescaled_ls = [x/max_y for x in ls]
+      #print("\nmax_y", max_y, rescaled_ls)
+      return max_y, rescaled_ls
+  
     'save the 1 sir generated'
-    tmp_traj = ndi_cases, ndi_totcases
+    max_dni_cases, dni_cases = 0, dni_cases #rescale_wrt_ymax(dni_cases)
+    max_dni_totcases, dni_totcases = 0, dni_totcases #rescale_wrt_ymax(dni_totcases)
+    tmp_traj = dni_cases, dni_totcases
     if not (i+1) % 50: 
       'time stamp'
       time_1sir = dt.datetime.now()-onesir_start_time
@@ -268,22 +279,13 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-2, mu = 0.05, start_i
       if length != max_len: raise Exception("Error: %s not max_len %s of %s-th it" % (length,max_len,i))
     if i == 199: print("End of avg_traj on 200 scenarios")
 
-  def rescale_wrt_ymax(ls):
-    ls = np.array(ls)
-    max_y = np.max(ls)
-    print(max_y)
-    return list(ls/max_y)
-
-  for idx_cl in range(numb_idx_cl):
-    trajectories[idx_cl] = rescale_wrt_ymax(trajectories[idx_cl])
-
   'std_avg_traj != order_param (std(arr_dni)) since prevalence(dni/N) and dni = 0 are allowed'  
   print("\nNow compute the Std of the prevalence")
   for idx_cl in range(numb_idx_cl):    
     avg_traj[idx_cl] = np.mean(trajectories[idx_cl], axis = 0) #avg wrt index, e.g. all 0-indexes
     std_avg_traj[idx_cl] = np.std(trajectories[idx_cl], axis = 0, ddof = 1)
     'compute p(t) s.t. D(1-p(t))lambda = Rc_net'
-    if idx_cl: #idx_cl(ndi_totcases) = 1
+    if idx_cl: #idx_cl(dni_totcases) = 1
       N, D, _ = N_D_std_D(G)
       R0 = D*beta/mu
       if not mf:
@@ -314,10 +316,10 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-2, mu = 0.05, start_i
   #if not mf: return avg_R, std_avg_R, avg_ordp, std_avg_ordp, plot_trajectories, avg_traj, std_avg_traj
   if not mf: 
     return avg_ordp, std_avg_ordp, plot_trajectories, avg_traj, std_avg_traj, \
-                    Rc_net, t_c, p_c
-  return plot_trajectories, avg_traj, std_avg_traj, t_c, p_c
+                    Rc_net, t_c, p_c, max_dni_cases, max_dni_totcases
+  return plot_trajectories, avg_traj, std_avg_traj, t_c, p_c, max_dni_cases, max_dni_totcases
 
-def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter = 200):
+def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter = 200):
 
   'D = numb acts only in mf_avg_traj'
   from definitions import rhu
@@ -328,46 +330,54 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
   'Inf and Cum_Infected from Net_Sir; Recovered from MF_SIR'
   print("\nNetwork-SIR loading...")
   #old ver: add avg_R_net, std_avg_R_net, 
-  avg_ordp_net, std_avg_ordp_net, trajectories, avg_traj, std_avg_traj, Rc_net, t_c, p_c = \
+  avg_ordp_net, std_avg_ordp_net, trajectories, avg_traj, std_avg_traj, Rc_net, t_c, p_c, max_dni_cases, max_dni_totcases = \
     itermean_sir(G, mf = False, beta = beta, mu = mu, start_inf  = start_inf, numb_iter=numb_iter,)
   
   print("Final avg_ordp_net", avg_ordp_net)
   print("\nMF-SIR loading...")
-  mf_trajectories, mf_avg_traj, mf_std_avg_traj, mf_t_c, mf_p_c = \
+  mf_trajectories, mf_avg_traj, mf_std_avg_traj, mf_t_c, mf_p_c, mf_max_dni_cases, mf_max_dni_totcases = \
     itermean_sir(G, mf = True, mu = mu, beta = beta, start_inf = start_inf, numb_iter = numb_iter,)
 
   'plotting the many realisations'  
-  colors = ["paleturquoise","weath","limegreen", "thistle"]
-  if R0 <= 1: colors = ["paleturquoise","wheat","lightgreen", "thistle"] #"coral","limegreen"
-  ax.grid(color = "grey", ls = "--", lw = 1)
-  ax2 = ax.twinx()
-  ax3 = ax.twiny()
+  #from matplotlib import cm
+  #green = cmap.get_cmap("Greens")(avg_traj[1][-1] / std_avg_traj[1][-1])
+  #orange = cmap.get_cmap("Oranges")(mf_avg_traj[1][-1] / mf_std_avg_traj[1][-1])
+  colors = ["paleturquoise","burlywood","lawngreen", "thistle"]
+  if beta*D/mu <= 1: colors = ["paleturquoise","coral","limegreen", "thistle"]
+  ax1.grid(color = "grey", ls = "--", lw = 1)
+  ax2 = ax1.twinx()
+  ax3 = ax1.twiny()
 
   lw_traj = 1
   for j in range(numb_iter):
-    ax.plot(mf_trajectories[1][j], color = colors[1], lw = lw_traj) #MF_dni_totcases
-    ax.plot(trajectories[1][j], color = colors[2], lw = lw_traj) #NET_dni_totcases
+    ax1.plot(mf_trajectories[1][j], color = colors[1], lw = lw_traj) #MF_dni_totcases
+    ax1.plot(trajectories[1][j], color = colors[2], lw = lw_traj) #NET_dni_totcases
     ax2.plot(trajectories[0][j], color = colors[0], lw = 0) #NET_dni_cases
     ax2.plot(mf_trajectories[0][j], color = colors[3], lw = 0) #MF_dni_cases
   
   lw_totc = 4
 
+  'LEAVE IT THE PROBLEM OF STD ILL GO TO BED'
+
+
   'define a string_format to choose the best way to format the std of the mean'
-  value = mf_std_avg_traj[1][-1]
+  value = mf_max_dni_totcases #       value = mf_std_avg_traj[1][-1]
   string_format = str(np.round(value*100,1))[:3]
-  if string_format == "0.0":
+  if string_format == "0.0" and np.isclose(value, 0):
     string_format = format(value, ".1e")
 
   lw_totc, ls_totc = 4, "solid"
   ax3.plot(mf_avg_traj[1], label=r"MF:TotalCases (%s%%$\pm$%s%%)"\
+    #% (np.round(value*100,1), string_format ), \
     % (np.round(mf_avg_traj[1][-1]*100,1), string_format ), \
     color = "tab:orange", lw = lw_totc, ls = ls_totc) #mf:cd_inf, np.round(mf_std_avg_traj[1][-1]*100,1)
   ax3.plot(avg_traj[1], label=r"Net:TotalCases (%s%%$\pm$%s%%)" %
+    #(np.round(max_dni_totcases*100,3), np.round(std_avg_traj[1][-1]*100,1) ), \
     (np.round(avg_traj[1][-1]*100,1), np.round(std_avg_traj[1][-1]*100,1) ), \
     color = "tab:green", lw = lw_totc, ls = ls_totc) #net:cd_inf
 
   'plot horizontal line to highlight the initial infected'
-  ax.axhline(start_inf/N, color = "r", ls="dashed", \
+  ax1.axhline(start_inf/N, color = "r", ls="dashed", \
             label = "Start_Inf/N (%s%%) "% np.round(start_inf/N*100,1))
 
   ax2.plot(mf_avg_traj[0], label="MF:DailyNewInf", \
@@ -389,36 +399,21 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
 
   'exclude first and last yticks'
   import matplotlib.pylab as plt
-  locs = ax.get_yticks()
-  ax.set_yticks(locs[1:-1])
-  ax.set_yticklabels(np.round(locs[1:-1],2), color='#003312')
+  locs = ax1.get_yticks()
+  ax1.set_yticks(locs[1:-1])
+  ax1.set_yticklabels(np.round(locs[1:-1],2), color='#003312')
 
   locs = ax2.get_yticks()
   ax2.set_yticks(locs[1:-1])
   ax2.set_yticklabels(np.round(locs[1:-1],3), color='darkblue')
 
   ax3.set_xticklabels([])
-  #ax3.set_yticklabels([])
-
-
-  '''
-  #Usually, matplotlib uses 12 ticks: 0th @ start- 1st = min; 10th = max; 11 @ end axes
-  step = max - min / 10
-  new_locs = list(np.linspace(min+step,max, 10))
-  new_locs[:0] = [min]
-  ax2.set_yticks(new_locs)
-  ax2.set_yticklabels(np.round(new_locs,2), color='#0a0535') # "darkblue"
-
-  try with already existing locs:
-  new_locs = list(np.linspace(locs[2],locs[-2], len(locs[2:-1])))
-  new_locs[:0] = [locs[1]]
-  print("locs", locs, locs[1:-1], new_locs)
-  ax2.set_yticks(new_locs)
-  ax2.set_yticklabels(np.round(new_locs,2), color='#0a0535') # "darkblue"'''
 
   #'plot labels'
-  ax.set_xlabel('Time-steps')
-  ax.set_ylabel('Indivs/N')
+  ax1.set_xlabel('Time-steps')
+  ax1.set_ylabel('Indivs/N')
+  for ax in [ax1,ax2,ax3]:
+    ax.set_yscale("log")
 
   'plotting figsize depending on legend'
   folders = ["WS_Pruned"]
@@ -427,9 +422,9 @@ def plot_sir(G, ax, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_
   'set legend above the plot if R_0 in [0,2] in the NNR_Config_Model'
   ax2.set_zorder(0.5)
   ax3.set_zorder(ax2.get_zorder()+1)
-  ax.patch.set_visible(False)
+  ax1.patch.set_visible(False)
 
-  handles, labels = ax.get_legend_handles_labels()
+  handles, labels = ax1.get_legend_handles_labels()
   handles2, labels2 = ax2.get_legend_handles_labels()
   handles3, labels3 = ax3.get_legend_handles_labels()
   handles = handles + handles2 + handles3
@@ -679,7 +674,7 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
       print("\nThe model has N: %s, D: %s(%s), beta: %s, mu: %s, p: %s, R0: %s" % 
       (N,rhuD2,rhu(std_D,2),rhu(beta,3),rhu(mu,3),rhu(p,3),rhu(R0,3)) )
       avg_ordp_net, std_avg_ordp_net, Rc_net = \
-        plot_sir(G, ax=ax, folder = folder, beta = beta, mu = mu, start_inf = start_inf, 
+        plot_sir(G, ax1=ax, folder = folder, beta = beta, mu = mu, start_inf = start_inf, 
                 numb_iter = numb_iter)
 
 
