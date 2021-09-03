@@ -97,7 +97,7 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, seed = False, start_inf = 10):
 
   inf_list = [] #infected node list @ each t
 
-  dni_cases = [fr_stinf] #it was dni_cases = [] # = len(inf_list)/N, i.e. frac of daily infected for every t
+  dni_cases = [0] #it was dni_cases = [] # = len(inf_list)/N, i.e. frac of daily infected for every t
   dni_totcases = [fr_stinf] #  dni_totcases = [fr_stinf]
   dni_susceptible = [1-fr_stinf] #  dni_susceptible = [1-fr_stinf] 
 
@@ -225,8 +225,6 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-2, mu = 0.05, start_i
       return max_y, rescaled_ls
   
     'save the 1 sir generated'
-    max_dni_cases, dni_cases = 0, dni_cases #rescale_wrt_ymax(dni_cases)
-    max_dni_totcases, dni_totcases = 0, dni_totcases #rescale_wrt_ymax(dni_totcases)
     tmp_traj = dni_cases, dni_totcases
     if not (i+1) % 50: 
       'time stamp'
@@ -316,8 +314,8 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-2, mu = 0.05, start_i
   #if not mf: return avg_R, std_avg_R, avg_ordp, std_avg_ordp, plot_trajectories, avg_traj, std_avg_traj
   if not mf: 
     return avg_ordp, std_avg_ordp, plot_trajectories, avg_traj, std_avg_traj, \
-                    Rc_net, t_c, p_c, max_dni_cases, max_dni_totcases
-  return plot_trajectories, avg_traj, std_avg_traj, t_c, p_c, max_dni_cases, max_dni_totcases
+                    Rc_net, t_c, p_c,  
+  return plot_trajectories, avg_traj, std_avg_traj, t_c, p_c,  
 
 def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter = 200):
 
@@ -330,12 +328,12 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
   'Inf and Cum_Infected from Net_Sir; Recovered from MF_SIR'
   print("\nNetwork-SIR loading...")
   #old ver: add avg_R_net, std_avg_R_net, 
-  avg_ordp_net, std_avg_ordp_net, trajectories, avg_traj, std_avg_traj, Rc_net, t_c, p_c, max_dni_cases, max_dni_totcases = \
+  avg_ordp_net, std_avg_ordp_net, trajectories, avg_traj, std_avg_traj, Rc_net, t_c, p_c,   = \
     itermean_sir(G, mf = False, beta = beta, mu = mu, start_inf  = start_inf, numb_iter=numb_iter,)
   
   print("Final avg_ordp_net", avg_ordp_net)
   print("\nMF-SIR loading...")
-  mf_trajectories, mf_avg_traj, mf_std_avg_traj, mf_t_c, mf_p_c, mf_max_dni_cases, mf_max_dni_totcases = \
+  mf_trajectories, mf_avg_traj, mf_std_avg_traj, mf_t_c, mf_p_c = \
     itermean_sir(G, mf = True, mu = mu, beta = beta, start_inf = start_inf, numb_iter = numb_iter,)
 
   'plotting the many realisations'  
@@ -356,29 +354,37 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
     ax2.plot(mf_trajectories[0][j], color = colors[3], lw = 0) #MF_dni_cases
   
   lw_totc = 4
-
-  'LEAVE IT THE PROBLEM OF STD ILL GO TO BED'
-
-
   'define a string_format to choose the best way to format the std of the mean'
-  value = mf_max_dni_totcases #       value = mf_std_avg_traj[1][-1]
+  value = mf_std_avg_traj[1][-1]
   string_format = str(np.round(value*100,1))[:3]
   if string_format == "0.0" and np.isclose(value, 0):
     string_format = format(value, ".1e")
 
-  lw_totc, ls_totc = 4, "solid"
+  lw_totc, ls_totc = 5, "solid"
   ax3.plot(mf_avg_traj[1], label=r"MF:TotalCases (%s%%$\pm$%s%%)"\
-    #% (np.round(value*100,1), string_format ), \
     % (np.round(mf_avg_traj[1][-1]*100,1), string_format ), \
-    color = "tab:orange", lw = lw_totc, ls = ls_totc) #mf:cd_inf, np.round(mf_std_avg_traj[1][-1]*100,1)
+    color = "tab:orange", lw = lw_totc, ls = ls_totc)
   ax3.plot(avg_traj[1], label=r"Net:TotalCases (%s%%$\pm$%s%%)" %
-    #(np.round(max_dni_totcases*100,3), np.round(std_avg_traj[1][-1]*100,1) ), \
     (np.round(avg_traj[1][-1]*100,1), np.round(std_avg_traj[1][-1]*100,1) ), \
     color = "tab:green", lw = lw_totc, ls = ls_totc) #net:cd_inf
 
   'plot horizontal line to highlight the initial infected'
   ax1.axhline(start_inf/N, color = "r", ls="dashed", \
             label = "Start_Inf/N (%s%%) "% np.round(start_inf/N*100,1))
+
+
+  def list_replace(lst, old, new):
+    """replace list elements (inplace)"""
+    lst = list(lst)
+    print(lst)
+    i = -1
+    try:
+      while 1:
+        i = lst.index(old, i + 1)
+        lst[i] = new
+    except:
+        pass
+    return lst
 
   ax2.plot(mf_avg_traj[0], label="MF:DailyNewInf", \
     color = "darkviolet", lw = lw_totc) #prevalence
@@ -413,16 +419,15 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
   ax1.set_xlabel('Time-steps')
   ax1.set_ylabel('Indivs/N')
   for ax in [ax1,ax2,ax3]:
-    ax.set_yscale("log")
+    ax.set_yscale("linear")
 
   'plotting figsize depending on legend'
-  folders = ["WS_Pruned"]
   R0 = beta*D/mu
   
   'set legend above the plot if R_0 in [0,2] in the NNR_Config_Model'
   ax2.set_zorder(0.5)
   ax3.set_zorder(ax2.get_zorder()+1)
-  ax1.patch.set_visible(False)
+  #ax1.patch.set_visible(False)
 
   handles, labels = ax1.get_legend_handles_labels()
   handles2, labels2 = ax2.get_legend_handles_labels()
@@ -433,15 +438,15 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
   order = [3,4,2,1,0,6,5]
   #print("handles, labels", handles, labels)
   loc = "best"
+  folders = ["WS_Pruned"]
   #if "WS_Pruned" in folders: loc = "center right"
   if R0 >= 1:
     leg = ax3.legend([handles[idx] for idx in order],[labels[idx] for idx in order],
               edgecolor="black", shadow = False, framealpha = 0.6, loc=loc)
-  elif folder in folders:
+  else:
     leg = ax3.legend([handles[idx] for idx in order],[labels[idx] for idx in order],
               bbox_to_anchor=(1.07, 1), edgecolor="black", shadow = False, framealpha = 0.6, loc='upper left')
   leg.set_zorder(ax3.get_zorder()+1)
-
 
   return avg_ordp_net, std_avg_ordp_net, Rc_net
 
@@ -479,7 +484,7 @@ def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = Fals
     print("ls_cc", ls_cc)
     max_cc = max(ls_cc, key = len)
     avg_pl = nx.average_shortest_path_length(G.subgraph(max_cc))
-    str_SW = r"SW_{#c-max:%s-%s}"%(number_connected_components(G), len(max_cc))
+    str_SW = r"SW_{c-max:%s-%s}"%(number_connected_components(G), len(max_cc))
 
   'find the major hub and the "ousiders", i.e. highly connected nodes'
   infos = G.degree()
@@ -679,8 +684,8 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
 
 
       right = 0.95
-      folders = ["WS_Pruned"]
-      if folder in folders and R0 <= 1: right = 0.73
+      #folders = ["WS_Pruned"]
+      if R0 <= 1: right = 0.73
       plt.subplots_adjust(
       top=0.920,
       bottom=0.12, #if vertical, bottom=0.10,
@@ -880,6 +885,8 @@ def pow_max(N, num_iter = "all"):
     return i-1
   return int(num_iter)
 
+
+'''
 '===Configurational Model'
 def pois_pos_degrees(D, N, L = int(2e3)):
   'Draw N degrees from a Poissonian sequence with lambda = D and length L'
@@ -892,7 +899,7 @@ def pois_pos_degrees(D, N, L = int(2e3)):
   return pos_degrees
 
 def config_pois_model(N, D, seed = 123, folder = None):
-  '''create a network with the node degrees drawn from a poissonian with even sum of degrees'''
+  'create a network with the node degrees drawn from a poissonian with even sum of degrees'
   
   np.random.seed(seed)
   degrees = pois_pos_degrees(D,N) #poiss distr with deg != 0
@@ -913,6 +920,8 @@ def config_pois_model(N, D, seed = 123, folder = None):
   infos_sorted_nodes(G)
   print("End of %s " % folder)
   return G
+
+'''
 
 '===def of net functions'
 'addition of distant nodes'
@@ -962,6 +971,7 @@ def connect_net(G, conn_flag): #set solo_nodes = False to have D < 1 nets
     #print("Total links to have", len(list(nx.connected_components(G))),"connected component are", its)
     if len(list(nx.connected_components(G)))>1: print("Disconnected net!")
 
+'''
 def NN_pois_net(N, folder, ext_D, p = 0, conn_flag = True):
   'p is not used right now'
   from definitions import config_pois_model, connect_net
@@ -1129,6 +1139,150 @@ def NNOverl_pois_net(N, ext_D, p, add_edges_only = False):
   # while(not nx.is_connected(G)): G = NN_pois_net(N, ext_D = D)
   
   return G
+
+'''
+
+'New Cluster for Poissonian Small World Network'
+def pois_pos_degrees(D, N):
+  import numpy as np
+  np.random.seed(0)
+
+  'Draw N degrees from a Poissonian sequence with lambda = D and length L'
+  def remove_zeros(array):
+    #print("array", array, "degarray", np.sum(array))
+    its = 0
+    while True:
+      its += 1
+      mask = np.where(array == 0)
+      if not mask[0].size: 
+        #print(f"Replacing non-0 degrees in {its} iterations")
+        return array
+      
+      'the sum of the degrees must be even'
+      psum = np.sum(array)
+      #print("psum", psum)
+      if not psum % 2: #psum is even return even cover
+        while True:
+          its += 1
+          cover = np.random.poisson(lam = D, size = len(array[mask]))
+          #print("even cover?", cover)
+          if not np.sum(cover) % 2: break
+      else:
+        while True: #psum is odd return odd cover
+          its += 1
+          cover = np.random.poisson(lam = D, size = len(array[mask]))
+          if np.sum(cover) % 2: break
+      #print("cover final", cover)
+      array[mask] = cover
+
+  pos_degrees = np.random.poisson(lam = D, size = N)
+  pos_degrees = remove_zeros(pos_degrees)
+  #print(pos_degrees)
+  return pos_degrees
+
+def dic_nodes_degrees(degrees):
+    np.random.seed(1)
+    #print("degrees", degrees, sum(degrees))
+    N = len(degrees)
+    nodes = np.arange(N)
+    dic_nodes = nodes.copy()
+    np.random.shuffle(dic_nodes)
+    dic_nodes = {k:v for k in dic_nodes for v in np.sort(degrees)[np.where(dic_nodes == k)]}
+    sorted_nodes = np.array([x for x in dic_nodes.keys()])
+    #print(f'nodes: {nodes}, sorted_nodes: {sorted_nodes}', "dic_nodes", dic_nodes, np.sort(degrees))
+    return dic_nodes
+
+def delete_node_from_both(avl_node, nodes, sorted_nodes, b_bool):
+    nodes = np.delete(nodes, np.where(nodes == avl_node))
+    sorted_nodes = np.delete(sorted_nodes, np.where(sorted_nodes == avl_node))
+    #print(f'len(nodes): {len(nodes)}',)
+    if len(nodes) == 1: 
+        #print(f'\nEnd By len(nodes):{len(nodes)},{len(sorted_nodes)}')
+        b_bool = True
+    return nodes, sorted_nodes, b_bool
+
+def add_edge(snode, i, b_bool, edges, sorted_nodes, nodes, dic_nodes):
+    D = len(nodes)
+    snode_idx = np.where(nodes == snode)[0]
+    avl_node = nodes[(snode_idx+i)%D] #nearest available node
+    ##print(f'Inside i={i} with D = {D} add_edge: nodes: {nodes}, snode_idx[{snode}]:{snode_idx},' )   
+    ##print(f"Before edge.add: selected node: {avl_node}, deg[{avl_node}]: {dic_nodes[int(avl_node)]}")
+    edges.add((int(snode),int(avl_node)))
+    dic_nodes[int(avl_node)] -= 1
+    ##print(f'after edge.add: edges, dic_nodes[{avl_node}]', edges, dic_nodes[int(avl_node)])
+    if dic_nodes[int(avl_node)]==1:
+        nodes, sorted_nodes, b_bool = delete_node_from_both(avl_node,  nodes, sorted_nodes, b_bool)
+        ##print(f'Deleted for low degree {avl_node}: nodes, sorted_nodes', nodes, sorted_nodes)
+
+def edges_nearest_node(dic_nodes):
+    from copy import deepcopy
+    dc_dic_nodes = deepcopy(dic_nodes)
+    sorted_nodes = np.array([x for x in dc_dic_nodes.keys()])
+    nodes = np.arange(len(sorted_nodes))
+    ##print(f'nodes: {nodes}',f'sorted_nodes: {sorted_nodes}',)
+    ##print(f'id(nodes): {id(nodes)}',f"id(dc_dic_nodes.keys)", id(dic_nodes.keys()), np.array(dic_nodes.keys()))
+    edges = set()
+    b_bool = False #breakingbool
+    for snode in sorted_nodes:
+        ##print(f'\nRecap nodes: nodes: {nodes}, sorted_nodes & degree', sorted_nodes, [dc_dic_nodes[k] for k in sorted_nodes])
+        ##print(f'Choosen snode: {snode} with degree: {dc_dic_nodes[snode]}')
+        snode_idx = np.where(nodes == snode)[0]
+        for i in np.arange(1, dc_dic_nodes[snode]//2+1):
+            no_avl_nodes = [a for (a,b) in edges if b == snode]
+            ##print(f'check already takes edges & avl_nodes: {edges}, {no_avl_nodes}', )
+            #if nodes[(snode_idx+i)%D] not in no_avl_nodes:
+            add_edge(snode, i, b_bool, edges = edges, sorted_nodes = sorted_nodes, \
+                nodes = nodes, dic_nodes = dc_dic_nodes)
+            if b_bool: 
+                ##print(f'i bbool break: ',)
+                break
+            add_edge(snode, -i, b_bool, edges = edges, sorted_nodes = sorted_nodes, \
+                nodes = nodes, dic_nodes = dc_dic_nodes)
+            if b_bool: 
+                ##print(f'-i bbool break: ',)
+                break
+
+        if dc_dic_nodes[snode]%2: #and nodes[(snode_idx+1)%D] not in [b for (a,b) in edges if a == snode]:
+            ##print("Odd last attachment")
+            add_edge(snode = snode, i = 1, b_bool = b_bool, edges = edges, sorted_nodes = sorted_nodes, \
+                nodes = nodes, dic_nodes = dc_dic_nodes)
+            if b_bool: 
+                ##print(f'Odd last bbool break: ',)
+                break
+        nodes, sorted_nodes, b_bool = delete_node_from_both(snode, nodes = nodes, sorted_nodes = sorted_nodes, b_bool = b_bool)
+        ##print(f'End of 1 cycle deleted snode: {snode}')
+        
+        if b_bool: 
+            ##print(f'End of all',)
+            break
+        ##print('After all the rewiring, left nodes', nodes, "sorted_nodes", sorted_nodes, "edges", edges)
+    return edges
+
+def NN_pois_net(N, folder, ext_D, p = 0, conn_flag = False):
+    from definitions import check_loops_parallel_edges, infos_sorted_nodes, \
+        long_range_edge_add, connect_net, N_D_std_D
+
+    D = ext_D
+    degrees = pois_pos_degrees(D, N)
+    dic_nodes = dic_nodes_degrees(degrees)
+
+    edges = edges_nearest_node(dic_nodes)
+    G = nx.Graph()
+    G.add_nodes_from(np.arange(N))
+    G.add_edges_from(edges)
+
+    check_loops_parallel_edges(G)
+    infos_sorted_nodes(G, num_sorted_nodes=False)
+
+    long_range_edge_add(G, p = p)
+    connect_net(G, conn_flag = conn_flag)
+
+    ##print(f"There are {len([j for i,j in G.degree() if j == 0])} 0 degree node as")
+    _,D,_ = N_D_std_D(G)
+    ##print(f"End of wiring with average degree {D} vs {ext_D}")
+    ##print(f'G.is_connected(): {nx.is_connected(G)}',)
+    
+    return G
 
 'Net Infos'
 def check_loops_parallel_edges(G):
@@ -1527,7 +1681,7 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
             conn_flag = False
           else: conn_flag = True'''
           conn_flag = False
-          G = NN_pois_net(N, folder = folder, ext_D = regD, p = p, conn_flag = conn_flag)
+          G = NN_pois_net(N = N, folder = folder, ext_D = regD, p = p, conn_flag = conn_flag)
           print("connected components", len(list(nx.connected_components(G))))
           if len(list(nx.connected_components(G))) != 1 and conn_flag:
             raise Exception("Error: it should be connected")
@@ -1601,7 +1755,7 @@ def parameters_net_and_sir(folder = None, p_max = 0.3):
   'WARNING: put SAME beta, mu, D and p to compare at the end the different topologies'
   #k_prog = np.concatenate(([0.2,0.4,0.6,0.8],np.arange(2,20,2)))
   #k_prog = np.concatenate(([1.0],np.arange(2,20,2)))
-  k_prog = np.arange(1,13) #poisssonian: np.arange(1,60,2)
+  k_prog = np.arange(2,13) #poisssonian: np.arange(1,60,2)
   p_prog = [0, 0.1, 0.3] #0.2 misses
   beta_prog = [0.05,0.1,0.2,0.3]; mu_prog = [0.14, 0.16, 0.2, 0.25, 0.8]#, 0.33,0.5]
   R0_min = 0; R0_max = 30
