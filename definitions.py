@@ -284,15 +284,16 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-2, mu = 0.05, start_i
     avg_traj[idx_cl] = np.mean(trajectories[idx_cl], axis = 0) #avg wrt index, e.g. all 0-indexes
     std_avg_traj[idx_cl] = np.std(trajectories[idx_cl], axis = 0, ddof = 1)
     'compute p(t) s.t. D(1-p(t))lambda = Rc_net'
+    N, D, _ = N_D_std_D(G)
     if idx_cl: #idx_cl(dni_totcases) = 1
-      N, D, _ = N_D_std_D(G)
       R0 = D*beta/mu
       if not mf:
         D2 = sum([j**2 for _,j in G.degree()]) / N
         Rc_net = D**2/(D2-D)
-      if mf: 
+      if mf and int(D)>1: 
         D = int(D)
         Rc_net = 1/(1-D**(-1))
+      elif mf and int(D)<=1: Rc_net = 0
 
       RcR0 = Rc_net / R0
       p_c = 1 - RcR0
@@ -312,10 +313,10 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-2, mu = 0.05, start_i
           print("End of t_c")
         #else: t_c = 0
 
-  #if not mf: return avg_R, std_avg_R, avg_ordp, std_avg_ordp, plot_trajectories, avg_traj, std_avg_traj
   if not mf: 
     return avg_ordp, std_avg_ordp, plot_trajectories, avg_traj, std_avg_traj, \
                     Rc_net, t_c, p_c,  
+  #else: return avg_ordp, std_avg_ordp, plot_trajectories, avg_traj, std_avg_traj,
   return plot_trajectories, avg_traj, std_avg_traj, t_c, p_c,  
 
 def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb_iter = 200):
@@ -443,7 +444,7 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
   #if "WS_Pruned" in folders: loc = "center right"
   if True: #R0 <= 1:
     leg = ax3.legend([handles[idx] for idx in order],[labels[idx] for idx in order],
-              bbox_to_anchor=(1.07, 1), edgecolor="black", shadow = False, framealpha = 0.6, loc='upper left')
+              bbox_to_anchor=(1.05, 1), edgecolor="black", shadow = False, framealpha = 0.6, loc='upper left')
   else:  leg = ax3.legend([handles[idx] for idx in order],[labels[idx] for idx in order],
               edgecolor="black", shadow = False, framealpha = 0.6, loc=loc)
     
@@ -457,7 +458,216 @@ def rhu(n, decimals=0, integer = False): #round_half_up
     res = math.floor(n*multiplier + 0.5) / multiplier
     if integer: return int(res)
     return res
-  
+
+def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 10, numb_iter = 50):
+  import os.path
+  from definitions import my_dir, func_file_name, N_D_std_D
+  import datetime as dt
+  import matplotlib.pylab as plt
+  start_time = dt.datetime.now()
+
+  print("numb_iter", numb_iter)
+  mode = "a"
+  #if done_iterations == 1: mode = "w"
+  my_dir = my_dir() #"/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/Tests/"
+  N, D, std_D = N_D_std_D(G) #D used in ordp_pmbD, outsiders, R0
+  adj_or_sir = "SIR"
+  'find the major hub and the "ousiders", i.e. highly connected nodes'
+  infos = G.degree()
+  dsc_sorted_nodes = sorted( infos, key = lambda x: x[1], reverse=True)
+  i,count_outsiders, threshold = 0,0,3*D
+  while( list(map(lambda x: x[1], dsc_sorted_nodes))[i] >  threshold):
+    count_outsiders += 1
+    i+=1
+  print("Outsiders", count_outsiders)
+
+  'directiories'
+  log_upper_path = my_dir + folder + "/" #../Plots/Tests/WS_Epids/
+  my_dir+=folder+"/p%s/"%rhu(p,3)+adj_or_sir+"/" #"../Plots/Test/WS_Epids/p0.001/SIR/"
+  #file_path depends on a "r0_folder"
+  log_path = log_upper_path + folder + "_log_saved_SIR.txt" #"../Plots/Test/WS_Epids/SIR_log_saved_SIR.txt"
+
+  plot_params()
+  intervals = np.arange(R0_max+1)
+  N = G.number_of_nodes()
+  rhuD2 = rhu(D,2) #use in suptitle, to print "The model...", 
+  #rhuD1 in file_name_save
+  R0 = beta * D / mu
+
+  for i in intervals:
+    if intervals[i] <= R0 < intervals[i+1]:
+      'Intro R0-subfolder since R0 det epids behaviour on a fixed net'
+      if folder == "WS_Pruned": r0_folder = "R0_%s-%s/R0_%s/" % (intervals[i], intervals[i+1], rhu(beta*D/mu,3)) #"R0_1-2/mu0.16/"
+      else: r0_folder = "beta%s/mu%s/" % (rhu(beta,3),rhu(mu,3)) #"R0_%s-%s/" % (intervals[i], intervals[i+1])
+      #if folder == "WS_Epids": r0_folder += "D%s/" % rhuD  #"R0_1-2/mu0.16/D6/"
+      if not os.path.exists(my_dir + r0_folder): os.makedirs(my_dir + r0_folder)
+      if not os.path.exists(my_dir + r0_folder + "/Sel_R0/"): os.makedirs(my_dir + r0_folder + "/Sel_R0/")
+      file_name = func_file_name(folder = folder, adj_or_sir = adj_or_sir, \
+        N = N, D = D, R0 = R0, p = p, beta = beta, mu = mu)
+      
+      file_path = my_dir + r0_folder + file_name
+
+      'plot all'
+      _, ax = plt.subplots()
+      #if vertical: _, ax = plt.subplots(figsize = (24,20)) #init = (24,14); BA_Model = (20,20) should change also the subplots_adjust!!!
+      
+      'plot sir'
+      print("\nThe model has N: %s, D: %s(%s), beta: %s, mu: %s, p: %s, R0: %s" % 
+      (N,rhuD2,rhu(std_D,2),rhu(beta,3),rhu(mu,3),rhu(p,3),rhu(R0,3)) )
+      avg_ordp_net, std_avg_ordp_net, Rc_net = \
+        plot_sir(G, ax1=ax, folder = folder, beta = beta, mu = mu, start_inf = start_inf, 
+                numb_iter = numb_iter)
+
+
+      right = 0.95
+      #folders = ["WS_Pruned"]
+      if True: right = 0.73 #if R0 <= 1 #0.73
+      plt.subplots_adjust(
+      top=0.920,
+      bottom=0.12, #if vertical, bottom=0.10,
+      left=0.07, # if vertical, left=0.10, #0.06
+      right=right, #0.99
+      hspace=0.2,
+      wspace=0.2)
+
+      string_format = str(np.round(std_avg_ordp_net,3))[:5]
+      if string_format == "0.000":
+        string_format = format(std_avg_ordp_net, ".1e")
+
+      #if not nx.is_connected(G): connect_net(G, True)
+      delta = r"\delta_C"
+      #comps = [nx.average_shortest_path_length(s) for c in nx.connected_components(G) 
+      #for s in G.subgraph(c)]
+      #print(comps)
+      
+      avg_pl = max([  
+        nx.average_shortest_path_length(C) for C in (G.subgraph(c).copy() for c in nx.connected_components(G))])
+
+      if not nx.is_connected(G): 
+        ls_cc = nx.connected_components(G)
+        #print("ls_cc", ls_cc)
+        max_cc = max(ls_cc, key = len)
+        str_len = f"{len(max_cc)}"
+        delta = r"\delta_{"+str_len+r"}"
+      #delta = (1-avg_pl)/avg_pl # To Giuseppe & Dario with esteem
+      R0pl = R0/avg_pl 
+      
+      R0_sign = "<"; R0pl_sign = "<"
+      if R0 > Rc_net: R0_sign = ">"
+      if R0pl > Rc_net/avg_pl: R0pl_sign = ">"
+      plt.suptitle(r"$R_0:%s, R_0(%s=%s):%s, OrdPar:%s(%s), D_{%s}:%s(%s), p:%s, \beta:%s, \mu:%s, R_{c-net}: %s$"
+      % (
+        f"{rhu(R0,3)}"+R0_sign+f"{rhu(Rc_net,3)}", delta, rhu(avg_pl,1),
+        f"{rhu(R0/avg_pl,3)}"+R0pl_sign+f"{rhu(Rc_net/avg_pl,3)}",      
+        rhu(avg_ordp_net,3), string_format, N, rhuD2, rhu(std_D,2), rhu(p,3), rhu(beta,3), rhu(mu,3),
+        f"{rhu(Rc_net,3)}"
+        )
+      )
+
+      plt.savefig( file_path )
+      print("time 1_save_sir:", dt.datetime.now()-start_time) 
+
+      with open(log_path, mode) as text_file: #write only 1 time
+        text_file.write(file_name + "\n")            
+      plt.close()
+
+      del my_dir
+      from definitions import my_dir; import json; from definitions import NestedDict
+      ordp_pmbD_dic = NestedDict(ordp_pmbD_dic)
+      value = avg_ordp_net
+      std = std_avg_ordp_net
+
+      #pp_ordp_pmbD_dic = json.dumps(ordp_pmbD_dic, sort_keys=False, indent=4)
+      #print("Start dic", pp_ordp_pmbD_dic)
+
+      print("\nTo be added pmbD itermean:", p, mu, beta, D, value)
+      
+      if folder == "WS_Pruned":
+        d = ordp_pmbD_dic #rename ordp_pmbD_dic to have compact wrinting
+        if p in d.keys():
+          if mu in d[p].keys():
+              d[p][mu] = { **d[p][mu], **{D:[std_D, value, std]} }
+          else: d[p] = {**d[p], **{mu:{D:[std_D,value,std]}}}
+        else:
+          d[p][mu][D] = [std_D,value,std]
+
+      else:
+        d = ordp_pmbD_dic #rename ordp_pmbD_dic to have compact wrinting
+        if p in d.keys():
+          if mu in d[p].keys():
+              if beta in d[p][mu].keys():
+                  d[p][mu][beta][D] = [std_D,value,std]
+              else: d[p][mu] = { **d[p][mu], **{beta: {D:[std_D, value, std]}} }
+          else: d[p] = {**d[p], **{mu:{beta:{D:[std_D,value,std]}}} }
+        else:
+          d[p][mu][beta][D] = [std_D,value,std]
+
+      _, ax = plt.subplots(figsize = (24,14))
+
+      'WARNING: here suptitle has beta // mu but the dict is ordp[p][mu][beta][D] = [std_D, ordp, std_ordp]'
+      'since in the article p and mu are fixed!'
+      plt.suptitle("Average SD(Daily New Cases) : "+r"$p:%s,\beta:%s,\mu:%s$"%(rhu(p,3),rhu(beta,3),rhu(mu,3)))
+      ax.set_xlabel("Avg Degree D [Indivs]")
+      ax.set_ylabel("Avg_SD(Cases)")
+      
+      if folder == "WS_Pruned":
+        fix_pmb = ordp_pmbD_dic[p][mu]
+      else: fix_pmb = ordp_pmbD_dic[p][mu][beta]
+      #print("ordp_pmbD_dic, p0, mu0, beta0, fix_pmb", \
+      #  ordp_pmbD_dic, p, mu, beta, fix_pmb)
+      x = sorted(fix_pmb.keys())
+      xerr = [fix_pmb[i][0] for i in x]
+      y = [fix_pmb[i][1] for i in x]
+      yerr = [fix_pmb[i][2] for i in x]
+
+      #print("y", y)
+      ax.grid(color='grey', linestyle='--', linewidth = 1)
+      ax.errorbar(x,y, xerr = xerr, yerr = yerr, color = "tab:blue", marker = "*", linestyle = "-",
+         markersize = 30, mfc = "tab:red", mec = "black", linewidth = 3, label = "Avg_SD(Cases)")
+      D_cfus = 1 + 2*Rc_net*mu/(beta*(1+p)) #Rc_net = 1 assumption
+      D_cer = 1 + Rc_net*mu/beta
+      ax.axvline(x = D_cfus, color = "maroon", lw = 4, ls = "--", 
+                 label = "".join((r"$D_{c-fuse \, model}$",f": {rhu(D_cfus,3)}")) )
+      ax.axvline(x = D_cer, color = "darkblue", lw = 4, ls = "--", 
+                 label = "".join((r"$D_{c-ER \, model}$",f": {rhu(D_cer,3)}")) )
+      ax.legend(fontsize = 35)
+
+      plt.subplots_adjust(
+      top=0.91,
+      bottom=0.122,
+      left=0.080,
+      right=0.99)
+      
+      if folder == "WS_Pruned":
+        ordp_path = f"{my_dir()}{folder}/OrdParam/p{rhu(p,3)}/mu{rhu(mu,3)}/"
+        if not os.path.exists(ordp_path): os.makedirs(ordp_path)
+
+        plt.savefig("".join((ordp_path,"%s_ordp_p%s_mu%s.png" % (folder, rhu(p,3),rhu(mu,3)))))
+      else: 
+        ordp_path = my_dir() + folder + "/OrdParam/p%s/beta%s/" % (rhu(p,3),rhu(beta,3))
+        if not os.path.exists(ordp_path): os.makedirs(ordp_path)
+        plt.savefig("".join((ordp_path,"%s_ordp_p%s_beta%s_mu%s.png" % (folder, rhu(p,3),rhu(beta,3),rhu(mu,3)))))
+      plt.close()
+
+
+      'pretty print the dictionary of the ordp'
+      pp_ordp_pmbD_dic = json.dumps(ordp_pmbD_dic, sort_keys=False, indent=4)
+      print("Final dic to be saved", pp_ordp_pmbD_dic)
+      ordp_file = "".join((ordp_path,"saved_ordp_dict.txt"))
+      with open(ordp_file, 'w') as file:
+        file.write(pp_ordp_pmbD_dic) # use `json.loads` to do the reverse
+      
+  if os.path.exists(log_path):
+    'sort line to have the new ones at first'
+    sorted_lines = []
+    with open(log_path, 'r') as r:
+      for line in sorted(r):
+        sorted_lines.append(line)
+    
+    with open(log_path, 'w') as r:
+      for line in sorted_lines:
+        r.write(line)
+
 def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = False, partition = None, pos = None):
   import os.path
   from definitions import my_dir, func_file_name
@@ -623,211 +833,6 @@ def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = Fals
   with open(log_path, 'w') as r:
     for line in sorted_lines:
       r.write(line)
-
-def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 10, numb_iter = 50):
-  import os.path
-  from definitions import my_dir, func_file_name, N_D_std_D
-  import datetime as dt
-  import matplotlib.pylab as plt
-  start_time = dt.datetime.now()
-
-  print("numb_iter", numb_iter)
-  mode = "a"
-  #if done_iterations == 1: mode = "w"
-  my_dir = my_dir() #"/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/Tests/"
-  N, D, std_D = N_D_std_D(G) #D used in ordp_pmbD, outsiders, R0
-  adj_or_sir = "SIR"
-  'find the major hub and the "ousiders", i.e. highly connected nodes'
-  infos = G.degree()
-  dsc_sorted_nodes = sorted( infos, key = lambda x: x[1], reverse=True)
-  i,count_outsiders, threshold = 0,0,3*D
-  while( list(map(lambda x: x[1], dsc_sorted_nodes))[i] >  threshold):
-    count_outsiders += 1
-    i+=1
-  print("Outsiders", count_outsiders)
-
-  'directiories'
-  log_upper_path = my_dir + folder + "/" #../Plots/Tests/WS_Epids/
-  my_dir+=folder+"/p%s/"%rhu(p,3)+adj_or_sir+"/" #"../Plots/Test/WS_Epids/p0.001/SIR/"
-  #file_path depends on a "r0_folder"
-  log_path = log_upper_path + folder + "_log_saved_SIR.txt" #"../Plots/Test/WS_Epids/SIR_log_saved_SIR.txt"
-
-  plot_params()
-  intervals = np.arange(R0_max+1)
-  N = G.number_of_nodes()
-  rhuD2 = rhu(D,2) #use in suptitle, to print "The model...", 
-  #rhuD1 in file_name_save
-  R0 = beta * D / mu
-
-  for i in intervals:
-    if intervals[i] <= R0 < intervals[i+1]:
-      'Intro R0-subfolder since R0 det epids behaviour on a fixed net'
-      if folder == "WS_Pruned": r0_folder = "R0_%s-%s/R0_%s/" % (intervals[i], intervals[i+1], rhu(beta*D/mu,3)) #"R0_1-2/mu0.16/"
-      else: r0_folder = "beta%s/mu%s/" % (rhu(beta,3),rhu(mu,3)) #"R0_%s-%s/" % (intervals[i], intervals[i+1])
-      #if folder == "WS_Epids": r0_folder += "D%s/" % rhuD  #"R0_1-2/mu0.16/D6/"
-      if not os.path.exists(my_dir + r0_folder): os.makedirs(my_dir + r0_folder)
-      if not os.path.exists(my_dir + r0_folder + "/Sel_R0/"): os.makedirs(my_dir + r0_folder + "/Sel_R0/")
-      file_name = func_file_name(folder = folder, adj_or_sir = adj_or_sir, \
-        N = N, D = D, R0 = R0, p = p, beta = beta, mu = mu)
-      
-      file_path = my_dir + r0_folder + file_name
-
-      'plot all'
-      _, ax = plt.subplots()
-      #if vertical: _, ax = plt.subplots(figsize = (24,20)) #init = (24,14); BA_Model = (20,20) should change also the subplots_adjust!!!
-      
-      'plot sir'
-      print("\nThe model has N: %s, D: %s(%s), beta: %s, mu: %s, p: %s, R0: %s" % 
-      (N,rhuD2,rhu(std_D,2),rhu(beta,3),rhu(mu,3),rhu(p,3),rhu(R0,3)) )
-      avg_ordp_net, std_avg_ordp_net, Rc_net = \
-        plot_sir(G, ax1=ax, folder = folder, beta = beta, mu = mu, start_inf = start_inf, 
-                numb_iter = numb_iter)
-
-
-      right = 0.95
-      #folders = ["WS_Pruned"]
-      if True: right = 0.73 #if R0 <= 1
-      plt.subplots_adjust(
-      top=0.920,
-      bottom=0.12, #if vertical, bottom=0.10,
-      left=0.06, # if vertical, left=0.10,
-      right=right, #0.99
-      hspace=0.2,
-      wspace=0.2)
-
-      string_format = str(np.round(std_avg_ordp_net,3))[:5]
-      if string_format == "0.000":
-        string_format = format(std_avg_ordp_net, ".1e")
-
-      #if not nx.is_connected(G): connect_net(G, True)
-      delta = r"\delta_C"
-      #comps = [nx.average_shortest_path_length(s) for c in nx.connected_components(G) 
-      #for s in G.subgraph(c)]
-      #print(comps)
-      
-      avg_pl = max([  
-        nx.average_shortest_path_length(C) for C in (G.subgraph(c).copy() for c in nx.connected_components(G))])
-
-      if not nx.is_connected(G): 
-        ls_cc = nx.connected_components(G)
-        #print("ls_cc", ls_cc)
-        max_cc = max(ls_cc, key = len)
-        delta = rf"$\delta_{{len(max_cc)}}$"
-      #delta = (1-avg_pl)/avg_pl # To Giuseppe & Dario with esteem
-      R0pl = R0/avg_pl 
-      
-      R0_sign = "<"; R0pl_sign = "<"
-      if R0 > Rc_net: R0_sign = ">"
-      if R0pl > Rc_net/avg_pl: R0pl_sign = ">"
-      plt.suptitle(r"$R_0:%s, R_0(%s=%s):%s, OrdPar:%s(%s), D_{%s}:%s(%s), p:%s, \beta:%s, \mu:%s$"
-      % (
-        f"{rhu(R0,3)}"+R0_sign+f"{rhu(Rc_net,3)}", delta, rhu(avg_pl,1),
-        f"{rhu(R0/avg_pl,3)}"+R0pl_sign+f"{rhu(Rc_net/avg_pl,3)}",      
-        rhu(avg_ordp_net,3), string_format, N, rhuD2, rhu(std_D,2), rhu(p,3), rhu(beta,3), rhu(mu,3),))
-
-      plt.savefig( file_path )
-      print("time 1_save_sir:", dt.datetime.now()-start_time) 
-
-      with open(log_path, mode) as text_file: #write only 1 time
-        text_file.write(file_name + "\n")            
-      plt.close()
-
-      del my_dir
-      from definitions import my_dir; import json; from definitions import NestedDict
-      ordp_pmbD_dic = NestedDict(ordp_pmbD_dic)
-      value = avg_ordp_net
-      std = std_avg_ordp_net
-
-      #pp_ordp_pmbD_dic = json.dumps(ordp_pmbD_dic, sort_keys=False, indent=4)
-      #print("Start dic", pp_ordp_pmbD_dic)
-
-      print("\nTo be added pmbD itermean:", p, mu, beta, D, value)
-      
-      if folder == "WS_Pruned":
-        d = ordp_pmbD_dic #rename ordp_pmbD_dic to have compact wrinting
-        if p in d.keys():
-          if mu in d[p].keys():
-              d[p][mu] = { **d[p][mu], **{D:[std_D, value, std]} }
-          else: d[p] = {**d[p], **{mu:{D:[std_D,value,std]}}}
-        else:
-          d[p][mu][D] = [std_D,value,std]
-
-      else:
-        d = ordp_pmbD_dic #rename ordp_pmbD_dic to have compact wrinting
-        if p in d.keys():
-          if mu in d[p].keys():
-              if beta in d[p][mu].keys():
-                  d[p][mu][beta][D] = [std_D,value,std]
-              else: d[p][mu] = { **d[p][mu], **{beta: {D:[std_D, value, std]}} }
-          else: d[p] = {**d[p], **{mu:{beta:{D:[std_D,value,std]}}} }
-        else:
-          d[p][mu][beta][D] = [std_D,value,std]
-
-      _, ax = plt.subplots(figsize = (24,14))
-
-      'WARNING: here suptitle has beta // mu but the dict is ordp[p][mu][beta][D] = [std_D, ordp, std_ordp]'
-      'since in the article p and mu are fixed!'
-      plt.suptitle("Average SD(Daily New Cases) : "+r"$p:%s,\beta:%s,\mu:%s$"%(rhu(p,3),rhu(beta,3),rhu(mu,3)))
-      ax.set_xlabel("Avg Degree D [Indivs]")
-      ax.set_ylabel("Avg_SD(Cases)")
-      
-      if folder == "WS_Pruned":
-        fix_pmb = ordp_pmbD_dic[p][mu]
-      else: fix_pmb = ordp_pmbD_dic[p][mu][beta]
-      #print("ordp_pmbD_dic, p0, mu0, beta0, fix_pmb", \
-      #  ordp_pmbD_dic, p, mu, beta, fix_pmb)
-      x = sorted(fix_pmb.keys())
-      xerr = [fix_pmb[i][0] for i in x]
-      y = [fix_pmb[i][1] for i in x]
-      yerr = [fix_pmb[i][2] for i in x]
-
-      #print("y", y)
-      ax.grid(color='grey', linestyle='--', linewidth = 1)
-      ax.errorbar(x,y, xerr = xerr, yerr = yerr, color = "tab:blue", marker = "*", linestyle = "-",
-         markersize = 30, mfc = "tab:red", mec = "black", linewidth = 3, label = "Avg_SD(Cases)")
-      D_cfus = 1 + 2*Rc_net*mu/(beta*(1+p))
-      D_cer = 1 + Rc_net*mu/beta
-      ax.axvline(x = D_cfus, color = "maroon", lw = 4, ls = "--", 
-                 label = "".join((r"$D_{c-fuse \, model}$",f": {rhu(D_cfus,3)}")) )
-      ax.axvline(x = D_cer, color = "darkblue", lw = 4, ls = "--", 
-                 label = "".join((r"$D_{c-ER \, model}$",f": {rhu(D_cer,3)}")) )
-      ax.legend(fontsize = 35)
-
-      plt.subplots_adjust(
-      top=0.91,
-      bottom=0.122,
-      left=0.080,
-      right=0.99)
-      
-      if folder == "WS_Pruned":
-        ordp_path = f"{my_dir()}{folder}/OrdParam/p{rhu(p,3)}/mu{rhu(mu,3)}/"
-        if not os.path.exists(ordp_path): os.makedirs(ordp_path)
-
-        plt.savefig("".join((ordp_path,"%s_ordp_p%s_mu%s.png" % (folder, rhu(p,3),rhu(mu,3)))))
-      else: 
-        ordp_path = my_dir() + folder + "/OrdParam/p%s/beta%s/" % (rhu(p,3),rhu(beta,3))
-        if not os.path.exists(ordp_path): os.makedirs(ordp_path)
-        plt.savefig("".join((ordp_path,"%s_ordp_p%s_beta%s_mu%s.png" % (folder, rhu(p,3),rhu(beta,3),rhu(mu,3)))))
-      plt.close()
-
-
-      'pretty print the dictionary of the ordp'
-      pp_ordp_pmbD_dic = json.dumps(ordp_pmbD_dic, sort_keys=False, indent=4)
-      print("Final dic to be saved", pp_ordp_pmbD_dic)
-      ordp_file = "".join((ordp_path,"saved_ordp_dict.txt"))
-      with open(ordp_file, 'w') as file:
-        file.write(pp_ordp_pmbD_dic) # use `json.loads` to do the reverse
-      
-  if os.path.exists(log_path):
-    'sort line to have the new ones at first'
-    sorted_lines = []
-    with open(log_path, 'r') as r:
-      for line in sorted(r):
-        sorted_lines.append(line)
-    
-    with open(log_path, 'w') as r:
-      for line in sorted_lines:
-        r.write(line)
 
 def already_saved_list(folder, adj_or_sir, chr_min, my_print = True, done_iterations = 1):
   from definitions import my_dir
@@ -1141,7 +1146,7 @@ def NN_pois_net(N, folder, ext_D, p = 0, conn_flag = True):
   
 
   return G
-
+'''
 'This kind of network is similar to a WS'
 def NNOverl_pois_net(N, ext_D, p, add_edges_only = False):
   #Nearest Neighbors Overlapping
@@ -1206,10 +1211,8 @@ def NNOverl_pois_net(N, ext_D, p, add_edges_only = False):
   
   return G
 
-'''
-
 'New Cluster of defs for Poissonian Small World Network'
-def pois_pos_degrees(D, N):
+def pois_pos_degrees(N, D):
   import numpy as np
   np.random.seed(0)
 
@@ -1329,7 +1332,7 @@ def NN_pois_net(N, folder, ext_D, p = 0, conn_flag = True):
         long_range_edge_add, connect_net, N_D_std_D
 
     D = ext_D
-    degrees = pois_pos_degrees(D, N)
+    degrees = pois_pos_degrees(N, D)
     dic_nodes = dic_nodes_degrees(degrees)
 
     edges = edges_nearest_node(dic_nodes)
@@ -1771,7 +1774,7 @@ def parameters_net_and_sir(folder = None, p_max = 0.3):
   #k_prog = np.concatenate(([1.0],np.arange(2,20,2)))
   k_prog = np.arange(2,13) #poisssonian: np.arange(1,60,2)
   p_prog = [0, 0.1, 0.3] #0.2 misses
-  beta_prog = [0.05,0.1,0.2,0.3]; mu_prog = [0.14, 0.16, 0.2, 0.25,]# 0.8]#, 0.33,0.5]
+  beta_prog = [0.05,0.1,0.2,0.3]; mu_prog = [0.14, 0.16, 0.2, 0.25, 0.8]#, 0.33,0.5]
   R0_min = 0; R0_max = 30
 
   'this should be deleted to have same params and make comparison more straight-forward'
@@ -1784,8 +1787,8 @@ def parameters_net_and_sir(folder = None, p_max = 0.3):
   if folder == "NN_Conf_Model": 
     'beta_prog = [0.05, 0.1, 0.2, 0.25]; mu_prog = beta_prog'
     # past parameters: beta_prog = np.linspace(0.01,1,8); mu_prog = beta_prog
-    k_prog = np.hstack((np.arange(3,13,1)))#,np.arange(14,42,5)))
-    R0_max = 100    
+    k_prog = np.hstack((np.arange(1,13,1),np.arange(14,42,5)))
+    R0_max = 300     
   if folder == "Caveman_Model": 
     'k_prog = np.arange(1,11,2)' #https://www.prb.org/about/ -> Europe householdsize = 3
     #beta_prog = np.linspace(0.001,1,6); mu_prog = beta_prog
