@@ -19,6 +19,7 @@ import os #to create a folder
 
 def my_dir():
   #return "/content/drive/MyDrive/Colab_Notebooks/Thesis/Complex_Plots/"
+  #return "/content/drive/MyDrive/Colab_Notebooks/Thesis/Complex_Plots/reduced_ver/"
   #return "/content/"
   return "/home/hal21/MEGAsync/Tour_Physics2.0/Thesis/NetSciThesis/Project/Plots/Test/"
 
@@ -440,12 +441,12 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
   loc = "best"
   folders = ["WS_Pruned"]
   #if "WS_Pruned" in folders: loc = "center right"
-  if R0 >= 1:
-    leg = ax3.legend([handles[idx] for idx in order],[labels[idx] for idx in order],
-              edgecolor="black", shadow = False, framealpha = 0.6, loc=loc)
-  else:
+  if True: #R0 <= 1:
     leg = ax3.legend([handles[idx] for idx in order],[labels[idx] for idx in order],
               bbox_to_anchor=(1.07, 1), edgecolor="black", shadow = False, framealpha = 0.6, loc='upper left')
+  else:  leg = ax3.legend([handles[idx] for idx in order],[labels[idx] for idx in order],
+              edgecolor="black", shadow = False, framealpha = 0.6, loc=loc)
+    
   leg.set_zorder(ax3.get_zorder()+1)
 
   return avg_ordp_net, std_avg_ordp_net, Rc_net
@@ -685,7 +686,7 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
 
       right = 0.95
       #folders = ["WS_Pruned"]
-      if R0 <= 1: right = 0.73
+      if True: right = 0.73 #if R0 <= 1
       plt.subplots_adjust(
       top=0.920,
       bottom=0.12, #if vertical, bottom=0.10,
@@ -708,7 +709,10 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
         nx.average_shortest_path_length(C) for C in (G.subgraph(c).copy() for c in nx.connected_components(G))])
 
       if not nx.is_connected(G): 
-        delta = r"\delta_{mc}"
+        ls_cc = nx.connected_components(G)
+        #print("ls_cc", ls_cc)
+        max_cc = max(ls_cc, key = len)
+        delta = rf"$\delta_{{len(max_cc)}}$"
       #delta = (1-avg_pl)/avg_pl # To Giuseppe & Dario with esteem
       R0pl = R0/avg_pl 
       
@@ -781,8 +785,8 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
       ax.grid(color='grey', linestyle='--', linewidth = 1)
       ax.errorbar(x,y, xerr = xerr, yerr = yerr, color = "tab:blue", marker = "*", linestyle = "-",
          markersize = 30, mfc = "tab:red", mec = "black", linewidth = 3, label = "Avg_SD(Cases)")
-      D_cfus = 1 + 2*Rc_net*beta/(mu*(1+p))
-      D_cer = 1 + Rc_net*beta/mu
+      D_cfus = 1 + 2*Rc_net*mu/(beta*(1+p))
+      D_cer = 1 + Rc_net*mu/beta
       ax.axvline(x = D_cfus, color = "maroon", lw = 4, ls = "--", 
                  label = "".join((r"$D_{c-fuse \, model}$",f": {rhu(D_cfus,3)}")) )
       ax.axvline(x = D_cer, color = "darkblue", lw = 4, ls = "--", 
@@ -923,7 +927,63 @@ def config_pois_model(N, D, seed = 123, folder = None):
 
 '''
 
-'===def of net functions'
+'Net Infos'
+def check_loops_parallel_edges(G):
+  ls = list(G.edges())
+  print("parallel edges", set([i for i in ls for j in ls[ls.index(i)+1:] if i==j]),
+        "; loops", [(i,j) for (i,j) in set(G.edges()) if i == j])
+
+def infos_sorted_nodes(G, num_sorted_nodes = False):
+    import networkx as nx
+    'sort nodes by key = degree. printing order: node, adjacent nodes, degree'
+    nodes = G.nodes()
+    #print("<k>: ", np.sum([j for (i,j) in G.degree() ]) / len(nodes), 
+    #      " and <k>/N ", np.sum([j for (i,j) in G.degree() ]) / len(nodes)**2, end="\n" )
+    
+    'put adj_matrix into dic for better visualisation'
+    adj_matrix =  nx.adjacency_matrix(G).todense()
+    adj_dict = {i: np.nonzero(row)[1].tolist() for i,row in enumerate(adj_matrix)}
+
+    infos = zip([x for x in nodes], [len(adj_dict[i]) for i in range(len(nodes))], [G.degree(x) for x in nodes])
+    dsc_sorted_nodes = sorted( infos, key = lambda x: x[2], reverse=True)
+
+    cut_off = 0
+    if len(dsc_sorted_nodes) != 0: min(len(dsc_sorted_nodes),4)
+    if num_sorted_nodes == True:  
+      num_sorted_nodes = len(nodes) 
+      for i in range(cut_off):
+        if i == 0: print("Triplets of (nodes, neighbors(%s), degree) sorted by descending degree:" % i)
+        print( dsc_sorted_nodes[i] )
+
+    if num_sorted_nodes == False: num_sorted_nodes = 0
+    
+'Net Actions'
+'append lists of // and loops and remove them'
+def remove_loops_parallel_edges(G, remove_loops = True):
+  print("\n")
+  import networkx as nx
+  'append // edges'
+  full_ls = list((G.edges()))
+  lpe = []
+  for i in full_ls:
+    full_ls.remove(i)
+    for j in full_ls:
+      if i == j: lpe.append(j) #print("i", i, "index", full_ls.index(i), "j", j)
+  
+  'append loops'
+  if remove_loops == True:  
+    for x in list(nx.selfloop_edges(G)): lpe.append(x)
+    print("Parallel edges and loops removed!")
+  return G.remove_edges_from(lpe)
+
+'replace edges from list or delete all edges'
+def replace_edges_from(G,list_edges=[]):
+  '''def: "replace" existing edges, since built-in method only adds'''
+  present_edges = [x for x in G.edges()]
+  G.remove_edges_from(present_edges)
+  if list_edges!=[]: return G.add_edges_from(list_edges)
+  return G
+
 'addition of distant nodes'
 def long_range_edge_add(G, p = 0, time_int = False):
   from itertools import chain
@@ -934,6 +994,7 @@ def long_range_edge_add(G, p = 0, time_int = False):
   
   if time_int: start_time = dt.datetime.now()
   
+  'list of tuple of edges for non-zero-degree nodes'
   all_edges = [list(G.edges(node)) for node in pos_deg_nodes(G)]
   all_edges = list(chain.from_iterable(all_edges))
   #??? why the 2 prev lines?? all_edges = G.edges()
@@ -944,10 +1005,10 @@ def long_range_edge_add(G, p = 0, time_int = False):
       left_nodes.remove(node) 
       re_link = random.choice( left_nodes )
       if random.random() < p:
-          all_edges.append((node,re_link))
+        all_edges.append((node,re_link))
   print("len(all_edges)_final", len(all_edges), "is? equal to start", initial_length )
   replace_edges_from(G, all_edges)
-  remove_loops_parallel_edges(G, False)
+  remove_loops_parallel_edges(G, True)
   if time_int: print(f"Time for add edges over ddistr:", dt.datetime.now()-start_time)
 
 'forcing connection of a net'
@@ -956,20 +1017,25 @@ def connect_net(G, conn_flag): #set solo_nodes = False to have D < 1 nets
     import networkx as nx
     import numpy as np
     from definitions import N_D_std_D
+    print("I'm here to connect")
     'there is only a node with 2 degree left. So, if rewired correctly only a +1 in the ddistr'
     'So, connect all the disconnected components'
     its = 0
     sorted_disc_components = sorted(nx.connected_components(G), key=len, reverse=True)
+    max_cc = sorted_disc_components[0]
     for c in sorted_disc_components: #set of conn_comp
       if its == 0: 
-        base_node = np.random.choice(([x for x in c])); 
+        base_node = np.random.choice((list(c))); 
       else: 
-        linking_node = np.random.choice(([x for x in c]))
+        linking_node = np.random.choice((list(c)))
         G.add_edge(linking_node,base_node)
         base_node = linking_node
       its += 1
     #print("Total links to have", len(list(nx.connected_components(G))),"connected component are", its)
-    if len(list(nx.connected_components(G)))>1: print("Disconnected net!")
+    if len(list(nx.connected_components(G)))>1: print("Disconnected net!"); raise Exception("G is not connected")
+    else: print("The network is connected!")
+    return sorted_disc_components
+
 
 '''
 def NN_pois_net(N, folder, ext_D, p = 0, conn_flag = True):
@@ -1142,7 +1208,7 @@ def NNOverl_pois_net(N, ext_D, p, add_edges_only = False):
 
 '''
 
-'New Cluster for Poissonian Small World Network'
+'New Cluster of defs for Poissonian Small World Network'
 def pois_pos_degrees(D, N):
   import numpy as np
   np.random.seed(0)
@@ -1258,7 +1324,7 @@ def edges_nearest_node(dic_nodes):
         ##print('After all the rewiring, left nodes', nodes, "sorted_nodes", sorted_nodes, "edges", edges)
     return edges
 
-def NN_pois_net(N, folder, ext_D, p = 0, conn_flag = False):
+def NN_pois_net(N, folder, ext_D, p = 0, conn_flag = True):
     from definitions import check_loops_parallel_edges, infos_sorted_nodes, \
         long_range_edge_add, connect_net, N_D_std_D
 
@@ -1275,7 +1341,8 @@ def NN_pois_net(N, folder, ext_D, p = 0, conn_flag = False):
     infos_sorted_nodes(G, num_sorted_nodes=False)
 
     long_range_edge_add(G, p = p)
-    connect_net(G, conn_flag = conn_flag)
+    if not nx.is_connected(G):
+      connect_net(G, conn_flag = False)
 
     ##print(f"There are {len([j for i,j in G.degree() if j == 0])} 0 degree node as")
     _,D,_ = N_D_std_D(G)
@@ -1283,59 +1350,6 @@ def NN_pois_net(N, folder, ext_D, p = 0, conn_flag = False):
     ##print(f'G.is_connected(): {nx.is_connected(G)}',)
     
     return G
-
-'Net Infos'
-def check_loops_parallel_edges(G):
-  ls = list(G.edges())
-  print("parallel edges", set([i for i in ls for j in ls[ls.index(i)+1:] if i==j]),
-        "; loops", [(i,j) for (i,j) in set(G.edges()) if i == j])
-
-def infos_sorted_nodes(G, num_sorted_nodes = False):
-    import networkx as nx
-    'sort nodes by key = degree. printing order: node, adjacent nodes, degree'
-    nodes = G.nodes()
-    #print("<k>: ", np.sum([j for (i,j) in G.degree() ]) / len(nodes), 
-    #      " and <k>/N ", np.sum([j for (i,j) in G.degree() ]) / len(nodes)**2, end="\n" )
-    
-    'put adj_matrix into dic for better visualisation'
-    adj_matrix =  nx.adjacency_matrix(G).todense()
-    adj_dict = {i: np.nonzero(row)[1].tolist() for i,row in enumerate(adj_matrix)}
-
-    infos = zip([x for x in nodes], [len(adj_dict[i]) for i in range(len(nodes))], [G.degree(x) for x in nodes])
-    dsc_sorted_nodes = sorted( infos, key = lambda x: x[2], reverse=True)
-
-    cut_off = 0
-    if len(dsc_sorted_nodes) != 0: min(len(dsc_sorted_nodes),4)
-    if num_sorted_nodes == True:  
-      num_sorted_nodes = len(nodes) 
-      for i in range(cut_off):
-        if i == 0: print("Triplets of (nodes, neighbors(%s), degree) sorted by descending degree:" % i)
-        print( dsc_sorted_nodes[i] )
-
-    if num_sorted_nodes == False: num_sorted_nodes = 0
-    
-def remove_loops_parallel_edges(G, remove_loops = True):
-  print("\n")
-  import networkx as nx
-
-  'create a list of what we want to remove'
-  full_ls = list((G.edges()))
-  lpe = []
-  for i in full_ls:
-    full_ls.remove(i)
-    for j in full_ls:
-      if i == j: lpe.append(j) #print("i", i, "index", full_ls.index(i), "j", j)
-  if remove_loops == True:  
-    for x in list(nx.selfloop_edges(G)): lpe.append(x)
-    print("Parallel edges and loops removed!")
-  return G.remove_edges_from(lpe)
-
-def replace_edges_from(G,list_edges=[]):
-  '''def: "replace" existing edges, since built-in method only adds'''
-  present_edges = [x for x in G.edges()]
-  G.remove_edges_from(present_edges)
-  if list_edges!=[]: return G.add_edges_from(list_edges)
-  return G
 
 '===Caveman Defs'
 def caveman_defs():
@@ -1757,7 +1771,7 @@ def parameters_net_and_sir(folder = None, p_max = 0.3):
   #k_prog = np.concatenate(([1.0],np.arange(2,20,2)))
   k_prog = np.arange(2,13) #poisssonian: np.arange(1,60,2)
   p_prog = [0, 0.1, 0.3] #0.2 misses
-  beta_prog = [0.05,0.1,0.2,0.3]; mu_prog = [0.14, 0.16, 0.2, 0.25, 0.8]#, 0.33,0.5]
+  beta_prog = [0.05,0.1,0.2,0.3]; mu_prog = [0.14, 0.16, 0.2, 0.25,]# 0.8]#, 0.33,0.5]
   R0_min = 0; R0_max = 30
 
   'this should be deleted to have same params and make comparison more straight-forward'
@@ -1770,7 +1784,7 @@ def parameters_net_and_sir(folder = None, p_max = 0.3):
   if folder == "NN_Conf_Model": 
     'beta_prog = [0.05, 0.1, 0.2, 0.25]; mu_prog = beta_prog'
     # past parameters: beta_prog = np.linspace(0.01,1,8); mu_prog = beta_prog
-    k_prog = np.hstack((np.arange(3,13,1),np.arange(14,42,5)))
+    k_prog = np.hstack((np.arange(3,13,1)))#,np.arange(14,42,5)))
     R0_max = 100    
   if folder == "Caveman_Model": 
     'k_prog = np.arange(1,11,2)' #https://www.prb.org/about/ -> Europe householdsize = 3
