@@ -132,6 +132,7 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, seed = False, start_inf = 10):
         'Select the neighbors of the infected node'
         if not mf: tests = G.neighbors(i) #only != wrt to the SIS: contact are taken from G.neighbors            
         if mf: 
+          #tests = G.neighbors(i) -- Watts-Strogatz(p = 1)??
           ls = list(range(N)); ls.remove(i)
           tests = random.sample(ls, k = int(rhu(D))) #spread very fast since multiple infected center
         tests = [int(x) for x in tests] #convert 35.0 into int
@@ -626,10 +627,13 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
          markersize = 30, mfc = "tab:red", mec = "black", linewidth = 3, label = "Avg_SD(Cases)")
       D_cfus = 1 + 2*Rc_net*mu/(beta*(1+p)) #Rc_net = 1 assumption
       D_cer = 1 + Rc_net*mu/beta
+      D_chomo = mu/beta
       ax.axvline(x = D_cfus, color = "maroon", lw = 4, ls = "--", 
                  label = "".join((r"$D_{c-fuse \, model}$",f": {rhu(D_cfus,3)}")) )
       ax.axvline(x = D_cer, color = "darkblue", lw = 4, ls = "--", 
                  label = "".join((r"$D_{c-ER \, model}$",f": {rhu(D_cer,3)}")) )
+      ax.axvline(x = D_chomo, color = "darkslategrey", lw = 4, ls = "--", 
+                 label = "".join((r"$D_{c-homog \, model} = \mu / \beta$",f": {rhu(D_chomo,3)}")) )
       ax.legend(fontsize = 35)
 
       plt.subplots_adjust(
@@ -897,7 +901,7 @@ def pow_max(N, num_iter = "all"):
 
 '''
 '===Configurational Model'
-def pois_pos_degrees(D, N, L = int(2e3)):
+def pois_pos_degrees(N, D, L = int(2e3)):
   'Draw N degrees from a Poissonian sequence with lambda = D and length L'
   degs = np.random.poisson(lam = D, size = L)
   print("NN_Starting D", D)
@@ -911,14 +915,14 @@ def config_pois_model(N, D, seed = 123, folder = None):
   'create a network with the node degrees drawn from a poissonian with even sum of degrees'
   
   np.random.seed(seed)
-  degrees = pois_pos_degrees(D,N) #poiss distr with deg != 0
+  degrees = pois_pos_degrees(N,D) #poiss distr with deg != 0
   print("\nseed1 %s, sum(degrees) %s" % (seed, np.sum(degrees)%2))
   'change seed to have a even sum of the degrees'
   while(np.sum(degrees)%2 != 0):
     seed+=1
     np.random.seed(seed)
     print("\nseed2 %s" % (seed))
-    degrees = pois_pos_degrees(D,N)
+    degrees = pois_pos_degrees(N,D)
 
   print("\nNetwork Created but w/o standard neighbors wiring!")
   G = nx.configuration_model(degrees, seed = seed)
@@ -1214,7 +1218,7 @@ def NNOverl_pois_net(N, ext_D, p, add_edges_only = False):
 'New Cluster of defs for Poissonian Small World Network'
 def pois_pos_degrees(N, D):
   import numpy as np
-  np.random.seed(0)
+  #np.random.seed(0)
 
   'Draw N degrees from a Poissonian sequence with lambda = D and length L'
   def remove_zeros(array):
@@ -1249,8 +1253,8 @@ def pois_pos_degrees(N, D):
   #print(pos_degrees)
   return pos_degrees
 
-def dic_nodes_degrees(degrees):
-    np.random.seed(1)
+def dic_nodes_degrees(N, degrees):
+    #np.random.seed(1)
     #print("degrees", degrees, sum(degrees))
     N = len(degrees)
     nodes = np.arange(N)
@@ -1333,7 +1337,7 @@ def NN_pois_net(N, folder, ext_D, p = 0, conn_flag = True):
 
     D = ext_D
     degrees = pois_pos_degrees(N, D)
-    dic_nodes = dic_nodes_degrees(degrees)
+    dic_nodes = dic_nodes_degrees(N, degrees)
 
     edges = edges_nearest_node(dic_nodes)
     G = nx.Graph()
@@ -1770,11 +1774,11 @@ def parameters_net_and_sir(folder = None, p_max = 0.3):
   'progression of net-parameters'
   import numpy as np
   'WARNING: put SAME beta, mu, D and p to compare at the end the different topologies'
-  #k_prog = np.concatenate(([0.2,0.4,0.6,0.8],np.arange(2,20,2)))
   #k_prog = np.concatenate(([1.0],np.arange(2,20,2)))
   k_prog = np.arange(2,13) #poisssonian: np.arange(1,60,2)
   p_prog = [0, 0.1, 0.3] #0.2 misses
-  beta_prog = [0.05,0.1,0.2,0.3]; mu_prog = [0.14, 0.16, 0.2, 0.25, 0.8]#, 0.33,0.5]
+  beta_prog = [0.05,0.1,0.2,0.4, 0.6, 0.8]; mu_prog = [0.07, 0.1, 0.167, 0.3, 0.6, 0.8]
+    # old @ 5.9.2021: mu_prog = [0.14, 0.16, 0.2, 0.25, 0.8]#, 0.33,0.5]
   R0_min = 0; R0_max = 30
 
   'this should be deleted to have same params and make comparison more straight-forward'
