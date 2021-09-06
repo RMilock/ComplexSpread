@@ -566,7 +566,7 @@ To face the problem of the "high $C$ at low edge probability (for now, redefined
 Practically, the idea is to start with a grid-like network, where all the nodes have $\langle k \rangle$ neighbors; then, with probability $p$, a link is chosen and one of the endpoints, e.g. the "rightmost", is replaced with a random vertex within the graph. The underlying degree distribution, hence, narrows the nodes degrees since it passes from an one-block histogram centered in $\langle k \rangle$ to a poissonian distribution. Thus, nodes have barely different neighbors degree and no hubs are allowed.
 A further constraint is that no multiple edges can connect the same pair of vertexes, i.e. no multi-edges. The presence of multiedges gives a correction of $1/N$ for big $N$, negligible in a real modeling scenario with big $N$.
 
-The rationale of ER model is that by a little decrease of clustering (i.e. destroying triangles) corresponds a significant reduction in the average path length $\langle d \rangle$. Other way around, by connecting nodes in a "long-range" fashion, the overall "triadic closures" are still relevant. 
+The rationale of ER model is that by a little decrease of clustering (i.e. destroying triangles) corresponds a significant reduction in the average path length $\delta:= \langle d \rangle$. Other way around, by connecting nodes in a "long-range" fashion, the overall "triadic closures" are still relevant. 
 
 It worths to highlight that the present $p$, called in this context the "rewiring parameter", is the "long-range" rewiring probability, while the ER model $p_{ER}$ is the probability of an edge formation either among neighbors ("short range" connection) or among distant nodes ("long range" connection). Thus, the "distant" connected vertexes are, on average, $p\cdot L$ where $L$ is the total number of links.
 In particular, a regular lattice is characterized by a high clustering (neighboring nodes are fully connected) but a high average path length; while a random network, as seen before, exhibits manifestly the "Small-World" property alongside with a low clustering coefficient especially, since triangles are rare for small $p$.
@@ -831,7 +831,7 @@ The final goal would be to find the evolving number of new daily infected at eac
 \section{Homogeneous Mixing}
 
 \begin{figure}[ht]
-	\includegraphics[scale = 0.38]{../images/Ch_TheEpidModels_Methodology/complete_graph_sir}
+	\includegraphics[scale = 0.38]{Ch_TheEpidModels_Methodology/D4_ws_graph_sir.png}
 	\caption{Mean-Field SIR using a Complete Graph with $N = 10^{3}, \langle k \rangle = 999, \beta = 0.001,  \mu = 0.2$}
 	\label{fig:MF_SIR}
 \end{figure}
@@ -842,7 +842,7 @@ the SIR equations are the following \cite{Newman:2010_Net:AnIntro}
 \begin{equation}
 	\begin{cases}
 		\frac{ds}{dt} = -\beta \langle k \rangle s i \\ \\ 
-		\frac{di}{dt} = \beta \langle k \rangle s i - \mu i = \beta \langle k \rangle \, (1-i-r) \, i -\mu i = \mu( R_0 s(t) - 1) i(t)  \\ \\
+		\frac{di}{dt} = \beta \langle k \rangle s i - \mu i = \beta \langle k \rangle \, (1-i-r) \, i -\mu i = \mu( R_0 s - 1) i  \\ \\
 		\frac{dr}{dt} = +\mu i
 	\end{cases}
 	\label{eq:SIR_MF}
@@ -899,8 +899,9 @@ To be precise, $R_0$ is the number of second infections in a naive population, i
 
 \newpage
 \section{Heterogeneous Mixing}
+\label{sec:degree-basedMF}
 \begin{figure}[ht]
-	\includegraphics[scale = 0.38]{../images/Ch_TheEpidModels_Methodology/er_graph_sir}
+	\includegraphics[scale = 0.38]{Ch_TheEpidModels_Methodology/D4_ws_graph_sir.png}
 	\caption{Degree-Based SIR using Erdös-Rényi Graph with $N = 10^{3}, p = 0.5, \langle k \rangle = 500, \beta = 0.001,  \mu = 0.2$}
 	\label{fig:DB_SIR}
 \end{figure}
@@ -912,10 +913,9 @@ The total fraction of infected $i(t) = \sum_{k=0}^{k_{max}} p_k i_k(t)$. Alongsi
 \begin{equation}
 	\begin{cases}
 		\frac{ds_k}{dt} = -\beta  k  s_k \Theta_k \\ \\ 
-		\frac{di_k}{dt} = \beta  k  s_k \Theta_k - \mu i_k = \beta  k  \, (1-i_k-r_k) \, \Theta_k -\mu i_k \\ \\
+		\frac{di_k}{dt} = \beta  k  s_k \Theta_k - \mu i_k = \beta  k  \, (1-i_k-r_k) \, \Theta_k -\mu i_k \label{eqs:SIR_degree-based} \\ \\
 		\frac{dr_k}{dt} = +\mu i_k
-	\end{cases}
-	\label{eqs:SIR_degree-based}
+	\end{cases}	
 \end{equation}
 where $\Theta_k(t) = i_0 \frac{\langle k \rangle - 1}{\langle k \rangle} e^{t/\tau}$ is the density function, representing the fraction of infected nodes surrounding a susceptible individual with degree $k$. It would be recovered, and commented, shortly but note that, a priori, it can depend both on $k$ and $t$.
 
@@ -1081,7 +1081,9 @@ As promised, a AMFN is defined as a (directed) random network whose $D$ links ar
 The spreading on network resembles the mean-field model, alias AMFN in our case, whenever either $R_0$ or the long-range connections $p \cdot N$ are high enough to allow the disease, reaching the epidemic state rapidly. Indeed, the comparison between mean-field and network spreading regards the fraction of total infected nodes and not how the nodes are infected: for the mean-field case the neighbors are chosen randomly along the circle; while they are fixed for the chosen network case. For this reason, there could an accordance in the measures considered.
 
 \section*{(Quasi-)Linear Contagion}
-In order to analyze a linear behavior of $P(t)$, it worths recall that $R_{0c} := \beta D_c / \mu \sim 1$ is the critical basic reproduction number, which separates the exponential growth ($R_0 > 1$) from the exponential decay ($R_0 < 1$) of the number of infected. The critical degree $D_c = \frac{\mu}{\beta \langle k \rangle}$ and $C(t) \propto R^{t/d}$. So, as the epidemic is fixed, the above behavior are recovered, respectively, for $D > D_c$ and $D<D_c$. For $D=D_c$ \cite{Thurner::NetBasedExpl}, the number of infected will behave critically, i.e. $P(t) \propto t^{\alpha}$, where $\alpha \in (1,2)$ for a simply connected (no multiedges or loops) short-range network embedded in dimension $2$. More in detail, $\alpha \sim 2$ for a network resembling a regular lattice in $2$ dimensions, since $C(t) \propto t^2$ is proportional to the covered area of the infection front; while $\alpha \sim 1$ for a tree or a collection of 1-dimensional chains, as the front spreads linearly as a flame along a fuse, i.e. $C(t) \propto t$. In between these regimes, the specific $\alpha$ is influenced and shaped by non-pharmaceutical interventions (NPIs).
+In order to analyze the linear behavior of $P(t)$, it worths define \textit{critical basic reproduction number} the  $R_{0c} := \beta D_c / \mu \stackrel{!}{=} R_{c-net}$ and in the case where the network is not so heterogeneous $ R_{c-net} \sim 1$, where $1$ is for a poissonian distribution. This is, indeed, the case for the reported networks (\autoref{ch:Results}) yielding a critical degree $D_c = \frac{\mu}{\beta}$. 
+
+A rough estimate of $C(t) \propto R^{t/d}$. So, as the epidemic is fixed, the exponential growth is recovered for $D > D_c$; while $D < D_c$ displays a drop out of the pathogen. For $D \sim D_c$ \cite{Thurner::NetBasedExpl}, the number of infected will behave critically, i.e. $P(t) \propto t^{\alpha}$, where $\alpha \in (1,2)$ for a simply connected (no multiedges or loops) short-range network embedded in dimension $2$. More in detail, $\alpha \sim 2$ for a network resembling a regular lattice in $2$ dimensions, since $C(t) \propto t^2$ is proportional to the covered area of the infection front; while $\alpha \sim 1$ for a tree or a collection of 1-dimensional chains, as the front spreads linearly as a flame along a fuse, i.e. $C(t) \propto t$. In between these regimes, the specific $\alpha$ is influenced and shaped by non-pharmaceutical interventions (NPIs).
 
 For a sub-exponential growth, it has to be expected that the network features, e.g. $\langle k^2 \rangle$, play a significant role in this context. In particular, for a fixed pathogen with $\lambda = \beta/ \mu$, $R_0 \propto D$ and it would be natural to search for a critical average degree $D_c$ (\cite{Thurner::NetBasedExpl}), when it is informative (e.g. not in scale-free networks), such that, fixing $p, \beta, \mu$, 
 \begin{itemize}
@@ -1113,11 +1115,11 @@ In the following, $D_c$ is derived for an ER model and a ring-shaped poissonian 
 
 Taking care of the dimensional effects, it worths to define the curvature of the front as $ \mathcal{K}:= \pm 1/\mathcal{R}_{front}$ where $\mathcal{R}_{front}$ is the radius of the fitting circle of the front: $\mathcal{K}>0$ for concave case; while $\mathcal{K}<0$ if the front surrounds an island of susceptible. For the poissonian small-world network, $\mathcal{K} = 0$, since the front is flat.    
 
-Moreover, $R_0$ is exact only for a naive population, i.e. at early times. In fact, if a node is later infected, it would find at least one neighbor infected, alias its infector. So, taking care of the epidemic spreading, $R := (D-n)rd$, where $n$ is the average number of not-susceptible neighbors which, further, implies that $\nu := 1 - n/D$ is the fraction of susceptible. This latter quantity has to be interpreted as an general estimate of how infectious is a disease, i.e. for low infectivity, $\nu\sim1$ which implies $D \lesssim D_c$.
+Moreover, $R_0$ is exact only for a naive population, i.e. at early times. In fact, if a node is later infected, it would find at least one neighbor infected, alias its infector. So, taking care of the epidemic spreading, $R := (D-n)\lambda$, where $n$ is the average number of not-susceptible neighbors which, further, implies that $\nu := 1 - n/D$ is the fraction of susceptible. This latter quantity has to be interpreted as an general estimate of how infectious is a disease, i.e. for low infectivity, $\nu\sim1$ which implies $D \lesssim D_c$.
 To be precise, for the "fuse-mode" $\nu$ represents only the fraction of susceptible in the neighborhood of the infection front; while for the ER model, $n$ embodies the entire population.
 \\Whenever, $n$ is known, 
 \begin{equation}
-	D_c = n + \frac{1}{rd}.
+	D_c = n + \lambda^{-1}.
 	\label{eq:D_c_analytical_discussion}
 \end{equation}   
 
@@ -1127,10 +1129,11 @@ Moving forward with the calculations, the network models have to be exploited. I
 For a Erdös-Rényi random graph with "rewiring probability" $p$, the average degree of contacts is $D = Np$. So, the number of un-infectable nodes from an infected is $n \sim 1 + (D-1)(1-\nu)$, as $1$ is the past infector of the fixed node summed with the remaining neighbors which are infected or recovered \cite{Thurner::Appendix_NetBasedExpl}. 
 \\Inserting the obtained $n$ in \autoref{eq:D_c_analytical_discussion}, 
 \begin{equation}
-	D_c^{ER} = 1 + \frac{1}{\nu rd}.
+	D_c^{ER} = 1 + \frac{ \lambda^{-1} }{\nu}.
+	\label{eq:Dc_ERenyi}
 \end{equation}
 which grasps the fact that for low infection levels $n\sim1$. 
-In addition, $D_c^{ER}$ increases as $\nu$ drops: it has been needed more contacts to spread a disease if there are less susceptible available.  
+In addition, $D_c^{ER}$ increases as $\nu$ drops: it has been needed more contacts to spread a disease if there are less susceptible available. However, for low infection or at the starting of the epidemics $\nu \sim 1$ and the is fixed by the epidemics parameters.
 %\\Other way around, for a fixed $D$ since $\nu \leq 1$,
 %\begin{equation}
 %	\nu_c = \text{min}\left(1, \frac{1}{(D-1)rd}\right)
@@ -1150,7 +1153,7 @@ In addition, $D_c^{ER}$ increases as $\nu$ drops: it has been needed more contac
 
 In this section, it is going to be obtained, for a one-dimensional regular grid with average degree $D$, the critical degree \cite{Thurner::NetBasedExpl} 
 \begin{equation}
-	D_c = 1 + \frac{2}{\beta d(1+p)}.
+	D_c = 1 + \frac{2 \lambda^{-1}}{1+p}.
 	\label{eq:Dc_PSW_network}
 \end{equation}
 The same result may be used for the poissonian small-world network.
@@ -1216,11 +1219,14 @@ Ultimately, introducing the $pD$ long-range ("lr") neighbors; while keeping the 
 \end{equation}   
 and, therefore,
 \begin{equation}
-	D_c = 1+ \frac{2}{\beta d(1+p)}.
+	D_c = 1+ \frac{2 \lambda^{-1}}{1+p}.
 	\label{eq:final_D_c_fuse_network}
 \end{equation}
 
-This estimate express the critical degree, i.e. the average number of contact under which the mean-field approximation fails, as a function of $p,\beta,\mu = 1/d$. As a second order approximation in $\tau$ as been exploited in \autoref{eq:rho_hat_fuse_model}, overestimates the number of infected which, in turn, drives to an overestimation of $D_c$. Other sources of divergence from the simulated critical degree may be the finite size effects or deviation from $\mathcal{k} = 0$.   
+This estimate express the critical degree, i.e. the average number of contact under which the mean-field approximation fails, as a function of $p,\beta,\mu = 1/d$. As a second order approximation in $\tau$ as been exploited in \autoref{eq:rho_hat_fuse_model}, overestimates the number of infected which, in turn, drives to an overestimation of $D_c$. Other sources of divergence from the simulated critical degree may be the finite size effects or deviation from $\mathcal{k} = 0$.
+
+\section*{Critical Degree in Practice}
+The \autoref{eq:final_D_c_fuse_network} and \autoref{eq:Dc_ERenyi} for $\nu \sim 1$ allow to put a upper and lower boundary on the $D_c$ of the studied networks. Indeed, the ER case provides a good comparison with an homogeneous approximation; while the "fuse model" is on the other extrema where the nodes overlaps only locally, i.e. the regular lattice case reported in \autoref{sec:RegularGraph_p0}. For example, a poissonian small-world network \autoref{sec:PSW_network} has either the "local-wiring" features than some outliers for the heterogeneity in node grees, since they have been drawn from a poissonian distribution. Therefore, the plots are going to present two vertical lines as a sign of $D_{c-ER} \textnormal{ and } D_{c-fuse model}$. 
 
 \section*{Parameters Discussion}
 
@@ -1234,12 +1240,25 @@ In the "Results" chapter, $D_c$ for different simulation is reported but only fo
 %$R_0$ try to modify it with $clust coefficient^{-1} or avg path length^{-1}$, i.e. an average estimate of the "openness" of the network.
 \chapter{MISSING TIPS}
 \begin{enumerate}
+	\item rifai WS pruned per $D_{c-ER} \textnormal{ and } D_{c-fuse model}$. PS: fuse model wrong since $D_{c-old} \propto \lambda $ but, in fact, $D_{c} \propto \lambda^{-1}$   
+	\item as $D_{mf} = int(D)$, consider to impelement a WSmodel with p = 1 for it. No ER? Make net vs mean-field eqs plot
+	\item Parameters from article: 
+	\begin{itemize}
+		\item 1st plot: $beta = 0.1, \mu = 0.167 \textnormal{ or } d = 6days, D = 8 \textnormal{ (exp-phase) vs } D = 3 \textnormal{ (linear-phase)}}$
+		\item Phase Transition: $\beta = 0.05, 0.1, 0.2, \mu = 0.167 = 6days$ 
+		\item Overall: $beta = 0.05, 0.1, 0.2, 0.4, 0.6, 0.8; \mu = 0.07(14days), 0.1(14days), 0.167(6days), 0.3, 0.6, 0.8$
+	\end{itemize}  
+	\item Why the underlying distribution is a poissonian one?
+	\item In the article, it has been used a narrow PSW; 
+	\item finite scale effect in ER phase transition
+	\item estimate beta for real COVID-19
+	\item R0 = D*S/N * tasso di infezione * I/N / tasso di recupero * I/N = infetti che infettano / infetti che si recuperano = num di infetti secondari; per le reti diverse dal WS pruned tengo fissa l'epidemia e facci variare D, i.e. vario il numero di vicini e vedo come cambia.
+	\item puoi mettere in appendice le figure che ritieni più belline
+	\item usa cmap per dare colore alle curve
 	\item inserisci gli infetti come plot blue dots mec black come nei plots di riferimento
-	\item spiega l'immagine dei plots con direttamente un grafico perché xe massa roba
-	\item frame to black, shadow legend sim 0.8, if $R_0 \leq 1$ put legend aside e colore più scuro per mf and net totcases; 
+	\item spiega l'immagine dei plots con direttamente un grafico perché xe massa roba 
 	\item scrivi per bene la parte su $R_0$ nuovo che si propone come aggiornamento del vecchio;
 	\item plots capitoli precedenti controlla il copyright;
-	\item inserisci i plots della JHU;
 	\item rifai il $NN Conf Model$ affinché si propaghi in un'unica direzione come il fuse model;
 	\item sistema grafici autogenerati;
 	\item riscala tutto per il massimo totcases, può essere una buona idea per avere un enanchement della sottiletta in WS-pruned D = 2?
@@ -1268,11 +1287,17 @@ In this chapter, it is going to be discussed the results obtained by the simulat
 The networks, in the following, are all composed by $N = 1000$ nodes and the simulations are performed over the Google Colab CPUs of \cite{GoogleColab}.
 
 \section{Regular Graph}
-\label{sec:RegularGraph}
-
-
-Starting from a fully connected graph, i.e. $D = 999$, a pruning scheme is introduced to clarify whether the spreading would have changed by fixing $R_0$, while dividing $D$ and doubling $\beta$: $R_0 = const = (D/k) \cdot (\beta k) / \mu$ where $k$ goes from 1 to the maximum power of $2$ s.t. $D/k > 1$.
-Practically, to generate a fully-connected graph it has been used a "Watts-Strogatz" algorithm with $p = 0$. Since this algorithm works only with even $D$, all the uneven $D$ where, arbitrarily, rounded to the nearestest even integer, e.g. $125 \to 124$. In this way, the reaching of the endpoint of $D = 2$ is faster. Moreover, \autoref{eq:lambdac_Rc_netSIR} implies that $R_{c-net} = (1-D^{-1})^{-1}$ decreases when $D$ increases. As expected, the critical basic reproduction number is more likely to be overtaken when a regular lattice has more neighbors.
+\subsection*{Local ($p = 0$) regular graph}
+\label{sec:RegularGraph_p0}
+\begin{figure}[h]
+	\centering
+	\includegraphics[width = .7\linewidth]{Results/WS_Pruned/Network/WS_Pruned_AdjMat_1000_500.0_0.0.png}
+	\caption{Lattice Graph panel for $D = 500$. On the upper left, there is the graphical realization of the network, characterized by a fan-shaped structure of connections for each node. On the upper right, the adjaciency matrix; while, on the bottom, the probability distribution.
+	$N_{3-out} \textnormal{ and } SW_{C}$ are, respectevely the number of nodes whose degree is $k>3D$ and the coefficient of small-worldness $SW_{C} := \delta / \ln(N)$ where $C$ stands for "connected" when the network is connected. Instead, the size of the largest component is going to be returned.} \label{fig:RegLatAdjMatrix}
+\end{figure}
+Starting from a fully connected graph, i.e. $D = 999$, a pruning scheme is introduced to test whether the spreading would have changed by fixing $R_0$. Indeed, dividing $D$ and doubling $\beta$: $R_0 = const = (D/k) \cdot (\beta k) / \mu$ where $k$ goes from 1 to the maximum power of $2$ s.t. $D/k > 1$.
+Practically, to generate a fully-connected graph it has been used a "Watts-Strogatz" algorithm with $p = 0$. Since this algorithm works only with even $D$, all the uneven $D$ where, arbitrarily, rounded to the nearestest even integer, e.g. $125 \to 124$. In particular, the real progression was $D \in [999,500,124,62,30,14,6,2]$, where the $D = 500$-network panel is shown in \autoref{fig:RegLatAdjMatrix}.
+ In this way, the reaching of the endpoint of $D = 2$ is faster. Moreover, \autoref{eq:lambdac_Rc_netSIR} implies that $R_{c-net} = (1-D^{-1})^{-1}$ decreases when $D$ increases. As expected, the critical basic reproduction number is more likely to be overtaken when a regular lattice has more neighbors.
 
 As said in the \autoref{ch:sir-models}, an epidemic could reach a considerable fraction of the population if $R_0 > R_{c-net} \sim 1$. For the sake of concreteness, let's focus on \autoref{fig:RegLat_p0_R0less1} whose $\mu = 0.8$, while $D \textnormal{ and }\beta$ vary. For brevity only the graphic in the \autoref{fig:RegLat_p0_R0less1} has been generated for this regime, since the others with $D \textnormal{ and } \beta$ are slightly different. 
 
@@ -1285,9 +1310,8 @@ As reported in \autoref{ch:Methodology}, the following plots display as sup-titl
 \end{itemize}
 
 The graphic shows that for $R_0 < R_{c-net}$ the epidemic remains limited to a small fraction of the population ($1.8 \%$ of the total population); while in the ANMF case, the percentage is comparable, since the epidemic is "weak". Moreover, at these low values of $R_0$ there could be appreciated how the stochasticity plays a relevant role in making the spreading more noisy and short. Indeed, the low-lasting green curves embodies the fact that pathogen has died our at lower time as, due to small "epidemic stregth" $R_0 $, the likelihood of spreading is small.   
-As said, fixed $R_0 < R_{c-net}$, as $D$ increases, the curves exhibit a little growth in the total cases as expected: this phenomonon is going to be showed in $R_0 > R_{c-net}$. 
- 
-\newpage
+As said, fixed $R_0 < R_{c-net}$, as $D$ increases, the curves exhibit a little growth in the total cases as expected: this phenomenon is going to be showed in $R_0 > R_{c-net}$. 
+
 \begin{figure}[t]
 	\includegraphics[width = \textwidth, height = 7cm]{Results/WS_Pruned/p0.0/WS_Pruned_SIR_R0_1_N1000_D2.0_p0.0_beta0.25_mu0.8.png} %../images/
 	\centering
@@ -1295,29 +1319,70 @@ As said, fixed $R_0 < R_{c-net}$, as $D$ increases, the curves exhibit a little 
 	\label{fig:RegLat_p0_R0less1}
 \end{figure}
 
-Strengthening the epidemic, i.e. chosing $\beta, \mu \textnormal{ s.t. } R_0 = 2.5$, some peculiar behaviors arise. \\Starting from the lowest $D = 6$, \autoref{fig:RegLat_R0maj1_D6} captures the (quasi-)linearity even in the early stage of contagion. Note that $D = 6$, is slightly above the upper bound of $2-5$ lockdown contacts per person \cite{Liu::2021_Review_SContactPattern}. In particular, this network assumes a regular structure of contacts limited in a portion of it. Thus, the number of new daily cases is limited (blue curve) and, so, it is the number of total cases (green one). In addition, in this particular case, only the AMFN could increases until the star-shaped turning point is reached: from that time on the number of cases are going to decrease since $R_0 \cdot s(t) < R_{c-net}$, as the susceptible are no more feeding the pathogen which is going to die out. On the other hand, the network epidemic
+Strengthening the epidemic, i.e. choosing $\beta, \mu \textnormal{ s.t. } R_0 = 2.5 > R_{c-net}$, some peculiar behaviors arise. \\Starting from the lowest $D = 6$, \autoref{fig:RegLat_R0maj1_D6} captures the (quasi-)linearity even in the early stage of contagion. Note that $D = 6$, is slightly above the upper bound of $2-5$ lockdown contacts per person \cite{Liu::2021_Review_SContactPattern}. In particular, this network assumes a fan-shaped structure of contacts limited in a portion of it \autoref{fig:RegLatAdjMatrix}. Thus, the number of new daily cases is limited (blue curve) and, so, it is the number of total cases (green one). In addition, in this particular case, only the AMFN could increases until the turning point (orange star) is reached: from that time on, the number of cases are going to decrease since $R_0 \cdot s(t) < R_{c-net}$, as the susceptible are no more feeding the pathogen which is going to die out. More specifically, the ANMF is the "annealed" realization of a homogeneous mean-field approximation, as developed in \autoref{sec:Annealed_MF_Network}. Thus, from \autoref{eqs:SIR_degree-based}, $R_0 s(t) \stackrel{!}{=} 1$ which, by interpolating with a straight line the two points obtained by the simulations, yields to $(t_{critical}, p_{critical}) = (16\textnormal{days}, 0.52)$. 
+\\On the other hand, in the network approximation, there are present a plethora of epidemic scenarios: the ones which die out fast (bottom green lines); the ones which are more gentle; the curves which have linearly increasing green line due to constant cases; and the stronger ones above the mean. This kind of beahavior could be highlighted whenever the disease is strong, but the underlying network constraint it.
+Moreover, note that the number of total infected drops as the disease is restricted to move on the fan-shaped structure of links that opens from each node \autoref{fig:RegLatAdjMatrix}.
+
+As $D$ increases as in \autoref{fig:RegLat_R0maj1_D30} and \autoref{fig:RegLat_R0maj1_D500}, also the final outbreak size is enanched, due to multiple contacts which make the network more tangled.
+To take advantage of the latter phenomenon, the plots exhibts also a $R_0(\delta):= R_0/ \delta$, where $\delta$ is the average path length of the network, i.e. the mean among minimum distance connecting all the possible pairs. In this way, it is possible to note that $R_0(\delta)$ changes according to $D$; while the classical one remains constant. Moreover, as a sign that the homogeneous approximation does not fit in general, it could be possible to estimate the $(t_{critical},p_{critical})$ for the degree-based mean field model (\autoref{sec:degree-basedMF}) displayed by the separation among the time of the maximum of the daily new cases (blue curve) with respect to the expected turning point (the green star) in \autoref{fig:RegLat_R0maj1_D6}. On the other hand, if $D = 500$ the degree-based mean field is well appproximated by a homogeneous mean-field: the turning points and the curves are nearly the same \autoref{fig:RegLat_R0maj1_D500}.
 
 \begin{figure}
     \centering
     \begin{subfigure}[t]{\textwidth}
         \centering
         \includegraphics[width=.97\textwidth]{Results/WS_Pruned/p0.0/WS_Pruned_SIR_R0_3_N1000_D6.0_p0.0_beta0.083_mu0.2.png} 
-        \caption{Generic} \label{fig:RegLat_R0maj1_D6}
+        \caption{Regular Lattice with $D = 6$. The other parameters are reported in the title} \label{fig:RegLat_R0maj1_D6}
     \end{subfigure}
 	\vfill
     \begin{subfigure}[t]{\textwidth}
         \centering
         \includegraphics[width=.97\textwidth]{Results/WS_Pruned/p0.0/WS_Pruned_SIR_R0_3_N1000_D30.0_p0.0_beta0.017_mu0.2.png} 
-        \caption{Competitors} \label{fig:RegLat_R0maj1_D30}
+        \caption{Regular Lattice with $D = 30$} \label{fig:RegLat_R0maj1_D30}
     \end{subfigure}
     \vspace{1cm}
     \begin{subfigure}[t]{\textwidth}
         \centering
         \includegraphics[width=.97\textwidth]{Results/WS_Pruned/p0.0/WS_Pruned_SIR_R0_3_N1000_D500.0_p0.0_beta0.001_mu0.2.png} 
-        \caption{Price regulation} \label{fig:RegLat_R0maj1_D500}
+        \caption{Regular Lattice with $D = 500$} \label{fig:RegLat_R0maj1_D500}
     \end{subfigure}
-    \caption{Some general caption of all the figures. In (\autoref{fig:RegLat_R0maj1_D6}) you can see a  green square....}
+    \caption{Some regular lattice spreading curves, which exhibit a strong dependence on $D$. As $D$ increases, the classical $R_0$ remains constant, while its (proposed) rescaled version ($R_0(\delta):=R_0 / \delta$) varies.}
 \end{figure}
+
+\newpage
+\subsection*{Watts-Strogatz model with Short-cuts}
+\label{sec:RegularGraph_p0.1}
+As the probability of connecting to distant nodes is switched on, i.e. $p \neq 0$, the network is built by using the Watts-Strogatz algorithm \cite{watts:1998_SWconnectiveDynamics}: a Watts-Strogatz Network model is, thus, produced.
+With the increasing of $p$, the network starts to resemble to a mean field network, since the short-cuts connect distant nodes similarly as for the ANMF.
+More specifically, the bottom degree distribution displays the scattering of the node degrees as if it were assigned at random but, also, the graphical representation of the lattice (upper left) shows a shadowed center, which signals the presence of shortcuts among distant nodes. In turns, this implies an increasing number of total cases. Indeed, as in \autoref{fig:RegLat_p0.1_D6}, the enanchement due to the shortcuts drives the final outbreak size $\pi(t \to \infty)$ to the $43\%$ of the total population even for $D=6$: a result that exceeds also the $\pi(t \to \infty)$ of $D = 14$ in the $p = 0$ case (not reported here). Moreover, it is shown how $\pi(t)$ is forced to have a linear trend until the plateaux of the new cases is exhausted, thus, making $\pi(t)$ to bend. This is the result, this work were looking for from the \autoref{sec:ATechIntro}. Indeed, the $r(t)$ (the total cases predicted by classical epidemiology shifted by the recovery time $\tau = 1/\mu$) shows a linear growth iff $R_0 = 1$, which is a null set over the infinite $R_0$ values (cf. \cite{Thurner::NetBasedExpl}). By contrast, the network topology constraints the disease yielding a linear growth of the total infected even for bigger $R_0$ ($R_0 = 2.5$). As a rough comparison with the Unites States case in \autoref{fig:USA-AUT-ITAtotalcasesOWID}, \autoref{fig:RegLat_p0.1_D14} shows how after a early exponential phase without a severe lockdown measures the total number of infected could continue growing linearly even if $D = 14$, i.e. less than the $7-29$ average contacts pre-COVID-19 \cite{Liu::2021_Review_SContactPattern}.
+
+The take on message is that social distancing is effective, which could naturally lead to some improbable behaviour, such as linearity.
+
+\begin{figure}[t]
+	\centering
+	\includegraphics[width = .7\linewidth]{Results/WS_Pruned/Network/WS_Pruned_AdjMat_1000_500.0_0.1.png}
+	\caption{Regular graph with $D = 500$, as in \autoref{fig:RegLatAdjMatrix}, but with $p = 0.1$.}
+	\label{fig:RL_adjmat_p0.1}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[t]{\textwidth}
+        \centering
+        \includegraphics[width=.97\textwidth]{Results/WS_Pruned/p0.1/WS_Pruned_SIR_R0_3_N1000_D6.0_p0.1_beta0.083_mu0.2.png} 
+        \caption{Remarkbly linear regime over 30 time-steps on Watts-Strogatz model with $D = 6 \textnormal{ and } p = 0.1$. The final outbreak ($43 \%$) is nearly $4$ times the $p = 0$ analogous in \autoref{fig:RegLat_R0maj1_D6}} \label{fig:RegLat_p0.1_D6}
+    \end{subfigure}
+	\vfill
+    \begin{subfigure}[t]{\textwidth}
+        \centering
+        \includegraphics[width=.97\textwidth]{Results/WS_Pruned/p0.1/WS_Pruned_SIR_R0_2_N1000_D14.0_p0.1_beta0.036_mu0.25.png} 
+        \caption{Watts-Strogatz model with $D = 14 \textnormal{ and } p = 0.1$} \label{fig:RegLat_p0.1_D14}
+    \end{subfigure}
+    \caption{Watts-Strogatz model spreading curves for $D = 6$ and $D = 14$.}
+\end{figure}
+
+
+
+
 
 
 \chapter{Conclusions}

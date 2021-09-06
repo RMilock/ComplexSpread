@@ -445,7 +445,7 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
   #if "WS_Pruned" in folders: loc = "center right"
   if True: #R0 <= 1:
     leg = ax3.legend([handles[idx] for idx in order],[labels[idx] for idx in order],
-              bbox_to_anchor=(1.05, 1), edgecolor="black", shadow = False, framealpha = 0.6, loc='upper left')
+              bbox_to_anchor=(1.06, 1), edgecolor="black", shadow = False, framealpha = 0.6, loc='upper left')
   else:  leg = ax3.legend([handles[idx] for idx in order],[labels[idx] for idx in order],
               edgecolor="black", shadow = False, framealpha = 0.6, loc=loc)
     
@@ -609,7 +609,7 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
       'since in the article p and mu are fixed!'
       plt.suptitle("Average SD(Daily New Cases) : "+r"$p:%s,\beta:%s,\mu:%s$"%(rhu(p,3),rhu(beta,3),rhu(mu,3)))
       ax.set_xlabel("Avg Degree D [Indivs]")
-      ax.set_ylabel("Avg_SD(Cases)")
+      ax.set_ylabel("Avg SD(Cases)")
       
       if folder == "WS_Pruned":
         fix_pmb = ordp_pmbD_dic[p][mu]
@@ -624,7 +624,7 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
       #print("y", y)
       ax.grid(color='grey', linestyle='--', linewidth = 1)
       ax.errorbar(x,y, xerr = xerr, yerr = yerr, color = "tab:blue", marker = "*", linestyle = "-",
-         markersize = 30, mfc = "tab:red", mec = "black", linewidth = 3, label = "Avg_SD(Cases)")
+         markersize = 30, mfc = "tab:red", mec = "black", linewidth = 3, label = "Avg SD(Cases)")
       D_cfus = 1 + 2*Rc_net*mu/(beta*(1+p)) #Rc_net = 1 assumption
       D_cer = 1 + Rc_net*mu/beta
       D_chomo = mu/beta
@@ -633,7 +633,7 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
       ax.axvline(x = D_cer, color = "darkblue", lw = 4, ls = "--", 
                  label = "".join((r"$D_{c-ER \, model}$",f": {rhu(D_cer,3)}")) )
       ax.axvline(x = D_chomo, color = "darkslategrey", lw = 4, ls = "--", 
-                 label = "".join((r"$D_{c-homog \, model} = \mu / \beta$",f": {rhu(D_chomo,3)}")) )
+                 label = "".join((r"$D_{c-homog \, model} = \mu / \beta$",f"= {rhu(D_chomo,3)}")) )
       ax.legend(fontsize = 35)
 
       plt.subplots_adjust(
@@ -652,7 +652,6 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
         if not os.path.exists(ordp_path): os.makedirs(ordp_path)
         plt.savefig("".join((ordp_path,"%s_ordp_p%s_beta%s_mu%s.png" % (folder, rhu(p,3),rhu(beta,3),rhu(mu,3)))))
       plt.close()
-
 
       'pretty print the dictionary of the ordp'
       pp_ordp_pmbD_dic = json.dumps(ordp_pmbD_dic, sort_keys=False, indent=4)
@@ -1150,7 +1149,7 @@ def NN_pois_net(N, folder, ext_D, p = 0, conn_flag = True):
   
 
   return G
-'''
+
 'This kind of network is similar to a WS'
 def NNOverl_pois_net(N, ext_D, p, add_edges_only = False):
   #Nearest Neighbors Overlapping
@@ -1214,6 +1213,8 @@ def NNOverl_pois_net(N, ext_D, p, add_edges_only = False):
   # while(not nx.is_connected(G)): G = NN_pois_net(N, ext_D = D)
   
   return G
+'''
+
 
 'New Cluster of defs for Poissonian Small World Network'
 def pois_pos_degrees(N, D):
@@ -1356,6 +1357,93 @@ def NN_pois_net(N, folder, ext_D, p = 0, conn_flag = True):
     ##print(f"End of wiring with average degree {D} vs {ext_D}")
     ##print(f'G.is_connected(): {nx.is_connected(G)}',)
     
+    return G
+'new_Overl_PSW'
+def NNOverl_pois_net(N, ext_D, p, add_edges_only = True, conn_flag = False, return_dic_nodes = False):
+    #Nearest Neighbors Overlapping
+    from itertools import chain
+    from definitions import replace_edges_from, check_loops_parallel_edges,\
+        remove_loops_parallel_edges, N_D_std_D, infos_sorted_nodes, connect_net
+    import datetime as dt
+    import numpy as np
+    import random
+    import networkx as nx
+
+
+    def edges_node(x):
+        return [(i,j) for i,j in all_edges if i == x]
+
+    D = ext_D
+    G = nx.Graph()
+    G.add_nodes_from(np.arange(N))
+    degrees = pois_pos_degrees(N,D)
+    dic_nodes = dic_nodes_degrees(N, degrees)
+
+    deg_mean = np.mean(degrees)   
+    
+
+    'rewire left and right for the max even degree'
+    dsc_sorted_nodes = dic_nodes_degrees(N, degrees)
+    #print(f'dsc_sorted_nodes: {dsc_sorted_nodes}',)
+    
+    #dsc_sorted_nodes = {k: v for k,v in sorted( G.degree(), key = lambda x: x[1], reverse=True)}
+    edges = set()
+    for node in dsc_sorted_nodes.keys():
+        k = dsc_sorted_nodes[node]//2
+        for i in range(1, k + 1):
+            edges.add((node, (node+i)%N))
+            edges.add((node, (node-i)%N))
+        if dsc_sorted_nodes[node] % 2 == 1: 
+            edges.add((node, (node+k+1)%N))
+        elif dsc_sorted_nodes[node] % 2 != 0: 
+            print("Error of Wiring: dsc[node]%2", dsc_sorted_nodes[node] % 2); break
+    G.add_edges_from(edges)
+    remove_loops_parallel_edges(G)
+
+    _, D, _ = N_D_std_D(G)
+    if D != deg_mean: print("!! avg_deg_Overl_Rew - avg_deg_Conf_Model = ", D - deg_mean)
+
+    if add_edges_only and p != 0: #add on top of the distr, a new long-range edge
+        long_range_edge_add(G, p = p)
+    
+    adeg_OR = sum([j for i,j in G.degree()])/G.number_of_nodes()
+    print("Rel Error wrt to ext_D %s %%" % (rhu((adeg_OR - ext_D)/ext_D,1 )*100))
+    print("Rel Error wrt to deg_mean %s %%" % (rhu( (adeg_OR - deg_mean)/deg_mean,1 )*100))
+
+    '''
+    else: #remove local edge and add long-range one
+        start_time = dt.datetime.now()
+        all_edges = [list(G.edges(node)) for node in pos_deg_nodes(G)]
+        all_edges = list(chain.from_iterable(all_edges))
+        initial_length = len(all_edges)
+        for node in pos_deg_nodes(G):
+            left_nodes = list(pos_deg_nodes(G))
+            left_nodes.remove(node) 
+            #print("edges of the node %s: %s" % (node, edges_node(node)) ) 
+            i_rmv, j_rmv = random.choice(edges_node(node))  
+            if random.random() < p and len(edges_node(j_rmv)) > 1: #if, with prob p, the "node" is not the only friend of "j_rmv" 
+                all_edges.remove((i_rmv,j_rmv)); all_edges.remove((j_rmv,i_rmv))
+                re_link = random.choice(left_nodes)
+                #print("rmv_choice: (%s,%s)" % (i_rmv, j_rmv), "relink with node: ", re_link)
+                all_edges.append((node, re_link)); all_edges.append((re_link, node))
+                all_edges = [(node,j) for node in range(len(all_edges)) for j in [j for i,j in all_edges if i == node] ]
+                #print("all_edges", all_edges)
+        print("len(all_edges)_final", len(all_edges), "is? equal to start", initial_length )
+        replace_edges_from(G, all_edges)
+        remove_loops_parallel_edges(G, False)
+        print(f"Time for add_edges = {add_edges_only}:", dt.datetime.now()-start_time)
+    '''
+
+    check_loops_parallel_edges(G)
+    infos_sorted_nodes(G, num_sorted_nodes=False)
+    connect_net(G, conn_flag = conn_flag)
+
+    _,D,_ = N_D_std_D(G)
+    print(f"End of wiring with average degree {D} vs {ext_D}")
+    print(f'G.is_connected(): {nx.is_connected(G)}',)
+    #print(f'G.edges(): {G.edges()}',)
+
+    if return_dic_nodes: return G, dic_nodes
     return G
 
 '===Caveman Defs'
@@ -1678,7 +1766,7 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
         #print("2nd: D %s, deg_ordp %s" % (D, deg_for_ordp))
         
         'intro regD has the "regularized D" even for D < 1'
-        if D <= 1: 
+        if D < 1: 
           if folder == ["Caveman_Model"]: regD = 2
           else: regD = 1
         else: regD = D
@@ -1776,10 +1864,12 @@ def parameters_net_and_sir(folder = None, p_max = 0.3):
   'WARNING: put SAME beta, mu, D and p to compare at the end the different topologies'
   #k_prog = np.concatenate(([1.0],np.arange(2,20,2)))
   k_prog = np.arange(2,13) #poisssonian: np.arange(1,60,2)
-  p_prog = [0, 0.1, 0.3] #0.2 misses
-  beta_prog = [0.05,0.1,0.2,0.4, 0.6, 0.8]; mu_prog = [0.07, 0.1, 0.167, 0.3, 0.6, 0.8]
-    # old @ 5.9.2021: mu_prog = [0.14, 0.16, 0.2, 0.25, 0.8]#, 0.33,0.5]
-  R0_min = 0; R0_max = 30
+  p_prog = [0, 0.3] #0.2 misses
+  beta_prog = [0.015, 0.05, 0.1, 0.2, 0.4, 0.6]; 
+  mu_prog = [0.07, 0.1, 0.167, 0.3, 0.6]
+  # old @ 5.9.2021: mu_prog = [0.14, 0.16, 0.2, 0.25, 0.8]#, 0.33,0.5]
+  k_prog = np.hstack((np.arange(1,13,2),np.arange(14,34,5)))
+  R0_min = 0; R0_max = 60
 
   'this should be deleted to have same params and make comparison more straight-forward'
   if folder == "WS_Epids": 
@@ -1791,7 +1881,7 @@ def parameters_net_and_sir(folder = None, p_max = 0.3):
   if folder == "NN_Conf_Model": 
     'beta_prog = [0.05, 0.1, 0.2, 0.25]; mu_prog = beta_prog'
     # past parameters: beta_prog = np.linspace(0.01,1,8); mu_prog = beta_prog
-    k_prog = np.hstack((np.arange(1,13,1),np.arange(14,42,5)))
+    k_prog = np.hstack((np.arange(1,13,2),np.arange(14,34,5)))
     R0_max = 300     
   if folder == "Caveman_Model": 
     'k_prog = np.arange(1,11,2)' #https://www.prb.org/about/ -> Europe householdsize = 3

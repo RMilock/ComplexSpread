@@ -176,3 +176,9 @@ LateX/full-text/.vscode/settings.json
 LateX/full-text/References
 .gitignore
 LateX/.vscode/settings.json
+CSSE_JHU/COVID-RealStates.png
+AutoGen_Plots/images/complete_graph_sir.png
+AutoGen_Plots/images/D2_ws_graph_sir.png
+AutoGen_Plots/images/D4_ws_graph_sir.png
+AutoGen_Plots/images/D6_ws_graph_sir.png
+AutoGen_Plots/images/er_graph_sir.png

@@ -5,8 +5,8 @@ import networkx as nx
 # %matplotlib inline
 from itertools import product
 import os #to create a folder
-from definitions import plot_save_nes, pow_max, save_log_params, parameters_net_and_sir
-from definitions import save_log_params, plot_save_nes, \
+from definitions import save_nes, pow_max, save_log_params, parameters_net_and_sir
+from definitions import save_log_params, save_nes, \
     NestedDict, jsonKeys2int, my_dir, rhu
 from itertools import product
 import networkx as nx
@@ -22,7 +22,7 @@ it drives to a nearer pruning.
 '''
 
 'rewire all the edges with a probability of p'
-N = int(1e3); p_max = 0.3
+N = int(1e2); p_max = 0.3
 
 def even_int(x):
   if int(x) % 2 != 0: return int(x-1)
@@ -39,7 +39,7 @@ for pruning in [False]:
     #R0_min = 0; R0_max = 4
     #p_prog = np.linspace(0,p_max,int(p_max*10)+1)
     print("---I'm pruning!")
-    betas = [1e-3]
+    betas = [5e-4]
 
     'In WS model, if D = odd, D = D - 1. So, convert it now'
     k_prog = [even_int(N/x) for x in \
@@ -48,7 +48,7 @@ for pruning in [False]:
 
     print("kprog, betaprog, zip",  k_prog, "\n", beta_prog, "\n", list(zip(k_prog,beta_prog))[3:])
 
-    zipped = list(zip(k_prog,beta_prog))[3:] #old: zip(k_prog, beta_prog)
+    zipped = list(zip(k_prog,beta_prog))[1:] #the [1:] is an arbitrary choice. If want also 1000, remove it
 
     total_iterations = 0
     for mu, p in product(mu_prog, p_prog):
@@ -62,7 +62,8 @@ for pruning in [False]:
     text = "N %s;\nk_prog %s, len: %s;\np_prog %s, len: %s;\nbeta_prog %s, len: %s;\nmu_prog %s, len: %s;\nR0_min %s, R0_max %s; \nTotal Iterations: %s;\n---\n" \
             % (N, k_prog, len(k_prog), p_prog, len(p_prog), beta_prog, len(beta_prog), \
             mu_prog, len(mu_prog),  R0_min, R0_max, total_iterations)
-    save_log_params(folder = folder, text = text)    
+    save_log_params(folder = folder, text = text)  
+    print("text", text)  
 
     done_iterations = 0; saved_nets = []
     for D, beta in zipped:
@@ -93,12 +94,12 @@ for pruning in [False]:
 
           import datetime as dt
           start_time = dt.datetime.now()       
-          plot_save_nes(G, m = m, N0 = N0, pos = pos, partition = partition,
+          save_nes(G, m = m, N0 = N0, pos = pos, partition = partition,
           p = p, folder = folder, adj_or_sir="AdjMat", done_iterations=done_iterations)
           print("\nThe total-time of one main-loop of one AdjMat is", dt.datetime.now()-start_time)
   
           start_time_total = dt.datetime.now()       
-          plot_save_nes(G, m = m, N0 = N0,
+          save_nes(G, m = m, N0 = N0,
           p = p, folder = folder, adj_or_sir="SIR", R0_max = R0_max, beta = beta, mu = mu, 
           ordp_pmbD_dic = ordp_pmbD_dic, done_iterations=done_iterations)
           print("\nThe total-time of one main-loop of one SIR is", dt.datetime.now()-start_time)
@@ -136,8 +137,8 @@ for pruning in [False]:
           done_iterations+=1
           print("Iterations left: %s" % ( total_iterations - done_iterations ) )
 
-          plot_save_nes(G = nx.connected_watts_strogatz_graph( n = N, k = D, p = p, seed = 1 ), 
+          save_nes(G = nx.connected_watts_strogatz_graph( n = N, k = D, p = p, seed = 1 ), 
           p = p, folder = folder, adj_or_sir="AdjMat", done_iterations=done_iterations)
-          plot_save_nes(G = nx.connected_watts_strogatz_graph( n = N, k = D, p = p, seed = 1 ),
+          save_nes(G = nx.connected_watts_strogatz_graph( n = N, k = D, p = p, seed = 1 ),
           p = p, folder = folder, adj_or_sir="SIR", beta = beta, mu = mu, done_iterations=done_iterations)
           print("---")'''
