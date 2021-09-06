@@ -73,9 +73,7 @@ def plot_params():
   plt.rc('ytick.major', pad = 16)
   plt.rcParams["figure.figsize"] = [32,14]
   plt.rc('axes', edgecolor='black', lw = 1.2)
-  #plt.rc("grid", color = "gray",ls="--", lw=1)
-  #plt.rc("tick_params", labelsize = MEDIUM_SIZE, direction="in", pad=10)
-  #plt.rcParams['xtick.major.pad']='16'
+  #plt.rc("patch", linewidth = 15)
 
 def sir(G, mf = False, beta = 1e-3, mu = 0.05, seed = False, start_inf = 10):
   'If mf == False, the neighbors are not fixed;' 
@@ -446,6 +444,7 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
   if True: #R0 <= 1:
     leg = ax3.legend([handles[idx] for idx in order],[labels[idx] for idx in order],
               bbox_to_anchor=(1.06, 1), edgecolor="black", shadow = False, framealpha = 0.6, loc='upper left')
+    leg.get_frame().set_linewidth(2.5)
   else:  leg = ax3.legend([handles[idx] for idx in order],[labels[idx] for idx in order],
               edgecolor="black", shadow = False, framealpha = 0.6, loc=loc)
     
@@ -496,9 +495,9 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
   R0 = beta * D / mu
 
   for i in intervals:
-    if intervals[i] <= R0 < intervals[i+1]:
+    if i <= R0 < i+1:
       'Intro R0-subfolder since R0 det epids behaviour on a fixed net'
-      if folder == "WS_Pruned": r0_folder = "R0_%s-%s/R0_%s/" % (intervals[i], intervals[i+1], rhu(beta*D/mu,3)) #"R0_1-2/mu0.16/"
+      if folder == "WS_Pruned": r0_folder = "R0_%s-%s/R0_%s/" % (i, i+1, rhu(beta*D/mu,3)) #"R0_1-2/mu0.16/"
       else: r0_folder = "beta%s/mu%s/" % (rhu(beta,3),rhu(mu,3)) #"R0_%s-%s/" % (intervals[i], intervals[i+1])
       #if folder == "WS_Epids": r0_folder += "D%s/" % rhuD  #"R0_1-2/mu0.16/D6/"
       if not os.path.exists(my_dir + r0_folder): os.makedirs(my_dir + r0_folder)
@@ -556,14 +555,28 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
       R0_sign = "<"; R0pl_sign = "<"
       if R0 > Rc_net: R0_sign = ">"
       if R0pl > Rc_net/avg_pl: R0pl_sign = ">"
-      plt.suptitle(r"$R_0:%s, R_0(%s=%s):%s, OrdPar:%s(%s), D_{%s}:%s(%s), p:%s, \beta:%s, \mu:%s, R_{c-net}: %s$"
+      ax.set_title(r"$R_0:%s, D_{%s}:%s(%s), p:%s, \beta:%s, \mu:%s$"
       % (
-        f"{rhu(R0,3)}"+R0_sign+f"{rhu(Rc_net,3)}", delta, rhu(avg_pl,1),
-        f"{rhu(R0/avg_pl,3)}"+R0pl_sign+f"{rhu(Rc_net/avg_pl,3)}",      
-        rhu(avg_ordp_net,3), string_format, N, rhuD2, rhu(std_D,2), rhu(p,3), rhu(beta,3), rhu(mu,3),
-        f"{rhu(Rc_net,3)}"
-        )
+        f"{rhu(R0,3)}"+R0_sign+f"{rhu(Rc_net,3)}", 
+        N, rhuD2, rhu(std_D,2), rhu(p,3), rhu(beta,3), rhu(mu,3),
+        ), pad = 30
       )
+      
+
+      textstr = '\n'.join((
+        "Other Measures:",
+        r"$R_{c-net}: %s$"%rhu(Rc_net,3),
+        r"$R_0(%s=%s):%s$"%(delta, rhu(avg_pl,1),
+        f"{rhu(R0/avg_pl,3)}"+R0pl_sign+f"{rhu(Rc_net/avg_pl,3)}"),
+        r"OrdPar: %s (%s)"%(rhu(avg_ordp_net,3), string_format),
+        ))
+
+      # these are matplotlib.patch.Patch properties
+      props = dict(boxstyle='round', facecolor='white', alpha=0.5, lw = 2.5)
+
+      # place a text box in upper left in axes coords
+      ax.text(1.07, 0.4, textstr, transform=ax.transAxes, fontsize=25, #x = 1.07
+              bbox=props,) #fontfamily = "serif", ha = "center" with x = 1.188
 
       plt.savefig( file_path )
       print("time 1_save_sir:", dt.datetime.now()-start_time) 
@@ -634,7 +647,8 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
                  label = "".join((r"$D_{c-ER \, model}$",f": {rhu(D_cer,3)}")) )
       ax.axvline(x = D_chomo, color = "darkslategrey", lw = 4, ls = "--", 
                  label = "".join((r"$D_{c-homog \, model} = \mu / \beta$",f"= {rhu(D_chomo,3)}")) )
-      ax.legend(fontsize = 35)
+      leg = ax.legend(fontsize = 35, loc = "best")
+      leg.get_frame().set_linewidth(2.5)
 
       plt.subplots_adjust(
       top=0.91,
@@ -782,7 +796,8 @@ def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = Fals
   if folder == "BA_Model": 
     ax.set_xscale("log")
     ax.set_yscale("log")
-  axs.legend(loc = "best")
+  leg = axs.legend(loc = "best")
+  leg.get_frame().set_linewidth(2.5)
     
   plt.subplots_adjust(top=0.85,
   bottom=0.09,  #0.088
@@ -1766,7 +1781,7 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
         #print("2nd: D %s, deg_ordp %s" % (D, deg_for_ordp))
         
         'intro regD has the "regularized D" even for D < 1'
-        if D < 1: 
+        if D <= 1: 
           if folder == ["Caveman_Model"]: regD = 2
           else: regD = 1
         else: regD = D
@@ -1866,7 +1881,7 @@ def parameters_net_and_sir(folder = None, p_max = 0.3):
   k_prog = np.arange(2,13) #poisssonian: np.arange(1,60,2)
   p_prog = [0, 0.3] #0.2 misses
   beta_prog = [0.015, 0.05, 0.1, 0.2, 0.4, 0.6]; 
-  mu_prog = [0.07, 0.1, 0.167, 0.3, 0.6]
+  mu_prog = [0.07, 0.11, 0.167, 0.25, 1] #d = 14,9,6,4,1
   # old @ 5.9.2021: mu_prog = [0.14, 0.16, 0.2, 0.25, 0.8]#, 0.33,0.5]
   k_prog = np.hstack((np.arange(1,13,2),np.arange(14,34,5)))
   R0_min = 0; R0_max = 60
