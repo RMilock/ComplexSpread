@@ -48,9 +48,9 @@ def func_file_name(folder, adj_or_sir, N, D, p, R0 = -1, m = 0, N0 = 0, beta = 0
     
 
   if adj_or_sir == "SIR":
-    return folder + "_%s_R0_%s_N%s_D%s_p%s_beta%s_mu%s"% (
+    return folder + "_%s_R0_%s_N%s_D%s_p%s_beta%s_d%s"% (
             adj_or_sir, int(rhu(R0)),
-            N,rhu(D), rhu(p,3), rhu(beta,3), rhu(mu,3) ) + ".png"
+            N,rhu(D), rhu(p,3), rhu(beta,3), rhu(mu**(-1)) ) + ".png"
 
 '===Plot and Save SIR + Net'
 def plot_params():
@@ -443,7 +443,7 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
   #if "WS_Pruned" in folders: loc = "center right"
   if True: #R0 <= 1:
     leg = ax3.legend([handles[idx] for idx in order],[labels[idx] for idx in order],
-              bbox_to_anchor=(1.06, 1), edgecolor="black", shadow = False, framealpha = 0.6, loc='upper left')
+              bbox_to_anchor=(1.07, 1), edgecolor="black", shadow = False, framealpha = 0.6, loc='upper left')
     leg.get_frame().set_linewidth(2.5)
   else:  leg = ax3.legend([handles[idx] for idx in order],[labels[idx] for idx in order],
               edgecolor="black", shadow = False, framealpha = 0.6, loc=loc)
@@ -459,7 +459,7 @@ def rhu(n, decimals=0, integer = False): #round_half_up
     if integer: return int(res)
     return res
 
-def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 10, numb_iter = 50):
+def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 10, numb_iter = 50, numb_inring_links = 0):
   import os.path
   from definitions import my_dir, func_file_name, N_D_std_D
   import datetime as dt
@@ -498,7 +498,7 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
     if i <= R0 < i+1:
       'Intro R0-subfolder since R0 det epids behaviour on a fixed net'
       if folder == "WS_Pruned": r0_folder = "R0_%s-%s/R0_%s/" % (i, i+1, rhu(beta*D/mu,3)) #"R0_1-2/mu0.16/"
-      else: r0_folder = "beta%s/mu%s/" % (rhu(beta,3),rhu(mu,3)) #"R0_%s-%s/" % (intervals[i], intervals[i+1])
+      else: r0_folder = "beta%s/d%s/" % (rhu(beta,3),rhu(mu**(-1))) #"R0_%s-%s/" % (intervals[i], intervals[i+1])
       #if folder == "WS_Epids": r0_folder += "D%s/" % rhuD  #"R0_1-2/mu0.16/D6/"
       if not os.path.exists(my_dir + r0_folder): os.makedirs(my_dir + r0_folder)
       if not os.path.exists(my_dir + r0_folder + "/Sel_R0/"): os.makedirs(my_dir + r0_folder + "/Sel_R0/")
@@ -512,8 +512,8 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
       #if vertical: _, ax = plt.subplots(figsize = (24,20)) #init = (24,14); BA_Model = (20,20) should change also the subplots_adjust!!!
       
       'plot sir'
-      print("\nThe model has N: %s, D: %s(%s), beta: %s, mu: %s, p: %s, R0: %s" % 
-      (N,rhuD2,rhu(std_D,2),rhu(beta,3),rhu(mu,3),rhu(p,3),rhu(R0,3)) )
+      print("\nThe model has N: %s, D: %s(%s), beta: %s, d: %s, p: %s, R0: %s" % 
+      (N,rhuD2,rhu(std_D,2),rhu(beta,3),rhu(mu**(-1)),rhu(p,3),rhu(R0,3)) )
       avg_ordp_net, std_avg_ordp_net, Rc_net = \
         plot_sir(G, ax1=ax, folder = folder, beta = beta, mu = mu, start_inf = start_inf, 
                 numb_iter = numb_iter)
@@ -521,7 +521,7 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
 
       right = 0.95
       #folders = ["WS_Pruned"]
-      if True: right = 0.73 #if R0 <= 1 #0.73
+      if True: right = 0.72 #if R0 <= 1 #0.73
       plt.subplots_adjust(
       top=0.920,
       bottom=0.12, #if vertical, bottom=0.10,
@@ -555,12 +555,22 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
       R0_sign = "<"; R0pl_sign = "<"
       if R0 > Rc_net: R0_sign = ">"
       if R0pl > Rc_net/avg_pl: R0pl_sign = ">"
-      ax.set_title(r"$R_0:%s, D_{%s}:%s(%s), p:%s, \beta:%s, \mu:%s$"
-      % (
-        f"{rhu(R0,3)}"+R0_sign+f"{rhu(Rc_net,3)}", 
-        N, rhuD2, rhu(std_D,2), rhu(p,3), rhu(beta,3), rhu(mu,3),
-        ), pad = 30
-      )
+      if folder == "Caveman_Model":
+          ax.set_title(r"$R_0:%s, D_{%s}:%s(%s), Inlinks:%s, p:%s, \beta:%s, d:%s$"
+        % (
+          f"{rhu(R0,3)}"+R0_sign+f"{rhu(Rc_net,3)}", 
+          N, rhuD2, rhu(std_D,2), 
+          numb_inring_links,
+          rhu(p,3), rhu(beta,3), rhu(mu**(-1)),
+          ), pad = 30
+        )
+      else:
+        ax.set_title(r"$R_0:%s, D_{%s}:%s(%s), p:%s, \beta:%s, d:%s$"
+        % (
+          f"{rhu(R0,3)}"+R0_sign+f"{rhu(Rc_net,3)}", 
+          N, rhuD2, rhu(std_D,2), rhu(p,3), rhu(beta,3), rhu(mu**(-1)),
+          ), pad = 30
+        )
       
 
       textstr = '\n'.join((
@@ -575,7 +585,7 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
       props = dict(boxstyle='round', facecolor='white', alpha=0.5, lw = 2.5)
 
       # place a text box in upper left in axes coords
-      ax.text(1.07, 0.4, textstr, transform=ax.transAxes, fontsize=25, #x = 1.07
+      ax.text(1.085, 0.4, textstr, transform=ax.transAxes, fontsize=25, #x = 1.07
               bbox=props,) #fontfamily = "serif", ha = "center" with x = 1.188
 
       plt.savefig( file_path )
@@ -620,7 +630,7 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
 
       'WARNING: here suptitle has beta // mu but the dict is ordp[p][mu][beta][D] = [std_D, ordp, std_ordp]'
       'since in the article p and mu are fixed!'
-      plt.suptitle("Average SD(Daily New Cases) : "+r"$p:%s,\beta:%s,\mu:%s$"%(rhu(p,3),rhu(beta,3),rhu(mu,3)))
+      plt.suptitle("Average SD(Daily New Cases) : "+r"$p:%s,\beta:%s,d:%s$"%(rhu(p,3),rhu(beta,3),rhu(mu**(-1))))
       ax.set_xlabel("Avg Degree D [Indivs]")
       ax.set_ylabel("Avg SD(Cases)")
       
@@ -657,14 +667,14 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
       right=0.99)
       
       if folder == "WS_Pruned":
-        ordp_path = f"{my_dir()}{folder}/OrdParam/p{rhu(p,3)}/mu{rhu(mu,3)}/"
+        ordp_path = f"{my_dir()}{folder}/OrdParam/p{rhu(p,3)}/d{rhu(mu**(-1))}/" 
         if not os.path.exists(ordp_path): os.makedirs(ordp_path)
 
-        plt.savefig("".join((ordp_path,"%s_ordp_p%s_mu%s.png" % (folder, rhu(p,3),rhu(mu,3)))))
+        plt.savefig("".join((ordp_path,"%s_ordp_p%s_d%s.png" % (folder, rhu(p,3),rhu(mu**(-1))))))
       else: 
         ordp_path = my_dir() + folder + "/OrdParam/p%s/beta%s/" % (rhu(p,3),rhu(beta,3))
         if not os.path.exists(ordp_path): os.makedirs(ordp_path)
-        plt.savefig("".join((ordp_path,"%s_ordp_p%s_beta%s_mu%s.png" % (folder, rhu(p,3),rhu(beta,3),rhu(mu,3)))))
+        plt.savefig("".join((ordp_path,"%s_ordp_p%s_beta%s_d%s.png" % (folder, rhu(p,3),rhu(beta,3),rhu(mu**(-1))))))
       plt.close()
 
       'pretty print the dictionary of the ordp'
@@ -685,7 +695,7 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
       for line in sorted_lines:
         r.write(line)
 
-def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = False, partition = None, pos = None):
+def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = False, partition = None, pos = None, numb_inring_links = 0):
   import os.path
   from definitions import my_dir, func_file_name
   from functools import reduce
@@ -822,9 +832,14 @@ def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = Fals
     print(string_format)
     if string_format == "0.000":
       string_format = format(value, ".1e")
-    
-    plt.suptitle(r"$N:%s, D:%s(%s), N_{3-out}: %s, p:%s, %s:%s$"
-                    % (N,D, std_D, count_outsiders, rhu(p,3), str_SW, value ))
+
+    if folder == "Caveman_Model":
+      plt.suptitle(r"$N:%s, D:%s(%s), Inlinks:%s, N_{3-out}: %s, p:%s, %s:%s$"%
+                  (N,D, std_D, numb_inring_links, count_outsiders, rhu(p,3), str_SW, value)
+                  )
+    else:  
+      plt.suptitle(r"$N:%s, D:%s(%s), N_{3-out}: %s, p:%s, %s:%s$"%
+                  (N,D, std_D, count_outsiders, rhu(p,3), str_SW, value ))
 
   'TO SAVE PLOTS'
   if not os.path.exists(my_dir): os.makedirs(my_dir)
@@ -868,7 +883,7 @@ def save_nes(
   G, p, folder, adj_or_sir, R0_max = 12, m = 0, N0 = 0, 
   beta = 0.3, mu = 0.3, my_print = True, pos = None, 
   partition = None, dsc_sorted_nodes = False, done_iterations = 1, 
-  chr_min = 0, ordp_pmbD_dic = 0): #save new_entrys
+  chr_min = 0, ordp_pmbD_dic = 0, numb_inring_links = 1): #save new_entrys
 
   'save net only if does not exist in the .txt. So, to overwrite all just delete .txt'
   from definitions import already_saved_list, func_file_name, N_D_std_D
@@ -887,11 +902,13 @@ def save_nes(
     #infos_sorted_nodes(G, num_sorted_nodes = True)
     if adj_or_sir == "AdjMat": 
       save_net(G = G, pos = pos, partition = partition, m = m, N0 = N0, 
-      folder = folder, p = p, done_iterations = done_iterations)
+               folder = folder, p = p, done_iterations = done_iterations, 
+               numb_inring_links = numb_inring_links)
       infos_sorted_nodes(G, num_sorted_nodes = 0)
     if adj_or_sir == "SIR": 
       save_sir(G, folder = folder, beta = beta, mu = mu, p = p, R0_max = R0_max, 
-      done_iterations = done_iterations, ordp_pmbD_dic = ordp_pmbD_dic)
+              done_iterations = done_iterations, ordp_pmbD_dic = ordp_pmbD_dic, 
+              numb_inring_links = numb_inring_links)
 
 def save_log_params(folder, text):
   import os
@@ -911,7 +928,6 @@ def pow_max(N, num_iter = "all"):
     while(N-2**i>0): i+=1
     return i-1
   return int(num_iter)
-
 
 '''
 '===Configurational Model'
@@ -949,7 +965,6 @@ def config_pois_model(N, D, seed = 123, folder = None):
   return G
 
 '''
-
 'Net Infos'
 def check_loops_parallel_edges(G):
   ls = list(G.edges())
@@ -1058,7 +1073,6 @@ def connect_net(G, conn_flag): #set solo_nodes = False to have D < 1 nets
     if len(list(nx.connected_components(G)))>1: print("Disconnected net!"); raise Exception("G is not connected")
     else: print("The network is connected!")
     return sorted_disc_components
-
 
 '''
 def NN_pois_net(N, folder, ext_D, p = 0, conn_flag = True):
@@ -1229,7 +1243,6 @@ def NNOverl_pois_net(N, ext_D, p, add_edges_only = False):
   
   return G
 '''
-
 
 'New Cluster of defs for Poissonian Small World Network'
 def pois_pos_degrees(N, D):
@@ -1596,28 +1609,26 @@ def caveman_defs():
       y = y0 + radius * np.sin(random_angle)
       return np.array([x, y])
 
-  def comm_caveman_relink(cliques = 8, clique_size = 7, p = 0,  relink_rnd = 0, numb_link_inring = 1):
+  def comm_caveman_relink(cliques = 8, clique_size = 7, p = 0,  relink_rnd = 0, numb_inring_links = 1):
     import numpy as np
     import numpy.random as npr
     from definitions import my_dir
 
     'caveman_graph'
     G = nx.caveman_graph(l = cliques, k = clique_size)
-    '''except: 
-      G = nx.caveman_graph(l = int(cliques), k = int(clique_size))
-      with open(my_dir()+"Caveman_Model/"+"CaveClClSProblems.txt","a") as f:
-        f.write("".join((str(cliques), str(clique_size), "\n")))'''
-
     print("G.nodes are", len(G.nodes()))
+    print("size/cliq: %s, cliq/size: %s" % (clique_size/cliques, cliques/clique_size) )
 
-    'decide how many nodes are going to relink to the neighbor "cave" (cfr numb_link_inring'
+
+
+    'decide how many nodes are going to relink to the neighbor "cave" (cfr numb_inring_links'
     total_nodes = clique_size*cliques
     
     'clique size = D. So, if D < 1 dont relink since we need a disconnected net'
     for clique in range(cliques):
-      if numb_link_inring != 0:
+      if numb_inring_links != 0:
         first_cl_node = clique_size*clique
-        nodes_inclique = np.arange(first_cl_node, first_cl_node+numb_link_inring)
+        nodes_inclique = np.arange(first_cl_node, first_cl_node+numb_inring_links)
         attached_nodes = npr.choice( np.arange(clique_size*(1+clique), 
                                     clique_size*(2+clique)), 
                                     size = len(nodes_inclique) )
@@ -1639,11 +1650,7 @@ def caveman_defs():
           #print("relink", (test,att_node))
           if npr.uniform() < p: G.add_edge(test,att_node)
 
-    #check_loops_parallel_edges(G)
-    remove_loops_parallel_edges(G)
-    #check_loops_parallel_edges(G)
-
-    print("size/cliq: %s, cliq/size: %s" % (clique_size/cliques, cliques/clique_size) )
+    #remove_loops_parallel_edges(G)
 
     '''
     if deg_for_ordp != False:
@@ -1659,7 +1666,6 @@ def caveman_defs():
       print("The Caveman_Model has %s left_nodes with avg %s" 
       % (i,np.mean([j for _,j in G.degree()])))
     '''
-
     return G
   
   return partition_layout, comm_caveman_relink
@@ -1755,7 +1761,11 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
   save_log_params(folder = folder, text = text)
 
   #saved_nets = []
-  for D,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog): #long product
+  'these are the links among near communities'
+  numb_inring_links = [1]
+  if folder == "Caveman_Model": numb_inring_links = np.arange(1,D+1)
+
+  for D,numb_inring_links,p,beta,mu in product(k_prog, numb_inring_links, p_prog, beta_prog, mu_prog): #long product
       'since D_real ~ 2*D (D here is fixing only the m and N0), R0_max-folder ~ 2*R0_max'
       if R0_min <= beta*D/mu <= R0_max:
         done_iterations+=1
@@ -1823,7 +1833,7 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
           cliques = int(N/clique_size)
           clique_size = int(clique_size) #clique_size is a np.float64!
           G = comm_caveman_relink(cliques=cliques, clique_size = clique_size, 
-                                  p = p, relink_rnd = clique_size, numb_link_inring = 1)
+                                  p = p, relink_rnd = clique_size, numb_inring_links = numb_inring_links)
           
           for node in range(clique_size*cliques):
             if node == 0: print("node", node, type(node), 
@@ -1864,13 +1874,14 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
         import datetime as dt
         start_time = dt.datetime.now()       
         save_nes(G, m = m, N0 = N0, pos = pos, partition = partition,
-        p = p, folder = folder, adj_or_sir="AdjMat", done_iterations=done_iterations)
+                 p = p, folder = folder, adj_or_sir="AdjMat", done_iterations=done_iterations, numb_inring_links = numb_inring_links)
         print("\nThe end-time of 1 generation of one AdjMat plot is", dt.datetime.now()-start_time)
 
         start_time = dt.datetime.now()       
         save_nes(G, m = m, N0 = N0,
-        p = p, folder = folder, adj_or_sir="SIR", R0_max = R0_max, beta = beta, mu = mu, 
-        ordp_pmbD_dic = ordp_pmbD_dic, done_iterations=done_iterations)
+                 p = p, folder = folder, adj_or_sir="SIR", R0_max = R0_max, beta = beta, mu = mu, 
+                 ordp_pmbD_dic = ordp_pmbD_dic, done_iterations=done_iterations, 
+                 numb_inring_links = numb_inring_links)
         print("\nThe end-time of the generation of one SIR plot is", dt.datetime.now()-start_time)
 
 def parameters_net_and_sir(folder = None, p_max = 0.3):
@@ -1883,7 +1894,7 @@ def parameters_net_and_sir(folder = None, p_max = 0.3):
   beta_prog = [0.015, 0.05, 0.1, 0.2, 0.4, 0.6]; 
   mu_prog = [0.07, 0.11, 0.167, 0.25, 1] #d = 14,9,6,4,1
   # old @ 5.9.2021: mu_prog = [0.14, 0.16, 0.2, 0.25, 0.8]#, 0.33,0.5]
-  k_prog = np.hstack((np.arange(1,13,2),np.arange(14,34,5)))
+  k_prog = np.hstack((np.arange(1,13,2),[14,19,24,50]))
   R0_min = 0; R0_max = 60
 
   'this should be deleted to have same params and make comparison more straight-forward'
@@ -1896,9 +1907,10 @@ def parameters_net_and_sir(folder = None, p_max = 0.3):
   if folder == "NN_Conf_Model": 
     'beta_prog = [0.05, 0.1, 0.2, 0.25]; mu_prog = beta_prog'
     # past parameters: beta_prog = np.linspace(0.01,1,8); mu_prog = beta_prog
-    k_prog = np.hstack((np.arange(1,13,2),np.arange(14,34,5)))
+    #k_prog = np.hstack((np.arange(1,13,2),np.arange(14,34,5)))
     R0_max = 300     
   if folder == "Caveman_Model": 
+    k_prog = [3]
     'k_prog = np.arange(1,11,2)' #https://www.prb.org/about/ -> Europe householdsize = 3
     #beta_prog = np.linspace(0.001,1,6); mu_prog = beta_prog
   if folder[:5] == "NNO_C": 
