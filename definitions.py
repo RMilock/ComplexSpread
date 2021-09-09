@@ -17,7 +17,24 @@ import os #to create a folder
 
 #this has been saved in morning of the 3.6.2021
 
+def rmv_folder(folder, rmv_flag = False):
+  import os
+  from definitions import my_dir
+  import sys
+  import shutil
+
+  # Get directory name
+  if rmv_flag:
+    my_dir = my_dir()+folder
+    if os.path.exists(my_dir):
+      try:
+        shutil.rmtree(my_dir)
+      except OSError as e:
+        print("Error: %s - %s." % (e.filename, e.strerror))
+
 def my_dir():
+  import datetime as dt
+  datetime = str(dt.datetime.now()).replace(" ", "_").replace(":", "")[:-7]+"/"
   #return "/content/drive/MyDrive/Colab_Notebooks/Thesis/Complex_Plots/"
   #return "/content/drive/MyDrive/Colab_Notebooks/Thesis/Complex_Plots/reduced_ver/"
   #return "/content/"
@@ -159,14 +176,14 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, seed = False, start_inf = 10):
     rec_list = [i for i, x in enumerate(current_state) if x == 'R']
 
     'Saves the fraction of new daily infected (dni) and recovered in the current time-step'
-    #prevalence.append(len(inf_list)/float(N))
+    prevalence.append(len(inf_list)/float(N))
     #recovered.append(len(rec_list)/float(N))
     #susceptible.append(1-prevalence[-1]-recovered[-1])
 
     dni_cases.append(daily_new_inf/float(N))        
     dni_totcases.append(dni_totcases[-1]+daily_new_inf/float(N))            
     #totcases.append(totcases[-1]+prevalence[-1]-prevalence[-2]+recovered[-1]-recovered[-2])
-    dni_susceptible.append(1-dni_totcases[-1])
+    #dni_susceptible.append(1-dni_totcases[-1])
 
   'Order Parameter (op) = Std(Avg_dni(t)) s.t. dni(t)!=0 as a func of D'
   if not mf:
@@ -180,9 +197,9 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, seed = False, start_inf = 10):
         raise Exception("Error There's 0 dni_cases: dni_cases, arr_daily, std", daily_new_inf, pos_dni_cases, op)
 
     
-    return op, dni_susceptible, dni_cases, dni_totcases
+    return op, prevalence, dni_cases, dni_totcases
 
-  return dni_susceptible, dni_cases, dni_totcases
+  return prevalence, dni_cases, dni_totcases
 
 def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-2, mu = 0.05, start_inf = 10,verbose = False,):
   'def a function that iters numb_iter and make an avg of all the trajectories'
@@ -194,7 +211,7 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-2, mu = 0.05, start_i
   import copy
 
   #mi servono solo gli infetti...quidni numb_idx_cl = 2, prev and dni_totcases
-  numb_idx_cl = 2; counts = [[],[]]; max_len = 0 
+  numb_idx_cl = 3; counts = [[],[],[]]; max_len = 0 
 
   'here avg are "means" among all the iterations'
   'So, better avg <-> itavg'
@@ -211,10 +228,10 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-2, mu = 0.05, start_i
     
     'save in a list std_dni to compute the ordp'
     if not mf:
-      std_dni, _, dni_cases, dni_totcases \
+      std_dni, infected, dni_cases, dni_totcases \
         = sir(G, beta = beta, mu = mu, start_inf = start_inf, mf = mf)
       list_ordp.append(std_dni)
-    else: _, dni_cases, dni_totcases = sir(G, beta = beta, mu = mu, start_inf = start_inf, mf = mf)
+    else: infected, dni_cases, dni_totcases = sir(G, beta = beta, mu = mu, start_inf = start_inf, mf = mf)
     
     def rescale_wrt_ymax(ls):
       #print("ls", ls)
@@ -225,7 +242,7 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-2, mu = 0.05, start_i
       return max_y, rescaled_ls
   
     'save the 1 sir generated'
-    tmp_traj = dni_cases, dni_totcases
+    tmp_traj = dni_cases, dni_totcases, infected
     if not (i+1) % 50: 
       'time stamp'
       time_1sir = dt.datetime.now()-onesir_start_time
@@ -284,7 +301,7 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-2, mu = 0.05, start_i
     std_avg_traj[idx_cl] = np.std(trajectories[idx_cl], axis = 0, ddof = 1)
     'compute p(t) s.t. D(1-p(t))lambda = Rc_net'
     N, D, _ = N_D_std_D(G)
-    if idx_cl: #idx_cl(dni_totcases) = 1
+    if idx_cl == 1: #idx_cl(dni_totcases) = 1
       R0 = D*beta/mu
       if not mf:
         D2 = sum([j**2 for _,j in G.degree()]) / N
@@ -353,8 +370,9 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
     ax1.plot(trajectories[1][j], color = colors[2], lw = lw_traj) #NET_dni_totcases
     ax2.plot(trajectories[0][j], color = colors[0], lw = 0) #NET_dni_cases
     ax2.plot(mf_trajectories[0][j], color = colors[3], lw = 0) #MF_dni_cases
+    #ax2.plot(trajectories[2][j], color = colors[0], lw = 0) #NET_infected
+    #ax2.plot(mf_trajectories[2][j], color = colors[3], lw = 0) #MF_infected'''
   
-  lw_totc = 4
   'define a string_format to choose the best way to format the std of the mean'
   value = mf_std_avg_traj[1][-1]
   string_format = str(np.round(value*100,1))[:3]
@@ -372,7 +390,7 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
   'plot horizontal line to highlight the initial infected'
   ax1.axhline(start_inf/N, color = "r", ls="dashed", \
             label = "Start_Inf/N (%s%%) "% np.round(start_inf/N*100,1))
-
+  ax2.axhline(start_inf/N, color = "r", ls="dashed")
 
   def list_replace(lst, old, new):
     """replace list elements (inplace)"""
@@ -392,6 +410,11 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
   ax2.plot(avg_traj[0], label="Net:DailyNewInf", \
     color = "tab:blue", lw = lw_totc) #prevalence
   
+  #ax2.plot(mf_avg_traj[2], label="MF:ODE_Inf", \
+  #  color = "darkviolet", lw = 0, ls = ls_totc) #prevalence
+  ax2.plot(avg_traj[2], label="Net:Infected", \
+    color = "darkcyan", ms = 8, marker = "o", lw = 0) #prevalence
+  
   label = r"Net:$t_c,p_c$" + f" = ({rhu(t_c)}d,{rhu(p_c,2)})"
   ms = 40
   if t_c > 0: 
@@ -405,6 +428,7 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
   else: ax3.plot([], marker = "*", mfc = "orange", mec = "k", ms = ms - 10, label = label)
 
   'exclude first and last yticks'
+  
   import matplotlib.pylab as plt
   locs = ax1.get_yticks()
   ax1.set_yticks(locs[1:-1])
@@ -413,14 +437,14 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
   locs = ax2.get_yticks()
   ax2.set_yticks(locs[1:-1])
   ax2.set_yticklabels(np.round(locs[1:-1],3), color='darkblue')
-
+  
   ax3.set_xticklabels([])
 
   #'plot labels'
   ax1.set_xlabel('Time-steps')
   ax1.set_ylabel('Indivs/N')
-  for ax in [ax1,ax2,ax3]:
-    ax.set_yscale("linear")
+  #for ax in [ax1,ax2,ax3]:
+  #  ax.set_yscale("linear")
 
   'plotting figsize depending on legend'
   R0 = beta*D/mu
@@ -436,7 +460,7 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
   handles = handles + handles2 + handles3
   labels = labels + labels2 + labels3
 
-  order = [3,4,2,1,0,6,5]
+  order = [4,5,2,3,1,6,7,0]
   #print("handles, labels", handles, labels)
   loc = "best"
   folders = ["WS_Pruned"]
@@ -554,7 +578,9 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
       
       R0_sign = "<"; R0pl_sign = "<"
       if R0 > Rc_net: R0_sign = ">"
+      elif R0 == Rc_net: R0_sign = "="
       if R0pl > Rc_net/avg_pl: R0pl_sign = ">"
+      elif R0pl == Rc_net/avg_pl: R0pl_sign = "="
       if folder == "Caveman_Model":
           ax.set_title(r"$R_0:%s, D_{%s}:%s(%s), Inlinks:%s, p:%s, \beta:%s, d:%s$"
         % (
@@ -572,13 +598,13 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
           ), pad = 30
         )
       
-
       textstr = '\n'.join((
         "Other Measures:",
-        r"$R_{c-net}: %s$"%rhu(Rc_net,3),
-        r"$R_0(%s=%s):%s$"%(delta, rhu(avg_pl,1),
+        r"$R_{c-HetNet}: %s$"%rhu(Rc_net,3),
+        r"$R_0(%s=%s): %s$"%(delta, rhu(avg_pl,1),
         f"{rhu(R0/avg_pl,3)}"+R0pl_sign+f"{rhu(Rc_net/avg_pl,3)}"),
-        r"OrdPar: %s (%s)"%(rhu(avg_ordp_net,3), string_format),
+        r"$R_{c-IBM}: %s$"%(rhu(D/np.max(nx.adjacency_spectrum(G).real),3)),
+        r"OrdPar: %s(%s)"%(rhu(avg_ordp_net,3), string_format),
         ))
 
       # these are matplotlib.patch.Patch properties
@@ -763,9 +789,10 @@ def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = Fals
   else: print("len(long_range_edges)", length_long_range)
   folders = ["WS_Pruned"]
   if folder in folders: width = 0.2*N/max(1,len(long_range_edges))
-  if folder == "BA_Model": 
-    width = 0.2*N/max(1,len(long_range_edges))
-    #print("The edge width is", int(width*10)/10)
+  #if folder == "BA_Model": 
+  #  width = 0.2*N/max(1,len(long_range_edges))
+  #  print("The edge width is", int(width*10)/10)
+  #  nx.draw_circular(G, ax=ax, with_labels=False, font_size=20, node_size=25, width=1)
   if folder== "Caveman_Model":
     nx.draw(G, pos, node_color=list(partition.values()), node_size = 5, width = 0.5, with_labels = False)
   else: nx.draw_circular(G, ax=ax, with_labels=False, font_size=20, node_size=25, width=width)
@@ -1891,7 +1918,8 @@ def parameters_net_and_sir(folder = None, p_max = 0.3):
   #k_prog = np.concatenate(([1.0],np.arange(2,20,2)))
   k_prog = np.arange(2,13) #poisssonian: np.arange(1,60,2)
   p_prog = [0, 0.3] #0.2 misses
-  beta_prog = [0.015, 0.05, 0.1, 0.2, 0.4, 0.6]; 
+  #beta_prog = [0.015, 0.05, 0.1, 0.2, 0.4, 0.6]; 
+  beta_prog = [0.6]
   mu_prog = [0.07, 0.11, 0.167, 0.25, 1] #d = 14,9,6,4,1
   # old @ 5.9.2021: mu_prog = [0.14, 0.16, 0.2, 0.25, 0.8]#, 0.33,0.5]
   k_prog = np.hstack((np.arange(1,13,2),[14,19,24,50]))
