@@ -129,7 +129,7 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, seed = False, start_inf = 10):
 
   'Selects the seed of the disease'
   inf_list = random.sample(node_labels, start_inf)  #without replacement, i.e. not duplicates
-  if rhu(D,0)-1 <= 0 and mf: #too slow for D = 1
+  if rhu(D,0)-1 < 0 and mf: #too slow for D = 1
     inf_list = []
   for seed in inf_list:
     current_state[seed] = 'I'
@@ -304,8 +304,8 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-2, mu = 0.05, start_i
     if idx_cl == 1: #idx_cl(dni_totcases) = 1
       R0 = D*beta/mu
       if not mf:
-        D2 = sum([j**2 for _,j in G.degree()]) / N
-        Rc_net = D**2/(D2-D)
+        avgk2 = sum([j**2 for _,j in G.degree()]) / N
+        Rc_net = D**2/(avgk2-D)
       if mf and int(D)>1: 
         D = int(D)
         Rc_net = 1/(1-D**(-1))
@@ -331,7 +331,7 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-2, mu = 0.05, start_i
 
   if not mf: 
     return avg_ordp, std_avg_ordp, plot_trajectories, avg_traj, std_avg_traj, \
-                    Rc_net, t_c, p_c,  
+                    Rc_net, avgk2, t_c, p_c,  
   #else: return avg_ordp, std_avg_ordp, plot_trajectories, avg_traj, std_avg_traj,
   return plot_trajectories, avg_traj, std_avg_traj, t_c, p_c,  
 
@@ -346,7 +346,7 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
   'Inf and Cum_Infected from Net_Sir; Recovered from MF_SIR'
   print("\nNetwork-SIR loading...")
   #old ver: add avg_R_net, std_avg_R_net, 
-  avg_ordp_net, std_avg_ordp_net, trajectories, avg_traj, std_avg_traj, Rc_net, t_c, p_c,   = \
+  avg_ordp_net, std_avg_ordp_net, trajectories, avg_traj, std_avg_traj, Rc_net, avgk2, t_c, p_c,   = \
     itermean_sir(G, mf = False, beta = beta, mu = mu, start_inf  = start_inf, numb_iter=numb_iter,)
   
   print("Final avg_ordp_net", avg_ordp_net)
@@ -474,7 +474,7 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
     
   leg.set_zorder(ax3.get_zorder()+1)
 
-  return avg_ordp_net, std_avg_ordp_net, Rc_net
+  return avg_ordp_net, std_avg_ordp_net, Rc_net, avgk2
 
 def rhu(n, decimals=0, integer = False): #round_half_up
     import math
@@ -538,7 +538,7 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
       'plot sir'
       print("\nThe model has N: %s, D: %s(%s), beta: %s, d: %s, p: %s, R0: %s" % 
       (N,rhuD2,rhu(std_D,2),rhu(beta,3),rhu(mu**(-1)),rhu(p,3),rhu(R0,3)) )
-      avg_ordp_net, std_avg_ordp_net, Rc_net = \
+      avg_ordp_net, std_avg_ordp_net, Rc_net, avgk2 = \
         plot_sir(G, ax1=ax, folder = folder, beta = beta, mu = mu, start_inf = start_inf, 
                 numb_iter = numb_iter)
 
@@ -600,10 +600,11 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
       
       textstr = '\n'.join((
         "Other Measures:",
-        r"$R_{c-HetNet}: %s$"%rhu(Rc_net,3),
-        r"$R_0(%s=%s): %s$"%(delta, rhu(avg_pl,1),
-        f"{rhu(R0/avg_pl,3)}"+R0pl_sign+f"{rhu(Rc_net/avg_pl,3)}"),
-        r"$R_{c-IBM}: %s$"%(rhu(D/np.max(nx.adjacency_spectrum(G).real),3)),
+        r"$\Delta R_0: %s$"%rhu(R0 - Rc_net,3),
+        r"$< k^{2} >: %s$"%(rhu(avgk2,3)),
+        r"$%s: %s$"%(delta, rhu(avg_pl,3)),
+        #f"{rhu(R0/avg_pl,3)}"+R0pl_sign+f"{rhu(Rc_net/avg_pl,3)}"),
+        #r"$R_{c-IBM}: %s$"%(rhu(D/np.max(nx.adjacency_spectrum(G).real),3)),
         r"OrdPar: %s(%s)"%(rhu(avg_ordp_net,3), string_format),
         ))
 
@@ -682,7 +683,7 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
       ax.axvline(x = D_cer, color = "darkblue", lw = 4, ls = "--", 
                  label = "".join((r"$D_{c-ER \, model}$",f": {rhu(D_cer,3)}")) )
       ax.axvline(x = D_chomo, color = "darkslategrey", lw = 4, ls = "--", 
-                 label = "".join((r"$D_{c-homog \, model} = \mu / \beta$",f"= {rhu(D_chomo,3)}")) )
+                 label = "".join((r"$D_{c-homog \, model}: \mu / \beta$",f": {rhu(D_chomo,3)}")) )
       leg = ax.legend(fontsize = 35, loc = "best")
       leg.get_frame().set_linewidth(2.5)
 
@@ -723,10 +724,14 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
 
 def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = False, partition = None, pos = None, numb_inring_links = 0):
   import os.path
-  from definitions import my_dir, func_file_name
+  from definitions import my_dir, func_file_name, N_D_std_D, rhu, plot_params
   from functools import reduce
   import networkx as nx
   from scipy.stats import poisson
+  import matplotlib.pylab as plt
+  import numpy as np
+  from matplotlib import cm
+  
   
   mode = "a"
   #if done_iterations == 1: mode = "w"
@@ -783,20 +788,17 @@ def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = Fals
   'start with degree distribution'
   'set edges width according to how many "long_range_edges'
   width = 0.8
-  long_range_edges = list(filter( lambda x: x > 30, [np.min((np.abs(i-j),np.abs(j-i))) for i,j in G.edges()] )) #list( filter(lambda x: x > 0, )
+  long_range_edges = list(filter( lambda x: x > 30, [np.min((np.abs(i-j),np.abs(N-i+j))) for i,j in G.edges()] )) #list( filter(lambda x: x > 0, )
   length_long_range = len(long_range_edges)
   if length_long_range < 10: print("\nLong_range_edges", long_range_edges, length_long_range)
   else: print("len(long_range_edges)", length_long_range)
-  folders = ["WS_Pruned"]
-  if folder in folders: width = 0.2*N/max(1,len(long_range_edges))
-  #if folder == "BA_Model": 
-  #  width = 0.2*N/max(1,len(long_range_edges))
-  #  print("The edge width is", int(width*10)/10)
-  #  nx.draw_circular(G, ax=ax, with_labels=False, font_size=20, node_size=25, width=1)
+  folders = ["WS_Pruned","BA_Model"]
+  #if folder in folders: 
+  width = min(3,0.2*N/max(1,len(long_range_edges)))
   if folder== "Caveman_Model":
     nx.draw(G, pos, node_color=list(partition.values()), node_size = 5, width = 0.5, with_labels = False)
   else: nx.draw_circular(G, ax=ax, with_labels=False, font_size=20, node_size=25, width=width)
-
+  
   #ax.text(0,1,transform=ax.transAxes, s = "D:%s" % D)
 
   'plot adjiacency matrix'
@@ -817,6 +819,7 @@ def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = Fals
               #in the count of "n"
   y = poisson.pmf(bins, D)
 
+
   axs = plt.subplot(212)
   'count how many sorted_degree there are in the bins. Then, align them on the left,'
   'so they are centered in the int'
@@ -830,11 +833,14 @@ def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = Fals
   axs.set_ylabel('Counts', )
   axs.grid(color = "grey", ls = "--", lw = 1)
   axs.set_xlim(bins[0],bins[-1]) 
+
   if folder == "BA_Model": 
-    ax.set_xscale("log")
-    ax.set_yscale("log")
+    #axs.set_xscale("log")
+    axs.set_yscale("log")
+
   leg = axs.legend(loc = "best")
   leg.get_frame().set_linewidth(2.5)
+
     
   plt.subplots_adjust(top=0.85,
   bottom=0.09,  #0.088
@@ -843,6 +849,7 @@ def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = Fals
   hspace=0.067, #0.067
   wspace=0.164) #0.164
 
+  
   if folder == "BA_Model": 
     value = rhu(avg_pl / np.log(np.log(N)) ,3)
     str_SW = "".join((r"U",str_SW))
@@ -851,8 +858,8 @@ def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = Fals
     if string_format == "0.000":
       string_format = format(value, ".1e")
 
-    plt.suptitle(r"$N:%s, D:%s(%s), k_{max}: %s, N_{3-out}: %s, %s: %s, N_0: %s, p:%s$" % (
-    N, D, std_D, max_degree, count_outsiders, str_SW, value, N0, rhu(p,3),  ))
+    plt.suptitle(r"$N:%s, D:%s(%s), k_{max}: %s, N_{3-out}: %s, %s: %s, p:%s$" % (
+    N, D, std_D, max_degree, count_outsiders, str_SW, rhu(value,1), rhu(p,3),  ))
   else: 
     value = rhu(avg_pl / np.log(N),3)
     string_format = str(value)[:5]
@@ -1050,7 +1057,7 @@ def replace_edges_from(G,list_edges=[]):
   return G
 
 'addition of distant nodes'
-def long_range_edge_add(G, p = 0, time_int = False):
+def add_lredges(G, p = 0, time_int = False):
   from itertools import chain
   import random
   import datetime as dt
@@ -1075,6 +1082,37 @@ def long_range_edge_add(G, p = 0, time_int = False):
   replace_edges_from(G, all_edges)
   remove_loops_parallel_edges(G, True)
   if time_int: print(f"Time for add edges over ddistr:", dt.datetime.now()-start_time)
+
+'replace lr-edges with local ones'
+def replace_lredges(G, p = 0): 
+    'replace long range edges'
+    import random
+    from itertools import chain
+
+    def fnode_edges(G, node):
+        return G.edges(node)
+
+    random.seed(0)
+    len_start = len(list(G.edges()))
+    for node in G.nodes():
+        if random.random() < p:
+            #print(f"\nI'm looking for a new neighbors for {node}")
+            node_edges = fnode_edges(G, node)
+            #print(f'Inside: {node_edges}',)
+            neighbors = list(G.neighbors(node))
+            #print(f'neighbors: {neighbors}',)
+            rm_neigh = random.choice(neighbors)
+            add_lrnode = random.choice(list(G.nodes()))
+            G.remove_edge(node, rm_neigh)
+            'dont select any present node (no // edges and loop)'
+            while(add_lrnode in list(chain.from_iterable([[rm_neigh], [node], neighbors]))):
+                add_lrnode = random.choice(list(G.nodes()))
+            #print(f'(rm_neigh: {rm_neigh} --> add_lrnode): {add_lrnode}',)
+            G.add_edge(node, add_lrnode)
+            node_edges = fnode_edges(G, node)
+            #print(f'final G.edges(node): {node_edges}',)
+    if  len(list(G.edges())) != len_start: 
+        raise ValueError(f"Error value: {len(list(G.edges()))} not {len_start}") 
 
 'forcing connection of a net'
 def connect_net(G, conn_flag): #set solo_nodes = False to have D < 1 nets
@@ -1387,9 +1425,9 @@ def edges_nearest_node(dic_nodes):
         ##print('After all the rewiring, left nodes', nodes, "sorted_nodes", sorted_nodes, "edges", edges)
     return edges
 
-def NN_pois_net(N, folder, ext_D, p = 0, conn_flag = True):
+def NN_pois_net(N, folder, ext_D, p = 0):
     from definitions import check_loops_parallel_edges, infos_sorted_nodes, \
-        long_range_edge_add, connect_net, N_D_std_D
+        replace_lredges, connect_net, N_D_std_D
 
     D = ext_D
     degrees = pois_pos_degrees(N, D)
@@ -1403,9 +1441,9 @@ def NN_pois_net(N, folder, ext_D, p = 0, conn_flag = True):
     check_loops_parallel_edges(G)
     infos_sorted_nodes(G, num_sorted_nodes=False)
 
-    long_range_edge_add(G, p = p)
-    if not nx.is_connected(G):
-      connect_net(G, conn_flag = False)
+    replace_lredges(G, p = p)
+    #if not nx.is_connected(G):
+    #  connect_net(G, conn_flag = False)
 
     ##print(f"There are {len([j for i,j in G.degree() if j == 0])} 0 degree node as")
     _,D,_ = N_D_std_D(G)
@@ -1414,7 +1452,7 @@ def NN_pois_net(N, folder, ext_D, p = 0, conn_flag = True):
     
     return G
 'new_Overl_PSW'
-def NNOverl_pois_net(N, ext_D, p, add_edges_only = True, conn_flag = False, return_dic_nodes = False):
+def NNOverl_pois_net(N, ext_D, p, conn_flag = False, return_dic_nodes = False):
     #Nearest Neighbors Overlapping
     from itertools import chain
     from definitions import replace_edges_from, check_loops_parallel_edges,\
@@ -1458,8 +1496,8 @@ def NNOverl_pois_net(N, ext_D, p, add_edges_only = True, conn_flag = False, retu
     _, D, _ = N_D_std_D(G)
     if D != deg_mean: print("!! avg_deg_Overl_Rew - avg_deg_Conf_Model = ", D - deg_mean)
 
-    if add_edges_only and p != 0: #add on top of the distr, a new long-range edge
-        long_range_edge_add(G, p = p)
+    if p != 0: #add on top of the distr, a new long-range edge
+        replace_lredges(G, p = p)
     
     adeg_OR = sum([j for i,j in G.degree()])/G.number_of_nodes()
     print("Rel Error wrt to ext_D %s %%" % (rhu((adeg_OR - ext_D)/ext_D,1 )*100))
@@ -1841,17 +1879,15 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
           if np.any([x<1. for x in k_prog]):
             conn_flag = False
           else: conn_flag = True'''
-          conn_flag = False
-          G = NN_pois_net(N = N, folder = folder, ext_D = regD, p = p, conn_flag = conn_flag)
+          G = NN_pois_net(N = N, folder = folder, ext_D = regD, p = p)
           print("connected components", len(list(nx.connected_components(G))))
           if len(list(nx.connected_components(G))) != 1 and conn_flag:
             raise Exception("Error: it should be connected")
         
         #this is a model really similar to Watts-Strogatz. So, decide wheter to insert it
-        add_edges_only = True
-        if folder == f"NNO_Conf_Model_addE_{add_edges_only}": #add edges instead of rew
+        if folder == f"NNO_Conf_Model": #add edges instead of rew
           from definitions import NNOverl_pois_net
-          G = NNOverl_pois_net(N, regD, p = p, add_edges_only = add_edges_only)
+          G = NNOverl_pois_net(N, regD, p = p)
         
         if folder == "Caveman_Model":
           from definitions import caveman_defs
@@ -1916,13 +1952,12 @@ def parameters_net_and_sir(folder = None, p_max = 0.3):
   import numpy as np
   'WARNING: put SAME beta, mu, D and p to compare at the end the different topologies'
   #k_prog = np.concatenate(([1.0],np.arange(2,20,2)))
-  k_prog = np.arange(2,13) #poisssonian: np.arange(1,60,2)
   p_prog = [0, 0.3] #0.2 misses
-  #beta_prog = [0.015, 0.05, 0.1, 0.2, 0.4, 0.6]; 
-  beta_prog = [0.6]
-  mu_prog = [0.07, 0.11, 0.167, 0.25, 1] #d = 14,9,6,4,1
+  beta_prog = [0.015, 0.05, 0.1, 0.2, 0.4, 0.6]; 
+  days_prog = [14,9,6,4,1] #mu_prog = [0.07, 0.11, 0.167, 0.25, 1]
+  mu_prog = [1/x for x in days_prog]
   # old @ 5.9.2021: mu_prog = [0.14, 0.16, 0.2, 0.25, 0.8]#, 0.33,0.5]
-  k_prog = np.hstack((np.arange(1,13,2),[14,19,24,50]))
+  k_prog = np.hstack((np.arange(1,13,2),[14,19,24,40,50]))
   R0_min = 0; R0_max = 60
 
   'this should be deleted to have same params and make comparison more straight-forward'
