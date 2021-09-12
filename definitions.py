@@ -47,6 +47,12 @@ def N_D_std_D(G):
   degrees = np.asarray([j for i,j in G.degree()])
   return G.number_of_nodes(), np.mean(degrees), np.std(degrees, ddof = 1)
 
+def fstd_Rc_net(Rc_net, D, avgk2, std_D, std_avgk2):
+  from math import sqrt
+  coeff0 = (Rc_net / D)**4
+  coeff1 = (2*avgk2/D - 1)**2
+  return sqrt(coeff0 * (coeff1*std_D**2+std_avgk2**2))
+
 def jsonKeys2int(x):
     if isinstance(x, dict):
         return {float(k):v for k,v in x.items()}
@@ -304,9 +310,11 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-2, mu = 0.05, start_i
     if idx_cl == 1: #idx_cl(dni_totcases) = 1
       R0 = D*beta/mu
       if not mf:
-        avgk2 = sum([j**2 for _,j in G.degree()]) / N
+        k2 = [j**2 for _,j in G.degree()]
+        avgk2 = np.mean(k2)        
+        std_avgk2 = np.std(k2, ddof = 1)
         Rc_net = D**2/(avgk2-D)
-      if mf and int(D)>1: 
+      if mf and int(D)>1:
         D = int(D)
         Rc_net = 1/(1-D**(-1))
       elif mf and int(D)<=1: Rc_net = 0
@@ -331,7 +339,7 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-2, mu = 0.05, start_i
 
   if not mf: 
     return avg_ordp, std_avg_ordp, plot_trajectories, avg_traj, std_avg_traj, \
-                    Rc_net, avgk2, t_c, p_c,  
+                    Rc_net, avgk2, std_avgk2, t_c, p_c,  
   #else: return avg_ordp, std_avg_ordp, plot_trajectories, avg_traj, std_avg_traj,
   return plot_trajectories, avg_traj, std_avg_traj, t_c, p_c,  
 
@@ -346,7 +354,7 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
   'Inf and Cum_Infected from Net_Sir; Recovered from MF_SIR'
   print("\nNetwork-SIR loading...")
   #old ver: add avg_R_net, std_avg_R_net, 
-  avg_ordp_net, std_avg_ordp_net, trajectories, avg_traj, std_avg_traj, Rc_net, avgk2, t_c, p_c,   = \
+  avg_ordp_net, std_avg_ordp_net, trajectories, avg_traj, std_avg_traj, Rc_net, avgk2, std_avgk2, t_c, p_c,   = \
     itermean_sir(G, mf = False, beta = beta, mu = mu, start_inf  = start_inf, numb_iter=numb_iter,)
   
   print("Final avg_ordp_net", avg_ordp_net)
@@ -474,7 +482,7 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
     
   leg.set_zorder(ax3.get_zorder()+1)
 
-  return avg_ordp_net, std_avg_ordp_net, Rc_net, avgk2
+  return avg_ordp_net, std_avg_ordp_net, Rc_net, avgk2, std_avgk2,
 
 def rhu(n, decimals=0, integer = False): #round_half_up
     import math
@@ -483,9 +491,33 @@ def rhu(n, decimals=0, integer = False): #round_half_up
     if integer: return int(res)
     return res
 
-def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 10, numb_iter = 50, numb_inring_links = 0):
+def mean_std_avg_pl(G, N = 0):
+        import datetime as dt
+        import networkx as nx
+        from math import sqrt
+        if not N:
+          N = G.number_of_nodes()
+        avg_pl = max([  
+          nx.average_shortest_path_length(C) for C in (G.subgraph(c).copy() for c in nx.connected_components(G))])
+        print(f'avg_pl: {avg_pl}',)
+        
+        'calculate the std_avg_pl'
+        #start = dt.datetime.now()
+        std_avg_pl = 0
+        for node in G:
+            path_length=nx.single_source_shortest_path_length(G, node)
+            #print(f'path_length.values(): {path_length.values()}',)
+            sq_deviation = [(x-avg_pl)**2/2 for x in path_length.values()]
+            #print(f'sq_deviation: {sq_deviation}',)
+            std_avg_pl += sum(sq_deviation) / (N/2*(N-1)-1)
+            #print(f'std_avg_pl: {std_avg_pl}',)
+        std_avg_pl = sqrt(std_avg_pl)
+        print(f'std_avg_pl: {std_avg_pl}',)
+        return avg_pl, std_avg_pl
+
+def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 3, numb_iter = 50, numb_inring_links = 0):
   import os.path
-  from definitions import my_dir, func_file_name, N_D_std_D
+  from definitions import my_dir, func_file_name, N_D_std_D, mean_std_avg_pl
   import datetime as dt
   import matplotlib.pylab as plt
   start_time = dt.datetime.now()
@@ -516,7 +548,12 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
   N = G.number_of_nodes()
   rhuD2 = rhu(D,2) #use in suptitle, to print "The model...", 
   #rhuD1 in file_name_save
-  R0 = beta * D / mu
+  R0 = beta * D / mu  
+  std_R0 = beta/mu*std_D
+
+  print(f'beta,mu: {beta},{mu},{std_D}, {std_R0}',)
+  
+
 
   for i in intervals:
     if i <= R0 < i+1:
@@ -538,7 +575,7 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
       'plot sir'
       print("\nThe model has N: %s, D: %s(%s), beta: %s, d: %s, p: %s, R0: %s" % 
       (N,rhuD2,rhu(std_D,2),rhu(beta,3),rhu(mu**(-1)),rhu(p,3),rhu(R0,3)) )
-      avg_ordp_net, std_avg_ordp_net, Rc_net, avgk2 = \
+      avg_ordp_net, std_avg_ordp_net, Rc_net, avgk2, std_avgk2, = \
         plot_sir(G, ax1=ax, folder = folder, beta = beta, mu = mu, start_inf = start_inf, 
                 numb_iter = numb_iter)
 
@@ -563,28 +600,35 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
       #comps = [nx.average_shortest_path_length(s) for c in nx.connected_components(G) 
       #for s in G.subgraph(c)]
       #print(comps)
-      
-      avg_pl = max([  
-        nx.average_shortest_path_length(C) for C in (G.subgraph(c).copy() for c in nx.connected_components(G))])
 
+      avg_pl, std_avg_pl = mean_std_avg_pl(G)
+      
+
+      'if not connected also show the len of the maxcc component'
       if not nx.is_connected(G): 
         ls_cc = nx.connected_components(G)
         #print("ls_cc", ls_cc)
         max_cc = max(ls_cc, key = len)
-        str_len = f"{len(max_cc)}"
+        len_max_cc = len(max_cc)
+        str_len = f"{len_max_cc}"
         delta = r"\delta_{"+str_len+r"}"
-      #delta = (1-avg_pl)/avg_pl # To Giuseppe & Dario with esteem
+
+      'find good way to put signs'
       R0pl = R0/avg_pl 
-      
       R0_sign = "<"; R0pl_sign = "<"
       if R0 > Rc_net: R0_sign = ">"
       elif R0 == Rc_net: R0_sign = "="
       if R0pl > Rc_net/avg_pl: R0pl_sign = ">"
       elif R0pl == Rc_net/avg_pl: R0pl_sign = "="
+
+      'estimate the StDs'
+      std_Rc_net = fstd_Rc_net(Rc_net, D, avgk2, std_D, std_avgk2)
+      std_DeltaR0Rc = np.sqrt(std_R0**2+std_Rc_net**2)
+
       if folder == "Caveman_Model":
           ax.set_title(r"$R_0:%s, D_{%s}:%s(%s), Inlinks:%s, p:%s, \beta:%s, d:%s$"
         % (
-          f"{rhu(R0,3)}"+R0_sign+f"{rhu(Rc_net,3)}", 
+          f"{rhu(R0,3)}({rhu(std_R0,3)})"+R0_sign+f"{rhu(Rc_net,3)}({rhu(std_Rc_net,3)})",
           N, rhuD2, rhu(std_D,2), 
           numb_inring_links,
           rhu(p,3), rhu(beta,3), rhu(mu**(-1)),
@@ -593,17 +637,17 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
       else:
         ax.set_title(r"$R_0:%s, D_{%s}:%s(%s), p:%s, \beta:%s, d:%s$"
         % (
-          f"{rhu(R0,3)}"+R0_sign+f"{rhu(Rc_net,3)}", 
+          f"{rhu(R0,3)}({rhu(std_R0,3)})"+R0_sign+f"{rhu(Rc_net,3)}({rhu(std_Rc_net,3)})",
           N, rhuD2, rhu(std_D,2), rhu(p,3), rhu(beta,3), rhu(mu**(-1)),
           ), pad = 30
         )
       
       textstr = '\n'.join((
         "Other Measures:",
-        r"$\Delta R_0: %s$"%rhu(R0 - Rc_net,3),
-        r"$< k^{2} >: %s$"%(rhu(avgk2,3)),
-        r"$%s: %s$"%(delta, rhu(avg_pl,3)),
-        #f"{rhu(R0/avg_pl,3)}"+R0pl_sign+f"{rhu(Rc_net/avg_pl,3)}"),
+        r"$\Delta R_0: %s(%s)$"%(rhu(R0 - Rc_net,3), rhu(std_DeltaR0Rc,3)),
+        r"$< k^{2} >: %s(%s)$"%(rhu(avgk2,3),rhu(std_avgk2,3)),
+        r"$%s: %s(%s)$"%(delta, rhu(avg_pl,3), rhu(std_avg_pl,3)),
+        f"{rhu(R0/avg_pl,3)}"+R0pl_sign+f"{rhu(Rc_net/avg_pl,3)}",
         #r"$R_{c-IBM}: %s$"%(rhu(D/np.max(nx.adjacency_spectrum(G).real),3)),
         r"OrdPar: %s(%s)"%(rhu(avg_ordp_net,3), string_format),
         ))
@@ -747,13 +791,16 @@ def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = Fals
 
   if nx.is_connected(G): 
     str_SW = r"SW_{C}"
-    avg_pl = nx.average_shortest_path_length(G)
+    avg_pl, std_avg_pl = mean_std_avg_pl(G, N)
+    len_max_cc = N
+    
   else:  
     ls_cc = nx.connected_components(G)
     print("ls_cc", ls_cc)
     max_cc = max(ls_cc, key = len)
-    avg_pl = nx.average_shortest_path_length(G.subgraph(max_cc))
-    str_SW = r"SW_{c-max:%s-%s}"%(number_connected_components(G), len(max_cc))
+    len_max_cc = len(max_cc)
+    avg_pl, std_avg_pl = mean_std_avg_pl(G.subgraph(max_cc))
+    str_SW = r"SW_{c-max:%s-%s}"%(number_connected_components(G), len_max_cc)
 
   'find the major hub and the "ousiders", i.e. highly connected nodes'
   infos = G.degree()
@@ -851,8 +898,12 @@ def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = Fals
 
   
   if folder == "BA_Model": 
-    value = rhu(avg_pl / np.log(np.log(N)) ,3)
-    str_SW = "".join((r"U",str_SW))
+    value = rhu(avg_pl / np.log(np.log(len_max_cc)),3)
+    std_value = np.sqrt(1/(np.log(np.log(len_max_cc)))) \
+                *std_avg_pl
+    print(f'std_value: {std_value}',)
+    
+    str_SW = "".join((r"U",str_SW,f"({rhu(std_value,3)})"))
     string_format = str(value)[:5]
     print(string_format)
     if string_format == "0.000":
@@ -861,26 +912,35 @@ def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = Fals
     plt.suptitle(r"$N:%s, D:%s(%s), k_{max}: %s, N_{3-out}: %s, %s: %s, p:%s$" % (
     N, D, std_D, max_degree, count_outsiders, str_SW, rhu(value,1), rhu(p,3),  ))
   else: 
-    value = rhu(avg_pl / np.log(N),3)
+    value = rhu(avg_pl / np.log(len_max_cc),3)
+    std_value = np.sqrt(1/np.log(len_max_cc)) \
+                *std_avg_pl
+    print(f'std_value: {std_value}',)
+    
+
     string_format = str(value)[:5]
     print(string_format)
     if string_format == "0.000":
       string_format = format(value, ".1e")
 
+    string_inlinks = ""
     if folder == "Caveman_Model":
-      plt.suptitle(r"$N:%s, D:%s(%s), Inlinks:%s, N_{3-out}: %s, p:%s, %s:%s$"%
-                  (N,D, std_D, numb_inring_links, count_outsiders, rhu(p,3), str_SW, value)
-                  )
-    else:  
-      plt.suptitle(r"$N:%s, D:%s(%s), N_{3-out}: %s, p:%s, %s:%s$"%
-                  (N,D, std_D, count_outsiders, rhu(p,3), str_SW, value ))
+      string_inlinks = f" Inlinks: {numb_inring_links},"
+    plt.suptitle(r"$N:%s, D:%s(%s),%s N_{3-out}: %s, p:%s, %s:%s(%s)$"%
+                (N,D, std_D, string_inlinks, count_outsiders, rhu(p,3), 
+                str_SW, value, rhu(std_value,3))
+                )
+    '''else:  
+      plt.suptitle(r"$N: %s, D: %s(%s), N_{3-out}: %s, p: %s, %s: %s(%s)$"%
+                  (N,D, std_D, count_outsiders, rhu(p,3), 
+                  str_SW, value, rhu(std_value,3) ))'''
 
   'TO SAVE PLOTS'
   if not os.path.exists(my_dir): os.makedirs(my_dir)
   plt.savefig(file_path)
   plt.close()
 
-  'save not_connected_nets'
+  'report in a .txt the disconnected_nets'
   if not nx.is_connected(G):
     sorted_disc_components = sorted(nx.connected_components(G), key=len, reverse=True)
     with open(nc_path, mode) as nc_file:
@@ -1913,7 +1973,7 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
 
         'generate solo nodes to reduce <k>'
         
-        if k_prog[0] <= 1: epruning = True
+        if k_prog[0] < 1: epruning = True
         if epruning:
           i = 1
           print("\nCreating solo-nodes to match the wanted D...")
