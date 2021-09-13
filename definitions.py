@@ -313,6 +313,11 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-2, mu = 0.05, start_i
         k2 = [j**2 for _,j in G.degree()]
         avgk2 = np.mean(k2)        
         std_avgk2 = np.std(k2, ddof = 1)
+        #print(f'G.degree(): {list(G.degree())}',)
+        #print(f'k2: {k2}',)
+        print(f'avgk2: {avgk2}',)
+        print(f'std_avgk2: {std_avgk2}',)
+        
         Rc_net = D**2/(avgk2-D)
       if mf and int(D)>1:
         D = int(D)
@@ -421,7 +426,7 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
   #ax2.plot(mf_avg_traj[2], label="MF:ODE_Inf", \
   #  color = "darkviolet", lw = 0, ls = ls_totc) #prevalence
   ax2.plot(avg_traj[2], label="Net:Infected", \
-    color = "darkcyan", ms = 8, marker = "o", lw = 0) #prevalence
+    color = "cadetblue", ms = 8, marker = "o", lw = 0) #prevalence
   
   label = r"Net:$t_c,p_c$" + f" = ({rhu(t_c)}d,{rhu(p_c,2)})"
   ms = 40
@@ -497,9 +502,15 @@ def mean_std_avg_pl(G, N = 0):
         from math import sqrt
         if not N:
           N = G.number_of_nodes()
+
+        import datetime as dt
+        start = dt.datetime.now()
         avg_pl = max([  
-          nx.average_shortest_path_length(C) for C in (G.subgraph(c).copy() for c in nx.connected_components(G))])
+                      nx.average_shortest_path_length(C) for C in (G.subgraph(c).copy() for c in \
+                      nx.connected_components(G))
+                      ])
         print(f'avg_pl: {avg_pl}',)
+        #print(f'The total time of avg_pl is: {dt.datetime.now()-start}')
         
         'calculate the std_avg_pl'
         #start = dt.datetime.now()
@@ -515,7 +526,7 @@ def mean_std_avg_pl(G, N = 0):
         print(f'std_avg_pl: {std_avg_pl}',)
         return avg_pl, std_avg_pl
 
-def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 3, numb_iter = 50, numb_inring_links = 0):
+def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 10, numb_iter = 50, numb_inring_links = 0, avg_pl = -1, std_avg_pl = -1):
   import os.path
   from definitions import my_dir, func_file_name, N_D_std_D, mean_std_avg_pl
   import datetime as dt
@@ -553,8 +564,6 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
 
   print(f'beta,mu: {beta},{mu},{std_D}, {std_R0}',)
   
-
-
   for i in intervals:
     if i <= R0 < i+1:
       'Intro R0-subfolder since R0 det epids behaviour on a fixed net'
@@ -573,8 +582,9 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
       #if vertical: _, ax = plt.subplots(figsize = (24,20)) #init = (24,14); BA_Model = (20,20) should change also the subplots_adjust!!!
       
       'plot sir'
+      
       print("\nThe model has N: %s, D: %s(%s), beta: %s, d: %s, p: %s, R0: %s" % 
-      (N,rhuD2,rhu(std_D,2),rhu(beta,3),rhu(mu**(-1)),rhu(p,3),rhu(R0,3)) )
+      (N,rhuD2,rhu(std_D,2),rhu(beta,5),rhu(mu**(-1)),rhu(p,3), beta*D/mu ))
       avg_ordp_net, std_avg_ordp_net, Rc_net, avgk2, std_avgk2, = \
         plot_sir(G, ax1=ax, folder = folder, beta = beta, mu = mu, start_inf = start_inf, 
                 numb_iter = numb_iter)
@@ -601,9 +611,12 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
       #for s in G.subgraph(c)]
       #print(comps)
 
-      avg_pl, std_avg_pl = mean_std_avg_pl(G)
+      if std_avg_pl == -1 or avg_pl == -1:
+        'calculate now the avg_pl and its std_avg_pl'
+        print("I'm calculating in save_sir the avg_pl and std_avg_pl")
+        avg_pl, std_avg_pl = mean_std_avg_pl(G)
+      if std_avg_pl == -1 or avg_pl == -1: raise ValueError("avg_pl = -1 or std_avg_pl = -1")
       
-
       'if not connected also show the len of the maxcc component'
       if not nx.is_connected(G): 
         ls_cc = nx.connected_components(G)
@@ -646,8 +659,8 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
         "Other Measures:",
         r"$\Delta R_0: %s(%s)$"%(rhu(R0 - Rc_net,3), rhu(std_DeltaR0Rc,3)),
         r"$< k^{2} >: %s(%s)$"%(rhu(avgk2,3),rhu(std_avgk2,3)),
-        r"$%s: %s(%s)$"%(delta, rhu(avg_pl,3), rhu(std_avg_pl,3)),
-        f"{rhu(R0/avg_pl,3)}"+R0pl_sign+f"{rhu(Rc_net/avg_pl,3)}",
+        r"$%s: %s(%s)$"%(delta, rhu(avg_pl,2), rhu(std_avg_pl,2)),
+        r"$R_0 / \delta = $"+f"{rhu(R0/avg_pl,3)} "+R0pl_sign+f" {rhu(Rc_net/avg_pl,3)}",
         #r"$R_{c-IBM}: %s$"%(rhu(D/np.max(nx.adjacency_spectrum(G).real),3)),
         r"OrdPar: %s(%s)"%(rhu(avg_ordp_net,3), string_format),
         ))
@@ -656,7 +669,7 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
       props = dict(boxstyle='round', facecolor='white', alpha=0.5, lw = 2.5)
 
       # place a text box in upper left in axes coords
-      ax.text(1.085, 0.4, textstr, transform=ax.transAxes, fontsize=25, #x = 1.07
+      ax.text(1.085, 0.3, textstr, transform=ax.transAxes, fontsize=25, #x = 1.07
               bbox=props,) #fontfamily = "serif", ha = "center" with x = 1.188
 
       plt.savefig( file_path )
@@ -719,15 +732,44 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
       ax.grid(color='grey', linestyle='--', linewidth = 1)
       ax.errorbar(x,y, xerr = xerr, yerr = yerr, color = "tab:blue", marker = "*", linestyle = "-",
          markersize = 30, mfc = "tab:red", mec = "black", linewidth = 3, label = "Avg SD(Cases)")
-      D_cfus = 1 + 2*Rc_net*mu/(beta*(1+p)) #Rc_net = 1 assumption
-      D_cer = 1 + Rc_net*mu/beta
+      
+      def D_cRc(lmbd, avgk2):
+        from math import sqrt
+        delta = avgk2**2 * lmbd - 2*avgk2*lmbd - 4*avgk2 + lmbd
+        if delta >= 0:
+          print(f'delta: {delta}',)
+          add1 = sqrt(delta*lmbd)        
+          num_less = - add1 + avgk2 * lmbd + lmbd
+          num_great = + add1 + avgk2 * lmbd + lmbd
+          den = 2*(lmbd+1)
+          D_great = num_great /den
+          D_less = num_less /den
+          return D_great, D_less
+        else: return 0,0
+
+      lmbd = beta/mu
+      D_cfuse = 1 + 2*mu/(beta*(1+p)) #Rc_net = 1 assumption
+      D_cer = 1 + mu/beta
       D_chomo = mu/beta
-      ax.axvline(x = D_cfus, color = "maroon", lw = 4, ls = "--", 
-                 label = "".join((r"$D_{c-fuse \, model}$",f": {rhu(D_cfus,3)}")) )
+      D_cRcfuse, _ = D_cRc(lmbd = lmbd*(1+p)/2, avgk2 = avgk2)
+      D_cRcer, _ = D_cRc(lmbd = lmbd, avgk2 = avgk2)
+
+      ax.axvline(x = D_cfuse, color = "maroon", lw = 4, ls = "--", 
+                 label = "".join((r"$D_{c-fuse \, model}$",f": {rhu(D_cfuse,3)}")) )
       ax.axvline(x = D_cer, color = "darkblue", lw = 4, ls = "--", 
                  label = "".join((r"$D_{c-ER \, model}$",f": {rhu(D_cer,3)}")) )
       ax.axvline(x = D_chomo, color = "darkslategrey", lw = 4, ls = "--", 
                  label = "".join((r"$D_{c-homog \, model}: \mu / \beta$",f": {rhu(D_chomo,3)}")) )
+      
+      print(f'D_cRcfuse: {D_cRcfuse}',)
+      print(f'D_cRcer: {D_cRcer}',)
+      
+      if D_cRcfuse:
+        ax.axvline(x = D_cRcfuse, color = "maroon", lw = 4, marker='o', ls='dashed', ms = 12,
+                  label = "".join((r"$D_{Rc-fuse \, model}$",f": {rhu(D_cRcfuse,3)}")) )
+      if D_cRcer:
+        ax.axvline(x = D_cRcer, color = "darkblue", lw = 4, ls = "-.", ms = 12,
+                  label = "".join((r"$D_{Rc-ER \, model}$",f": {rhu(D_cRcer,3)}")) )
       leg = ax.legend(fontsize = 35, loc = "best")
       leg.get_frame().set_linewidth(2.5)
 
@@ -766,7 +808,73 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
       for line in sorted_lines:
         r.write(line)
 
-def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = False, partition = None, pos = None, numb_inring_links = 0):
+def suptitle_AdjMat(G, folder, D, std_D, p, numb_inring_links, avg_pl, std_avg_pl):
+    import networkx as nx
+    import numpy as np
+
+    string_inlinks = ""; string_kmax = "" 
+    N = G.number_of_nodes()
+    if nx.is_connected(G): 
+        str_sw = r"SW_{C}"
+        #avg_pl, std_avg_pl = mean_std_avg_pl(G)
+        len_max_cc = G.number_of_nodes()
+        
+    else:  
+        ls_cc = nx.connected_components(G)
+        print("ls_cc", ls_cc)
+        max_cc = max(ls_cc, key = len)
+        len_max_cc = len(max_cc)
+        #avg_pl, std_avg_pl = mean_std_avg_pl(G.subgraph(max_cc))
+        str_sw = r"SW_{c-max:%s-%s}"%(number_connected_components(G), len_max_cc)
+
+    if std_avg_pl == -1 or avg_pl == -1: raise ValueError("avg_pl = -1 or std_avg_pl = -1")
+      
+    'find the major hub and the "ousiders", i.e. highly connected nodes'
+    infos = G.degree()
+    dsc_sorted_nodes = sorted( infos, key = lambda x: x[1], reverse=True) # List w/ elements (node, deg)
+    _, max_degree = dsc_sorted_nodes[0]
+    count_outsiders, threshold = 0,3*D
+
+    deg_dsc_nodes = list(map(lambda x: x[1], dsc_sorted_nodes) )
+    for i in range(len(deg_dsc_nodes)):
+        tmp_count = 0
+        if deg_dsc_nodes[i] >=  threshold:  tmp_count += 1
+        if -deg_dsc_nodes[-i] >=  threshold: tmp_count += 1
+        if tmp_count == 0: break
+        count_outsiders += tmp_count
+
+    if folder == "BA_Model": 
+        sw_coeff = rhu(avg_pl / np.log(np.log(len_max_cc)),3)
+        std_sw_coeff = np.sqrt(1/(np.log(np.log(len_max_cc)))) \
+                    *std_avg_pl
+        print(f'std_sw_coeff: {std_sw_coeff}',)
+        str_sw = "".join((r"U",str_sw))
+        string_kmax = r", k_{max}: %s" % max_degree
+
+    else: 
+        sw_coeff = rhu(avg_pl / np.log(len_max_cc),3)
+        std_sw_coeff = np.sqrt(1/np.log(len_max_cc)) \
+                    *std_avg_pl
+        print(f'std_sw_coeff: {std_sw_coeff}',)
+        
+
+    string_format = str(sw_coeff)[:5]
+    print(string_format)
+    if string_format == "0.000":
+        string_format = format(sw_coeff, ".1e")
+    if folder == "Caveman_Model":
+        string_inlinks = f"\, Inlinks: {numb_inring_links},"
+
+        #plt.suptitle(r"$N:%s, D:%s(%s), p:%s, N_{3-out}: %s, %s: %s,  k_{max}: %s, $" % (
+        #N, D, std_D, rhu(p,3), count_outsiders, str_sw, rhu(sw_coeff,1),  max_degree, )) 
+
+    str_suptitle = r"$N:%s, D:%s(%s), p:%s,%s N_{3-out}: %s, %s:%s(%s) %s$" % \
+                    (N,D, rhu(std_D,3), rhu(p,3), string_inlinks, count_outsiders, 
+                    str_sw, sw_coeff, rhu(std_sw_coeff,3), string_kmax)
+
+    return str_suptitle
+
+def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = False, partition = None, pos = None, numb_inring_links = 0, avg_pl = -1, std_avg_pl = -1):
   import os.path
   from definitions import my_dir, func_file_name, N_D_std_D, rhu, plot_params
   from functools import reduce
@@ -775,7 +883,6 @@ def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = Fals
   import matplotlib.pylab as plt
   import numpy as np
   from matplotlib import cm
-  
   
   mode = "a"
   #if done_iterations == 1: mode = "w"
@@ -789,33 +896,6 @@ def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = Fals
   #D = rhu( D)
   adj_or_sir = "AdjMat"
 
-  if nx.is_connected(G): 
-    str_SW = r"SW_{C}"
-    avg_pl, std_avg_pl = mean_std_avg_pl(G, N)
-    len_max_cc = N
-    
-  else:  
-    ls_cc = nx.connected_components(G)
-    print("ls_cc", ls_cc)
-    max_cc = max(ls_cc, key = len)
-    len_max_cc = len(max_cc)
-    avg_pl, std_avg_pl = mean_std_avg_pl(G.subgraph(max_cc))
-    str_SW = r"SW_{c-max:%s-%s}"%(number_connected_components(G), len_max_cc)
-
-  'find the major hub and the "ousiders", i.e. highly connected nodes'
-  infos = G.degree()
-  dsc_sorted_nodes = sorted( infos, key = lambda x: x[1], reverse=True) # List w/ elements (node, deg)
-  _, max_degree = dsc_sorted_nodes[0]
-  count_outsiders, threshold = 0,3*D
-
-  deg_dsc_nodes = list(map(lambda x: x[1], dsc_sorted_nodes) )
-  for i in range(len(deg_dsc_nodes)):
-    tmp_count = 0
-    if deg_dsc_nodes[i] >=  threshold:  tmp_count += 1
-    if -deg_dsc_nodes[-i] >=  threshold: tmp_count += 1
-    
-    if tmp_count == 0: break
-    count_outsiders += tmp_count
 
   log_upper_path = my_dir + folder + "/" #"../Plots/Tests/WS_Epids/"
   my_dir+=folder+"/p%s/"%rhu(p,3)+adj_or_sir+"/" #"../Plots/Tests/WS_Epids/p0.001/AdjMat/"
@@ -839,7 +919,7 @@ def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = Fals
   length_long_range = len(long_range_edges)
   if length_long_range < 10: print("\nLong_range_edges", long_range_edges, length_long_range)
   else: print("len(long_range_edges)", length_long_range)
-  folders = ["WS_Pruned","BA_Model"]
+  #folders = ["WS_Pruned","BA_Model"]
   #if folder in folders: 
   width = min(3,0.2*N/max(1,len(long_range_edges)))
   if folder== "Caveman_Model":
@@ -865,7 +945,6 @@ def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = Fals
   mean = rhuD #rhu (2.6 -> 3) is right, since axs.hist exclude the highest ( [0,1) ) 
               #in the count of "n"
   y = poisson.pmf(bins, D)
-
 
   axs = plt.subplot(212)
   'count how many sorted_degree there are in the bins. Then, align them on the left,'
@@ -895,45 +974,10 @@ def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = Fals
   right=0.963,
   hspace=0.067, #0.067
   wspace=0.164) #0.164
-
-  
-  if folder == "BA_Model": 
-    value = rhu(avg_pl / np.log(np.log(len_max_cc)),3)
-    std_value = np.sqrt(1/(np.log(np.log(len_max_cc)))) \
-                *std_avg_pl
-    print(f'std_value: {std_value}',)
     
-    str_SW = "".join((r"U",str_SW,f"({rhu(std_value,3)})"))
-    string_format = str(value)[:5]
-    print(string_format)
-    if string_format == "0.000":
-      string_format = format(value, ".1e")
+  if std_avg_pl == -1 or avg_pl == -1: raise ValueError("avg_pl = -1 or std_avg_pl = -1")
+  plt.suptitle(suptitle_AdjMat(G, folder, D, std_D, p, numb_inring_links, avg_pl = avg_pl, std_avg_pl = std_avg_pl))
 
-    plt.suptitle(r"$N:%s, D:%s(%s), k_{max}: %s, N_{3-out}: %s, %s: %s, p:%s$" % (
-    N, D, std_D, max_degree, count_outsiders, str_SW, rhu(value,1), rhu(p,3),  ))
-  else: 
-    value = rhu(avg_pl / np.log(len_max_cc),3)
-    std_value = np.sqrt(1/np.log(len_max_cc)) \
-                *std_avg_pl
-    print(f'std_value: {std_value}',)
-    
-
-    string_format = str(value)[:5]
-    print(string_format)
-    if string_format == "0.000":
-      string_format = format(value, ".1e")
-
-    string_inlinks = ""
-    if folder == "Caveman_Model":
-      string_inlinks = f" Inlinks: {numb_inring_links},"
-    plt.suptitle(r"$N:%s, D:%s(%s),%s N_{3-out}: %s, p:%s, %s:%s(%s)$"%
-                (N,D, std_D, string_inlinks, count_outsiders, rhu(p,3), 
-                str_SW, value, rhu(std_value,3))
-                )
-    '''else:  
-      plt.suptitle(r"$N: %s, D: %s(%s), N_{3-out}: %s, p: %s, %s: %s(%s)$"%
-                  (N,D, std_D, count_outsiders, rhu(p,3), 
-                  str_SW, value, rhu(std_value,3) ))'''
 
   'TO SAVE PLOTS'
   if not os.path.exists(my_dir): os.makedirs(my_dir)
@@ -977,7 +1021,7 @@ def save_nes(
   G, p, folder, adj_or_sir, R0_max = 12, m = 0, N0 = 0, 
   beta = 0.3, mu = 0.3, my_print = True, pos = None, 
   partition = None, dsc_sorted_nodes = False, done_iterations = 1, 
-  chr_min = 0, ordp_pmbD_dic = 0, numb_inring_links = 1): #save new_entrys
+  chr_min = 0, ordp_pmbD_dic = 0, numb_inring_links = 1, avg_pl = -1, std_avg_pl = -1): #save new_entrys
 
   'save net only if does not exist in the .txt. So, to overwrite all just delete .txt'
   from definitions import already_saved_list, func_file_name, N_D_std_D
@@ -991,18 +1035,30 @@ def save_nes(
     saved_files = already_saved_list(folder, adj_or_sir, chr_min = chr_min, my_print= my_print, done_iterations=done_iterations)
     file_name = func_file_name(folder = folder, adj_or_sir = adj_or_sir, \
     N = N, D = D, R0 = R0, p = p, m = m, N0 = N0, beta = beta, mu = mu)
+
+  if adj_or_sir == "AdjMat" and file_name in saved_files:
+    return -1,-1
+
   if file_name not in saved_files: 
     print("I'm saving", file_name)
     #infos_sorted_nodes(G, num_sorted_nodes = True)
     if adj_or_sir == "AdjMat": 
+      'pass the average path length to save_sir onyl if calculated here'
+      'calculate once for all the avg_pl and its std_avg_pl'
+      avg_pl, std_avg_pl = mean_std_avg_pl(G)
+      print(f'avg_pl in AdjMat: {avg_pl}',)  
+      print(f'std_avg_pl in AdjMat: {std_avg_pl}',)
       save_net(G = G, pos = pos, partition = partition, m = m, N0 = N0, 
                folder = folder, p = p, done_iterations = done_iterations, 
-               numb_inring_links = numb_inring_links)
+               numb_inring_links = numb_inring_links, avg_pl = avg_pl, std_avg_pl = std_avg_pl)
       infos_sorted_nodes(G, num_sorted_nodes = 0)
+      return avg_pl, std_avg_pl
+
     if adj_or_sir == "SIR": 
       save_sir(G, folder = folder, beta = beta, mu = mu, p = p, R0_max = R0_max, 
               done_iterations = done_iterations, ordp_pmbD_dic = ordp_pmbD_dic, 
-              numb_inring_links = numb_inring_links)
+              numb_inring_links = numb_inring_links, avg_pl = avg_pl, std_avg_pl = std_avg_pl)
+
 
 def save_log_params(folder, text):
   import os
@@ -1860,7 +1916,7 @@ class NestedDict(dict):
 def main(folder, N, k_prog, p_prog, beta_prog, mu_prog, 
   R0_min, R0_max, epruning = False):
   from definitions import save_log_params, save_nes, \
-    NestedDict, jsonKeys2int, my_dir
+    NestedDict, jsonKeys2int, my_dir, mean_std_avg_pl
   from itertools import product
   import networkx as nx
   import json
@@ -1939,6 +1995,7 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
           if np.any([x<1. for x in k_prog]):
             conn_flag = False
           else: conn_flag = True'''
+          conn_flag = False
           G = NN_pois_net(N = N, folder = folder, ext_D = regD, p = p)
           print("connected components", len(list(nx.connected_components(G))))
           if len(list(nx.connected_components(G))) != 1 and conn_flag:
@@ -1994,17 +2051,20 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
 
         #print("\nIterations left: %s" % ( total_iterations - done_iterations ) )
 
+        avg_pl, std_avg_pl = -1, -1
+
+        'if obtain avg_pl, std_avg_pl pass it to the sir'
         import datetime as dt
         start_time = dt.datetime.now()       
-        save_nes(G, m = m, N0 = N0, pos = pos, partition = partition,
-                 p = p, folder = folder, adj_or_sir="AdjMat", done_iterations=done_iterations, numb_inring_links = numb_inring_links)
+        avg_pl, std_avg_pl = save_nes(G, m = m, N0 = N0, pos = pos, partition = partition,
+                 p = p, folder = folder, adj_or_sir="AdjMat", done_iterations=done_iterations, numb_inring_links = numb_inring_links, avg_pl = avg_pl, std_avg_pl = std_avg_pl)
         print("\nThe end-time of 1 generation of one AdjMat plot is", dt.datetime.now()-start_time)
 
         start_time = dt.datetime.now()       
         save_nes(G, m = m, N0 = N0,
                  p = p, folder = folder, adj_or_sir="SIR", R0_max = R0_max, beta = beta, mu = mu, 
                  ordp_pmbD_dic = ordp_pmbD_dic, done_iterations=done_iterations, 
-                 numb_inring_links = numb_inring_links)
+                 numb_inring_links = numb_inring_links, avg_pl = avg_pl, std_avg_pl = std_avg_pl)
         print("\nThe end-time of the generation of one SIR plot is", dt.datetime.now()-start_time)
 
 def parameters_net_and_sir(folder = None, p_max = 0.3):
