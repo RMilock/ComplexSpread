@@ -1,7 +1,7 @@
 \documentclass[a4paper,10pt,twoside]{book} %%{book}
 
 \usepackage[top=5cm,bottom=5cm,inner=5cm,outer=3cm]{geometry}
-\usepackage{graphicx, subcaption} %per poter inserire le figure
+\usepackage{graphicx, caption, subcaption} %per poter inserire le figure
 \usepackage{csquotes} %handle " and ""
 \MakeOuterQuote{"}  %handle opening/closing quotation
 \usepackage{amssymb,amsmath,amsthm,amsfonts,bm, yhmath}
@@ -12,7 +12,6 @@
 \usepackage{indentfirst}
 %\usepackage{subfigure}
 %\usepackage[small]{caption}
-\usepackage{caption}
 \usepackage{eucal}
 \usepackage{eso-pic}
 \usepackage{url}
@@ -511,7 +510,7 @@ As a sociological example, the average distance of a random person, in the curre
 \subsection{The Clustering Coefficient}
 As far as a social network is considered, it seems natural to introduce a measure of community membership (\autoref{fig:degree_clustcoefficient_pathlength}) which capture the possibility to join a local community, e.g. an association or a family. More generally, real networks are characterized by the clustering formation, which "simplify" the network by aggregating the nodes, called clusters, which present common characteristics. Proceeding as the "coarse graining" technique of Statistical Mechanics, it becomes appealing to take care of the emergent properties exhibited by the "coarse-grained" network. In the following section, it is introduced the degree of "clusterization" of a network.
 
-More precisely, the local clustering coefficient $C_i$ measures the chance of having a link among the neighbors of the $i-th$ node. To gain a rough intuition of its purpose, it worths to consider two opposite limits: 
+More precisely, the local clustering coefficient $C_i$ measures the chance of having a link among the neighbors of the $i-th$ node. To gain a rough intuition of its purpose, it is worthwhile to consider two opposite limits: 
 \begin{itemize}
 	\item $C_i = 0$ as there are no links among neighbors of $i$;
 	\item $C_i = 1$ as there are fully connected neighbors of $i$.
@@ -818,10 +817,10 @@ In particular, it would be possible to observe that for small "epidemic strength
 
 The model which may be composed with the quoted compartments are the $SI$, the $SIS$ and the $SIR$ (the case of study). In detail, the $SI$ model accounts for the fact that it would be impossible to recover from the disease, e.g. herpes; the $SIS$ model for diseases where it would be not possible to waning immunity, thus, returning susceptible, e.g. the HPV, generic flu; the $SIR$ where the last state is the gained immunity, e.g. the most strain of seasonal influenza or chickenpox.
 
-Before gaining the details on the two mixing hypothesis, it is worth define the variables involved in the two approach.
+Before gaining the details on the two mixing hypothesis, it is worth defining the variables involved in the two approach.
 In particular, by denoting the total number of individuals $N$, $s(t) := S(t)/N$ is the number of susceptible (healthy) normalized with $N$; $i(t):=I(t)/N$ is the fraction of already infectious persons; while $r(t) := R(t)/N$ the recovered one. In this way, the "closed population" constraint translates into $s(t)+i(t)+r(t)=1$ at any time $t$. 
 Thus, at the initial time ($t = 0$), a seed of infected has to be injected to start the infection, e.g. $I(0) := 10$. So, $s(0) = 1 - i(0)$ since the recovered are $r(0) = 0$.
-Furthermore, let assume that the likelihood of transmitting the disease to a susceptible per unit time is $\beta$, i.e. the "transmission rate"; while the "recovery rate" is $\mu$. Hence, it worths define the \textit{basic reproduction number}  $R_0 := \beta \langle k \rangle / \mu$, embodying the number of secondary infected in a naive population.
+Furthermore, let assume that the likelihood of transmitting the disease to a susceptible per unit time is $\beta$, i.e. the "transmission rate"; while the "recovery rate" is $\mu$. Hence, defining the \textit{basic reproduction number}  $R_0 := \beta \langle k \rangle / \mu$, this quantity embodies the number of secondary infected in a naive population.
 
 The final goal would be to find the evolving number of new daily infected at each time (a slight modification of $I(t)$). Moreover, since the disease-spreading is a stochastic process, it would be the average of the various scenarios--in our case 50.
 
@@ -1078,9 +1077,60 @@ As promised, a AMFN is defined as a (directed) random network whose $D$ links ar
 
 The spreading on network resembles the mean-field model, alias AMFN in our case, whenever either $R_0$ or the long-range connections $p \cdot N$ are high enough to allow the disease, reaching the epidemic state rapidly. Indeed, the comparison between mean-field and network spreading regards the fraction of total infected nodes and not how the nodes are infected: for the mean-field case the neighbors are chosen randomly along the circle; while they are fixed for the chosen network case. For this reason, there could an accordance in the measures considered.
 
+Error propagation for $R_0$:
+\begin{equation}
+	\sigma_{R_0} = \sqrt{\beta / \mu} \cdot \sigma_D
+\end{equation} 
+Error propagation for $R_{c-net}$:
+\begin{equation}
+	\begin{aligned}
+		\sigma_{R_{c-net}}^{2} &= \widehat{
+			\left[\frac{2 D \langle k^2 \rangle - D^{2}}{\left(\langle k^2 \rangle - D \right)^{2}}\right]^{2} }
+			\cdot \sigma_D^{2} + 
+			\widehat{
+			\left[ \frac{D^{2}}{\left(\langle k^2 \rangle - D\right)^{2}}\right]^{2} } 
+			\cdot \sigma_{\langle k^2 \rangle}^{2} \\ \\
+			&= \widehat{\left[\frac{R_{c-net}}{D}\right]^{4}} \cdot 
+			\left[
+			\widehat{ \left( \frac{2 \langle k^2 \rangle}{D} -1 \right)^{2} } \sigma_D^{2} 
+			+ 
+			\sigma_{\langle k^2 \rangle}^{2} \right]
+	\end{aligned}
+\end{equation}
+
+Error propagation for $\Delta R_0 := R_0 - R_{c-net}$:
+\begin{equation}
+	\sigma_{\Delta R_0}^{2} = \sigma_{R_0}^{2} + \sigma_{R_{c-net}}^{2}
+\end{equation}
+
+Error propagation of secondary attack rate of COVID-19 $\beta_{COVID-19}$ for household restrictions: $\beta := 1 - (1-SAR)^{1/d} \textnormal{ , where } SAR := 19.3\% \, (95\% \, CI: 15.5\%-23.9\%)$ \cite{Jing:2020_betaCOVID-19_Houseldo_Sec_atta}. Thus,
+\begin{equation}
+	\sigma_{\beta} = \widehat{\left[ \frac{1}{d} \left( 1 - SAR \right)^{1/d - 1} \right]^{\frac{1}{2}}}\cdot \sigma_{ \mu } \sim 0.036
+\end{equation}
+
+\begin{center}
+	\begin{tabular}{||c | c||} 
+	\hline
+	Recovery Measures \\
+	\hline
+	$\mu \, \left[Days\right]^{-1}$   & $Days:= \mu^{-1}$ \\
+	\hline \hline
+	0.071 &  14\\ 
+	\hline
+	0.111 & 9 \\
+	\hline
+	0.167 & 6 \\
+	\hline
+	0.25 & 4 \\
+	\hline
+	1 & 1 \\ [1ex] 
+	\hline
+	\end{tabular}
+\end{center}
+
 \section*{Order Parameter}
 \label{sec:OrderParam4LinContagion}
-In order to analyze the linear behavior of $P(t)$, it worths define \textit{critical basic reproduction number} the  $R_{0c} := \beta D_c / \mu \stackrel{!}{=} R_{c-net}$ and in the case where the network is not so heterogeneous $ R_{c-net} \sim 1$, where $1$ is for a poissonian distribution. This is, indeed, the case for the reported networks (\autoref{ch:Results}) yielding a critical degree $D_c = \frac{\mu}{\beta}$. 
+In order to analyze the linear behavior of $P(t)$, it is worth defining \textit{critical basic reproduction number} the  $R_{0c} := \beta D_c / \mu \stackrel{!}{=} R_{c-net}$ and in the case where the network is not so heterogeneous $ R_{c-net} \sim 1$, where $1$ is for a poissonian distribution. This is, indeed, the case for the reported networks (\autoref{ch:Results}) yielding a critical degree $D_c = \frac{\mu}{\beta}$. 
 
 A rough estimate of $C(t) \propto R^{t/d}$. So, as the epidemic is fixed, the exponential growth is recovered for $D > D_c$; while $D < D_c$ displays a drop out of the pathogen. For $D \sim D_c$ \cite{Thurner::NetBasedExpl}, the number of infected will behave critically, i.e. $P(t) \propto t^{\alpha}$, where $\alpha \in (1,2)$ for a simply connected (no multiedges or loops) short-range network embedded in dimension $2$. More in detail, $\alpha \sim 2$ for a network resembling a regular lattice in $2$ dimensions, since $C(t) \propto t^2$ is proportional to the covered area of the infection front; while $\alpha \sim 1$ for a tree or a collection of 1-dimensional chains, as the front spreads linearly as a flame along a fuse, i.e. $C(t) \propto t$. In between these regimes, the specific $\alpha$ is influenced and shaped by non-pharmaceutical interventions (NPIs).
 
@@ -1112,7 +1162,7 @@ In Statistical Mechanics, the dimensionality of a system is crucial to legitimat
 
 In the following, $D_c$ is derived for an ER model and a ring-shaped poissonian small-world network (see \autoref{sec:PSW_network}) with $D$ average degree, $p$ rewiring probability, $D(1-p)$ short-range per node links, e.g. family, and $Dp$ long-range connections, e.g. leisure activities. So, the probability that an infector will infect a susceptible person in the next d days is $\beta_d:= 1-(1-\beta)^d \sim \beta d = \beta/\mu$, i.e. the complementary probability of not having a "risky" interaction for $d$ days.
 
-Taking care of the dimensional effects, it worths to define the curvature of the front as $ \mathcal{K}:= \pm 1/\mathcal{R}_{front}$ where $\mathcal{R}_{front}$ is the radius of the fitting circle of the front: $\mathcal{K}>0$ for concave case; while $\mathcal{K}<0$ if the front surrounds an island of susceptible. For the poissonian small-world network, $\mathcal{K} = 0$, since the front is flat.    
+Taking care of the dimensional effects, it is whorthwhile to define the curvature of the front as $ \mathcal{K}:= \pm 1/\mathcal{R}_{front}$ where $\mathcal{R}_{front}$ is the radius of the fitting circle of the front: $\mathcal{K}>0$ for concave case; while $\mathcal{K}<0$ if the front surrounds an island of susceptible. For the poissonian small-world network, $\mathcal{K} = 0$, since the front is flat.    
 
 Moreover, $R_0$ is exact only for a naive population, i.e. at early times. In fact, if a node is later infected, it would find at least one neighbor infected, alias its infector. So, taking care of the epidemic spreading, $R := (D-n)\lambda$, where $n$ is the average number of not-susceptible neighbors which, further, implies that $\nu := 1 - n/D$ is the fraction of susceptible. This latter quantity has to be interpreted as an general estimate of how infectious is a disease, i.e. for low infectivity, $\nu\sim1$ which implies $D \lesssim D_c$.
 To be precise, for the "fuse-mode" $\nu$ represents only the fraction of susceptible in the neighborhood of the infection front; while for the ER model, $n$ embodies the entire population.
@@ -1142,6 +1192,7 @@ In addition, $D_c^{ER}$ increases as $\nu$ drops: it has been needed more contac
 %Moreover, $\nu_c = 1$ provides that a pathogen dies out whenever, at the beginning of the spreading, the average contacts $D < 1+1/rd$.
 
 \subsection*{The fuse model}
+\label{sec:D_c_fuse_model}
 \begin{figure}[t]
 	%scale = 0.27, trim = {10cm 0 1cm 0}
 	\includegraphics[trim = {2cm 0 1cm 0}, width=\textwidth]{../images/Ch_TheEpidModels_Methodology/NN_Conf_Model_ordp_p0.3_beta0.1_mu0.25.png}
@@ -1232,14 +1283,21 @@ The \autoref{eq:final_D_c_fuse_network} and \autoref{eq:Dc_ERenyi} for $\nu \sim
 According to \cite{Liu::2021_Review_SContactPattern} (2021), the most relevant studies \footnote{These works are extracted from PubMed, Medline, Embase and Google Scholar} on social contact patterns report $2-5$ average contacts per day during the lockdown, i.e. nearly the household size. This estimate is, roughly, $5$ times less than the pre-COVID-19 ones of $7-29$ average contacts per day. On the other hand, Mossong et Al. (\cite{Mossong:2008_preCOVID-europe_SCP}) (2008), based on $8$ european states, reported a pre-COVID-19 average of $13$ contacts per day, while Leung et Al. \cite{Leung:2017_HKSocialCP} (2017) find an average per day contacts of $8$ individuals for the abitants of Hong Kong. Moreover, the quoted surveys have taken into consideration individuals of different ages, with the further possibility of determine how society could be clustered by age, e.g. elderly are likely in contact with children.
 The present thesis does not aim at guessing a balanced average of contacts per day but, anyway, its purpose is to emulate a typical social network. Thus, the main plots are going to be focused on the $D < 30$ regime; while little room is going to be left for $D > 30$ as it can be the case for leisure activities, e.g. exhibitions or discotheques. Since COVID-19 spreads over face-to-face interactions, the latter case is crucial for the re-opening of the crowded activities.
 
-By constrast, the epidemic parameters are chosen independently on the real ones, in order to capture many different scenarios of epidemics. Other way around, transmissibility $\beta$ and recovery $\mu$ depends on many factor and especially on the studied population. Therefore, to have a broad inspection of the capabilities of a network topology it worths consider different combinations of $\beta \textnormal{ and }\mu$. 
+By constrast, the epidemic parameters are chosen independently on the real ones, in order to capture many different scenarios of epidemics. Other way around, transmissibility $\beta$ and recovery $\mu$ depends on many factor and especially on the studied population. Therefore, to have a broad inspection of the capabilities of a network topology it is worth considering different combinations of $\beta \textnormal{ and }\mu$. 
 
 In the "Results" chapter, $D_c$ for different simulation is reported but only for poissonian small-world network, it approximates the point where the $SD(C(t))$ start increasing.
 
 %$R_0$ try to modify it with $clust coefficient^{-1} or avg path length^{-1}$, i.e. an average estimate of the "openness" of the network.
 \chapter{MISSING TIPS}
 \begin{enumerate}
-	\item metti in un' unica funzione il calcolo di SWc e il suptitle (in generale cerca in "if folders"...e vedi se le cose vanno bene)
+	\item presentazione risultati: 
+	\begin{itemize}
+		\item fisso $\lambda$ vario $D \& p \Rightarrow \textnormal{ variano i contagi}$ 
+		\item fisso $\lambda$ vario $ \mu \textnormal{ (vaccino)} \Rightarrow \textnormal{ variano i contagi}$ 
+		\item stesso $R_0 $ con $ p \neq p' \textnormal{ e } p = p'$, epidemia varia;
+		\item mostra che se $R_0 < R_{c-Net} < 1$ l'epidemia cresce;
+		\item $\sigma_D(p \uparrow) \sim \uparrow$ for Overlapping PSW?     
+		\end{itemize}
 	\item Order paramter a d = 1 ha una seguito di $Dc < Dc(d = 1)$ che presentano la linear-zone per D più bassi;
 	\item sihuro che le medie degli infetti e dei nuovi casi siano medie? molto stocastiche ad es. per NNconfModel beta = 0.015, d = 6gg; 
 	\item descrivi anche la durata temporale dell'epidemia: dipende da beta o da mu?
@@ -1370,7 +1428,7 @@ The take on message is that social distancing is effective, which could naturall
 	\label{fig:RL_adjmat_p0.1}
 \end{figure}
 
-\begin{figure}[t]
+\begin{figure}[p]
     \centering
     \begin{subfigure}[t]{\textwidth}
         \centering
@@ -1407,91 +1465,236 @@ The NPIs measures constraint the indivuals to lower their number of contacts, i.
 Therefore, to capture the absence of hubs while retaining the heterogeneity on the number of contacts, a poisson SW network is introduced. In addition, the nodes are properly rewired only to the nearest nodes, in order to mimic a lockdown scenario \cite{Thurner::Appendix_NetBasedExpl}. Nevertheless, this arises the choice (\autoref{fig:net_O-PSW}, \autoref{fig:net_S-PSW}) of whether to preserve locality, obtaining a narrower distribution $p_k$, or to fix the poissonian distribution, introducing some long-range connections. Based on the kind of connections, the former would be addressed as the "overlapping-PSW" (O-PSW); while the latter the "sparse-PSW" (S-PSW). To gain a perceiving understanding of this, assume the nodes are arranged in a circle and wire them anticlock-wise from the bottom. If "locality" as to be preserved (\autoref{fig:net_O-PSW}), the rewiring scheme allows that a "left-most" node could wire to a node on its right, whose degree has been already saturated. Therefore, the poissonian distribution is lost. On the other hand, by aiming at preserving the latter one (\autoref{fig:net_S-PSW}), the wiring procedure allows to wire at the "next" available node, which could be also distant from the source neighborhood. Since in \cite{Thurner::Appendix_NetBasedExpl}, there are reported some puzzling behaviors for a PSW but not which of these two kinds, in this section, there are going to be reported the results both.
 
 \subsection*{Overlapping PSW}
-The goal of this section is to report the typical behaviors of a SIR model on a "O-PSW" network.
+The goal of this section is to report the typical behaviors of a SIR model on a "O-PSW" network for both $p = 0.0 \textnormal{ and } p=0.3$. The focus would be narrowed to the (pseudo-)linear evolution of the number of total cases for $D < D_c$, in order to explain the relevant features that could be captured in this thesis.
+For brevity, the former would be called the "regular" OPSW (R-OPSW) while the latter "long range" OPSW (LR-OPSW).
 In order to simulate the COVID-19 pandemic, $\beta = 0.015 \textnormal{ and } d = 14$ are chosen from \cite{Thurner::NetBasedExpl} and \cite{LaurerSA:2020_IncPeriodCOVID-19}: $\beta \textnormal{ and } d:= \frac{1}{\mu} \textnormal{ with } \mu = 0.07$ are the transmissibility rate and recovery days, i.e. the incubation period.
 
-In the following triptych, it is displayed the emergence of the exponential growth of the total number of cases; while a sub-exponential one for lower average number of contact.
+\subsubsection*{SIR on Regular O-PSW}
+
+The triptych in \autoref{fig:sir_O-PSW_COVID} displays the appearance of the exponential growth of the total number of cases $p( \infty)$ as the average number of contacts $D$ increases: as $D$ increases, $p(\infty) \to 1$. It has to be highlighted that even at early time, for small $D$, there is not an exponential growth even at early times, where there is a big pool of susceptible. 
+
+Moreover, there are two other features that depends both on epidemics and network structure: the end of the diffusion of the pathogen $t_{max}$ and the variance of the outbreak final size $\sigma(t_max)$ . The former occurs whenever there are no more infectors or, more precisely, whenever the dotted marks (in cadet-blue) goes to zero. All the parameters interplay, driving to an increase in the number of infected individuals; alongside to lowering them down. Surely, $\beta and \mu$ are well classified as increasing and reducing the number of infected. Rather, $D \textnormal{ and } p$ could act differently with respect the underlying topology. Moreover, severe epidemics could reach herd immunity with different growth rate. So, there is no clear dependence on the role of $D \textnormal{ and } p$ parameters. Indeed, in \autoref{fig:sir_O-PSW_COVID}, $t_{max}$ dimishes in the first increase of $D$ in the last figure, is increased. 
+The second one, namely the variance $\sigma(t_{max})$, embodies a "degree of stochasticity" of the different trajectories displayed in pale green (network-based) and orange (mean-field): it is reported after the $\pm$ sign in the legend. Specifically, it dimishes with the increasing of the epidemic strength, as the pathogen forces the number of total cases to be roughly the same. Other way around, whenever the contagions are more stochastic the variance rises. Its intrinsic dependence on the parameters $D, p, \beta, \mu$ is highly non trivial, but it could be seen it increases whenever there is room, allowing different behavior: for roughly $\textnormal{total number of cases} \sim 0.5$ it is allowed for a plethora of behavors.
+
+As in \autoref{sec:RegularGraph_p0}, by varying the $D$ parameter, fixing $\lambda:=\frac{\beta}{ \mu}$ , it could be noted that, the "severity" of a disease is better described by the difference $\Delta R_0 := R_0 - R_{c-Net}$ rather than $R_0 $ itself, which is only a "early-time" indicator. Moreover, by changing $\beta \textnormal{ and } \mu$ even $\Delta R_0$ starts to be obsolete while $\Delta R_{\delta} := \Delta R_0 / \delta$ could capture the network structure more in detail. In particular, the factor $\frac{1}{\delta}$ embodies the fact that as long-range nodes increase the epidemic is favoured, due to this jumps into a new pool of susceptible. As a direct comparison, compare the epidemic severity among the \autoref{fig:sir_O-PSW_D5_p0} and \autoref{fig:sir_O-PSW_D7_d4}.
+
+\begin{figure}[p]
+	\centering
+    \begin{subfigure}[t]{\linewidth}
+        \includegraphics[width = .90\linewidth]{Results/PSW/OPSW/p0.0/NNO_Conf_Model_addE_True_SIR_R0_1_N1000_D5.0_p0.0_beta0.015_mu0.07.png}
+		\centering
+        \caption{SIR spreading for $D = 5$ with COVID-19 parameters. Note that $R_0 < R_{c-Net}$ showing that the pathogen is naturally extinguishing.}
+        \label{fig:sir_O-PSW_D5_p0}
+    \end{subfigure}
+	\vfill
+	\begin{subfigure}[b]{\linewidth}
+		\centering
+        \includegraphics[width = .90\linewidth]{Results/PSW/OPSW/p0.0/NNO_Conf_Model_addE_True_SIR_R0_2_N1000_D11.0_p0.0_beta0.015_mu0.07.png}
+        \caption{SIR spreading for $D = 11$}
+        \label{fig:sir_O-PSW_D11_p0}
+    \end{subfigure}
+	\vfill
+	\begin{subfigure}[b]{\linewidth}
+		\centering
+        \includegraphics[width = .90\linewidth]{Results/PSW/OPSW/p0.0/NNO_Conf_Model_addE_True_SIR_R0_3_N1000_D14.0_p0.0_beta0.015_mu0.07.png}
+        \caption{SIR spreading for $D = 14$}
+        \label{fig:sir_O-PSW_D14_p0}
+    \end{subfigure}
+	\caption{SIR spreading with COVID-19 parameters}
+	\label{fig:sir_O-PSW_COVID}
+\end{figure}
+
+\begin{figure}[p]
+	\centering
+	\begin{subfigure}{\linewidth}
+		\centering
+		\includegraphics[width = .90\linewidth]{Results/PSW/OPSW/p0.0/Pec_Behaviours/NNO_Conf_Model_addE_True_SIR_R0_2_N1000_D7.0_p0.0_beta0.05_mu0.167.png}
+		\caption{A pathogen with faster human-recovery but more infectivity than the COVID-19 one. $\Delta R_{0}|_{d=4} > \Delta R_{0-COVID-19}$, rather, $\Delta R_0 (\delta)|_{d=4} \lesssim \Delta R_0 (\delta)|_{COVID-19}$ could be considered a more concrete mark of the epidemic bourden.}
+		\label{fig:sir_O-PSW_D7_d4}
+	\end{subfigure}
+	\vfill
+	\begin{subfigure}{\linewidth}
+		\centering
+		\includegraphics[width = .90\linewidth]{Results/PSW/OPSW/p0.0/Pec_Behaviours/NNO_Conf_Model_addE_True_SIR_R0_1_N1000_D24.0_p0.0_beta0.015_mu0.25_SEASINFLUENZA.png}
+		\caption{A pathogen faced with medical interventions such that $\mu$ is lower than the COVID-19 one. Even with $D$ enhanched to barely $23$, the epidemic final size is less of \autoref{fig:sir_O-PSW_D11_p0}}
+		\label{fig:sir_O-PSW_D23_d4}
+	\end{subfigure}
+	\vfill
+	\begin{subfigure}{\linewidth}
+		\centering
+		\includegraphics[width = .90\linewidth]{Results/PSW/OPSW/p0.0/Pec_Behaviours/NNO_Conf_Model_addE_True_SIR_R0_1_N1000_D24.0_p0.0_beta0.05_mu1.0.png}
+		\caption{The sub-exponential growth for a $D$ slightly above the $D_c$ of \autoref{fig:Ordp_OPSW_highmu_COVID19}}
+		\label{fig:sir_O-PSW_D24_d1}
+	\end{subfigure}
+	\caption{Spread for different epidemic parameters}
+\end{figure}
+
+\subsubsection*{SIR on Long Range O-PSW}
+The diffusion of the pathogen for $p = 0.3$ shares the overall shape with the $p = 0$ case, but with an enhanchment due to the possibility to jump into a new pool of susceptible. In this way, an infected node may have more susceptible around and could spread easily. Moreover, by fixing the epidemic parameters, the shape of the total number of cases for $D_{p=0} \cdot p$ are roughly the same of $D_{p=0.3}$ when $\pi(t_{max}) \sim 1/2$, since the trajectories have room to develop their peculiar behavior. Other way around, at low $D$ where the outbreak final size is barely the same (see \autoref{fig:sir_O-PSW_D5_p0}, 
+\autoref{fig:sir_O-PSW_D5_p0.3}), as stochasticity could drive many trajectories to die out fast. Also for high $D$, it could be observed a similar collapse of $\pi(t_{max})$ for $p = 0.0 / 0.3$  due to the fact the population is fixed to $N$ individuals. 
+In addition, when fixing $D, \beta, \mu$, the $\sigma(t_{max})$ is higher for $p = 0.3$ since the pathogen have more way to diffuse.
+
+An extreme case where $D \sim 1$ is reported, since even for a $R_0 >> 1$ the pathogen could burden a fraction of population less of the $10 \%$ as shown in \autoref{fig:sir_O-PSW_D111_p0.3}. This would be the case of a really stringent lock-down where many nodes are "epidemiologically"\footnote{The isolated individuals has to be considered shielded even by the droplets, a person could be in contact with, even just going to the supermarket. So, "epidemiologically isolated" is more stringent than leaving alone.} isolated, while others have fewer contacts. This could be better understood by looking at the pedix of the $\delta$, which is the number of nodes in the largest component. The same scenario appears in the $p = 0.0$ case, but it is not present for conciseness purpose.
+
+Ultimately, it is worth recalling that, as $p$ grows toward $1$, the epidemic curves for the network-based mode (in blue and green) tend to the mean-field curves (orange and violet ones).
+
+\begin{figure}[p]
+	\centering
+	\begin{subfigure}[t]{\linewidth}
+		\centering
+		\includegraphics[width = .90\linewidth]{Results/PSW/OPSW/p0.3/NNO_Conf_Model_addE_True_SIR_R0_1_N1000_D5.0_p0.3_beta0.015_mu0.07.png}
+		\caption{Diffusion in a network with $p = 0.3$ fraction of long-range nodes. It does not differ as \autoref{fig:sir_O-PSW_D5_p0} since $D_{p=0} \cdot (1+p) \sim 6.5$. Note that $R_0 < R_{c-Net}$ showing that the pathogen is naturally extinguishing.}
+		\label{fig:sir_O-PSW_D5_p0.3}
+	\end{subfigure}
+	\begin{subfigure}[t]{\linewidth}
+		\centering
+		\includegraphics[width = .90\linewidth]{Results/PSW/OPSW/p0.3/NNO_Conf_Model_addE_True_SIR_R0_2_N1000_D11.0_p0.3_beta0.015_mu0.07.png}
+		\caption{A pathogen spreading with higher $\mu$ than the COVID-19 one. $\pi(t_{max})$ is similar to the one for $D_{p=0} \cdot p \sim 14$ \autoref{fig:sir_O-PSW_D14_p0}. Note how, if limited at the first hundred days, the epidemic produce a total number of infected increasing, roughly, linearly in time. This is a commond feature for $D < D_c$.}
+		\label{fig:sir_O-PSW_D11_p0.3}
+	\end{subfigure}
+	\begin{subfigure}[t]{\linewidth}
+		\centering
+		\includegraphics[width = .90\linewidth]{Results/PSW/OPSW/p0.3/Pec_Behaviours/NNO_Conf_Model_addE_True_SIR_R0_5_N1000_D1.0_p0.3_beta0.4_mu0.07.png}
+		\caption{A pathogen with same recovery rate $\mu$ but more infective than the COVID-19 one. $\pi(t_{max})$ is similar to the one for $D_{p=0}$.}
+		\label{fig:sir_O-PSW_D111_p0.3}
+	\end{subfigure}
+	\caption{Overlapping PSW spread for COVID-19 parameters with $p = 0.3$ }
+\end{figure}
+
+\newpage
+\subsubsection*{Order Parameters}
+In this subsection, there are going to be displayed the behavior of the order parameters developed in \autoref{sec:OrderParam4LinContagion}, namely the standard deviation of the total number of cases $SD(C(t))$ . More specifically, the evolution of $SD(C(t))$, driven by $D$, marks that there is a critical degree of contact $D_c$ above whiche the constant rate of daily new infected is lost and, thus, an exponential growth appears. The theoretically estimated $D_c$ are 3, one for the three model applied: homogeneous mean-field approximation, ER-model, fuse-model (cf. \autoref{eq:D_c_analytical_discussion}).
+As a pedagogical remark, note that $D_{c-homog model} < D_{c-ER model} < D_{c-fuse model}$, since, as the above plots show, it easier to exponentially grow in a random network than following local paths (fuse model). In addition, the fuse model slightly overestimate the $D_c$, since the theoretical approximation overestimates the number of infected. Other sources of divergence from the simulated critical degree may be the finite size effects or deviation from the null curvature, formally, $\mathcal{k} = 0$ (see \autoref{sec:D_c_fuse_model}).
+Finally, a similarity could be understood since these graphs resemble the \autoref{fig:ER_Epidem_Thr} where the number of total cases is exhibiting a phase transition as $\beta$ grows. Here, the dependence is changed, as $D$ is driving the evolution of the $SD(C(t))$.
+
+\textbf{Regular O-PSW Order Parameter}
+
+In the following panel, it is reported how the $D_c$ behaves by changing the epidemic parameters. The first figure exhibits the COVID-19 transition from linear to exponential growth; while the latter embodies a different agent more infective but also less severe, e.g. a diffuse light flu. As $ \mu$ is strong enogh to recover one individual at time-step, e.g. reachable per a strong vaccination campaign, $D_c$ grows as a signal that exponential growth is more difficult. Indeed, the contagious individuals have to surely infect some neighbors in $1$ time-step, unless they are going to be neutralized by gaining immunity.  
+
+\begin{figure}[t]
+	\begin{subfigure}{0.48\linewidth}
+		\centering
+		\includegraphics[width=\linewidth, keepaspectratio]{Results/PSW/OPSW/OrdParam/p0.0/NNO_Conf_Model_addE_True_ordp_p0.0_beta0.015_mu0.07.png} 
+		\caption{Order Parameter with fixed COVID-19 parameters}
+		\label{fig:Ordp_OPSW_COVID-19}
+	\end{subfigure}
+	\begin{subfigure}{0.48\linewidth}
+		\centering
+		\includegraphics[width=\linewidth, keepaspectratio]{Results/PSW/OPSW/OrdParam/p0.0/NNO_Conf_Model_addE_True_ordp_p0.0_beta0.05_mu1.0.png}
+		\caption{Order Parameter exhibiting a higher $D_c$ since recovery rate is enhanched more than the transmissibility}
+		\label{fig:Ordp_OPSW_highmu_COVID19}
+	\end{subfigure}
+	\caption{Order Paramater with different recovery rates at $p = 0$ }
+\end{figure}
+
+\newpage
+\textbf{Long Range O-PSW Order Parameter}
+The order parameters displays the fact that, switching on the long-range interactions, the epidemic acquires enough strength to ease the exponential growth. Thus, $D_c$ is low and still depends from the epidemic parameter, in similar manner of before. Nevertheless, here even if $\beta$ is changed the transmissibility of the pathogen is not strong enough to prevent a fast recovery of the individuals. Thus, taking to a small number of daily cases, which is reflected by a small order parameter for many $D$.
+The enhancement of the recovery rate could be thought as an improvement for the pharmaceutical interventions to support an ill person. Since $ \mu = 1$, the recovery acts in $1$ day, which could be the case for a different pathogen than COVID-19 or, hopefully, reached by a strong vaccination campaign. It is worth recalling that the SIR model does not distinguish among asymptomatic or symptomatic. Therefore, $mu = 1$ is the same for a person who is contagious but without symptoms or with an hospedalized one. This fact support the idea of recovering from a pathogen in $1 day$, e.g. a temporary cold. 
+\begin{figure}[t]
+	\begin{subfigure}{0.48\linewidth}
+		\includegraphics[width=\linewidth, keepaspectratio]{Results/PSW/OPSW/OrdParam/p0.3/NNO_Conf_Model_addE_True_ordp_p0.3_beta0.015_mu0.07.png}
+		\caption{Order Parameter dependence on $D$ with fixed COVID-19 parameters}
+		\label{fig:Ordp_OPSW_COVID-19_p0.3}
+	\end{subfigure}
+	\begin{subfigure}{0.48\linewidth}
+		\includegraphics[width=\linewidth, keepaspectratio]{Results/PSW/OPSW/OrdParam/p0.3/NNO_Conf_Model_addE_True_ordp_p0.3_beta0.05_mu1.0.png}
+		\caption{Higher $D_c$ since recovery rate is higher than the transmission rate}
+		\label{fig:Ordp_OPSW_highmu_p0.3}
+	\end{subfigure}
+	\caption{Long Range Order Parameter of different pathogens and recovery rates.}
+\end{figure}
+
+\newpage
+\subsection*{Sparse PSW}
+This section aims at describing the diffusion of a pathogen, described by a SIR model, on a "S-PSW" network for both $p = 0.0 \textnormal{ and } p=0.3$. Inheriting the previous notation, the former would be called the "regular" S-PSW (R-SPSW) while the latter "long range" S-PSW (LR-SPSW).
+This type of network reinvigorates the agent with respect to the O-PSW, as the underlying topology of S-PSW accounts for long-rage edges even at $p=0.0$  (cf. \autoref{fig:net_S-PSW}).
+
+\subsubsection*{SIR on Regular S-PSW}
+As underlined before, the panel in the next page shows how the pathogen diffuse more easily than in \autoref{fig:sir_O-PSW_COVID}. The collected epidemic curves are the ones from $D = 5$ to $D = 14$ (\autoref{fig:sir_SPSW_COVID}), since at lower $D$, it is understood that the stochasticity is going to play a relavant role in blocking the diffusion; while on higher $D$ the exponential growth is recovered.
+
+As a first remarkable result, it has been observed a linear growth of the total number of cases for 20 time-steps where for the "Overalapping" PSW, the curve started bending rapidly. Thus, the extension of the linearity depends on also the arrangement of the susceptible around the infect nodes. Indeed, the evolution, in a OPSW, bends rapidly due to the "local" interactions which does not sustain the linear growth. However, all the curves with a $D \lesssim D_c$ develop a pseudo lienarity in the first part of the evolution (\autoref{fig:sir_O-PSW_D11_p0.3}). Then, they bend reaching the herd immunity.
 
 \begin{figure}[ht]
+	\includegraphics[width = \linewidth]{Results/PSW/SPSW/p0.0/Pec_Behaviors/NN_Conf_Model_SIR_R0_2_N1000_D5.0_p0.0_beta0.1_d4.0.png}
+	\caption{(pseudo-)Linear growth of the number of total cases extending for more than 20 time-steps.}
+\end{figure}
+
+\begin{figure}[p]
 	\centering
-    \begin{subfigure}[t]{.7\linewidth}
-        \includegraphics[width = \linewidth]{Results/PSW/OPSW/p0.0/NNO_Conf_Model_addE_True_SIR_R0_1_N1000_D5.0_p0.0_beta0.015_mu0.07.png}
-        \caption{Overlapping PSW degree distribution}
-        \label{fig:sir_S-PSW_D5_p0}
-    \end{subfigure}
+	\begin{subfigure}{\linewidth}
+		\centering
+		\includegraphics[width = 0.9\linewidth]{Results/PSW/SPSW/p0.0/NN_Conf_Model_SIR_R0_1_N1000_D5.0_p0.0_beta0.015_d14.0.png}
+		\caption{SIR spreading for $D = 5$ and COVID-19 parameters as in \autoref{fig:sir_O-PSW_D5_p0}. As in that case, $R_0 < R_{c-Net}$ provides a disease, which naturally dies out in time.
+		\label{fig:sir_S-PSW_D5_p0.0}}
+	\end{subfigure}
+	\vfill	
+	\begin{subfigure}{\linewidth}
+		\centering
+		\includegraphics[width = 0.9\linewidth]{Results/PSW/SPSW/p0.0/NN_Conf_Model_SIR_R0_2_N1000_D10.0_p0.0_beta0.015_d14.0.png}
+		\caption{The evolution for a larger number of contact $D = 10$}
+		\label{fig:sir_S-PSW_D10_p0.0}
+	\end{subfigure}
 	\vfill
-	\centering
-	\begin{subfigure}[t]{.7\linewidth}
-        \includegraphics[width = \linewidth]{Results/PSW/OPSW/p0.0/NNO_Conf_Model_addE_True_SIR_R0_2_N1000_D11.0_p0.0_beta0.015_mu0.07.png}
-        \caption{Sparse PSW degree distribution}
-        \label{fig:sir_S-PSW_D11_p0}
-    \end{subfigure}
-	\vfill
-	\centering
-	\begin{subfigure}[t]{.7\linewidth}
-        \includegraphics[width = \linewidth]{Results/PSW/OPSW/p0.0/NNO_Conf_Model_addE_True_SIR_R0_3_N1000_D14.0_p0.0_beta0.015_mu0.07.png}
-        \caption{Sparse PSW degree distribution}
-        \label{fig:sir_S-pSW_D14_p0}
-    \end{subfigure}
+	\begin{subfigure}{\linewidth}
+		\centering
+		\includegraphics[width = 0.9\linewidth]{Results/PSW/SPSW/p0.0/NN_Conf_Model_SIR_R0_3_N1000_D13.0_p0.0_beta0.015_d14.0.png}
+		\caption{The evolution for a larger number of contact $D = 14$. From this $D$ on, the epidemic growth is going to develop an exponential beavior.}
+		\label{fig:sir_S-PSW_D13_p0.0}
+	\end{subfigure}
+	\caption{Sparse PSW spread for COVID-19 parameters with $p = 0.0$ }
+	\label{fig:sir_SPSW_COVID}
+\end{figure}
+
+\newpage
+\subsubsection*{Long Range S-PSW}
+For brevity, it is shown only a SIR evolution (\autoref{fig:sir_SPSW_p0.3_D3}) where the linearity is supported by the "long-range" interactions as in the cases seen before. All the "linear" curves share a number of total cases approximatevely from $10\% - 20\%$. Therefore, by characterizing this interval with $R_0(\delta)$ it could be possible to predict this linear trend from the initial conditions, i.e. $D, \beta, \mu, \delta, \langle k^2 \rangle$.
+
+\begin{figure}[h]
+	\includegraphics[width = \linewidth]{Results/PSW/SPSW/p0.3/Pec_Beh/NN_Conf_Model_SIR_R0_2_N1000_D3.0_p0.3_beta0.05_d14.0.png}
+	\caption{(pseudo-)Linear growth of the number of total cases extending barely for 100 time-steps.}
+	\label{fig:sir_SPSW_p0.3_D3}
 \end{figure}
 
 
-Error propagation for $R_0$:
-\begin{equation}
-	\sigma_{R_0} = \sqrt{\beta / \mu} \cdot \sigma_D
-\end{equation} 
-Error propagation for $R_{c-net}$:
-\begin{equation}
-	\begin{aligned}
-		\sigma_{R_{c-net}}^{2} &= \widehat{
-			\left[\frac{2 D \langle k^2 \rangle - D^{2}}{\left(\langle k^2 \rangle - D \right)^{2}}\right]^{2} }
-			\cdot \sigma_D^{2} + 
-			\widehat{
-			\left[ \frac{D^{2}}{\left(\langle k^2 \rangle - D\right)^{2}}\right]^{2} } 
-			\cdot \sigma_{\langle k^2 \rangle}^{2} \\ \\
-			&= \widehat{\left[\frac{R_{c-net}}{D}\right]^{4}} \cdot 
-			\left[
-			\widehat{ \left( \frac{2 \langle k^2 \rangle}{D} -1 \right)^{2} } \sigma_D^{2} 
-			+ 
-			\sigma_{\langle k^2 \rangle}^{2} \right]
-	\end{aligned}
-\end{equation}
+\newpage
+\subsubsection*{Order Parameters}
+In this subsection, the evolution of $SD(C(t))$ driven by $D$. As the previous case, $D_{c-homog model} < D_{c-ER model} < D_{c-fuse model}$. On the other hand, even at a plain eye inspection the \autoref{fig:Ordp_OPSW_COVID-19} the difference in $D_c$ is remarkable. More specifically, for the COVID-19 parameters, it could be seen that the departure from a ps-linearity is expected at $D \sim 10$ considering a SPSW; while in the homologous plot 
 
-Error propagation for $\Delta R_0 := R_0 - R_{c-net}$:
-\begin{equation}
-	\sigma_{\Delta R_0}^{2} = \sigma_{R_0}^{2} + \sigma_{R_{c-net}}^{2}
-\end{equation}
+\textbf{Regular S-PSW Order Parameter} 
+\begin{figure}[t]
+	\begin{subfigure}{0.48\linewidth}
+		\centering
+		\includegraphics[width=\linewidth, keepaspectratio]{Results/PSW/SPSW/OrdParam/p0.0/NN_Conf_Model_ordp_p0.0_beta0.015_d14.0.png} 
+		\caption{Order Parameter with fixed COVID-19 parameters}
+		\label{fig:Ordp_SPSW_COVID-19}
+	\end{subfigure}
+	\begin{subfigure}{0.48\linewidth}
+		\centering
+		\includegraphics[width=\linewidth, keepaspectratio]{Results/PSW/SPSW/OrdParam/p0.0/NN_Conf_Model_ordp_p0.0_beta0.05_d1.0.png}
+		\caption{Order Parameter exhibiting a higher $D_c$ since $\beta$ and $ \mu$ are changed.}
+		\label{fig:Ordp_SPSW_d1.0_COVID19}
+	\end{subfigure}
+	\caption{Order Paramater for SPSW at different epidemic rates at $p = 0$ }
+\end{figure}
 
-Error propagation of secondary attack rate of COVID-19 $\beta_{COVID-19}$ for household restrictions: $\beta := 1 - (1-SAR)^{1/d} \textnormal{ , where } SAR := 19.3\% \, (95\% \, CI: 15.5\%-23.9\%)$ \cite{Jing:2020_betaCOVID-19_Houseldo_Sec_atta}. Thus,
-\begin{equation}
-	\sigma_{\beta} = \widehat{\left[ \frac{1}{d} \left( 1 - SAR \right)^{1/d - 1} \right]^{\frac{1}{2}}}\cdot \sigma_{ \mu } \sim 0.036
-\end{equation}
-
-\begin{center}
-	\begin{tabular}{||c | c||} 
-	\hline
-	Recovery Measures \\
-	\hline
-	$\mu \, \left[Days\right]^{-1}$   & $Days:= \mu^{-1}$ \\
-	\hline \hline
-	0.071 &  14\\ 
-	\hline
-	0.111 & 9 \\
-	\hline
-	0.167 & 6 \\
-	\hline
-	0.25 & 4 \\
-	\hline
-	1 & 1 \\ [1ex] 
-	\hline
-	\end{tabular}
-\end{center}
-
-
-
-
-
-
+\newpage
+\textbf{Long Range O-PSW Order Parameter}
+The order parameters displays the fact that, switching on the long-range interactions, the epidemic acquires enough strength to ease the exponential growth. Thus, $D_c$ is low and still depends from the epidemic parameter, in similar manner of before. Nevertheless, here even if $\beta$ is changed the transmissibility of the pathogen is not strong enough to prevent a fast recovery of the individuals. Thus, taking to a small number of daily cases, which is reflected by a small order parameter for many $D$.
+The enhancement of the recovery rate could be thought as an improvement for the pharmaceutical interventions to support an ill person. Since $ \mu = 1$, the recovery acts in $1$ day, which could be the case for a different pathogen than COVID-19 or, hopefully, reached by a strong vaccination campaign. It is worth recalling that the SIR model does not distinguish among asymptomatic or symptomatic. Therefore, $mu = 1$ is the same for a person who is contagious but without symptoms or with an hospedalized one. This fact support the idea of recovering from a pathogen in $1 day$, e.g. a temporary cold. 
+\begin{figure}[t]
+	\begin{subfigure}{0.48\linewidth}
+		\includegraphics[width=\linewidth, keepaspectratio]{Results/PSW/OPSW/OrdParam/p0.3/NNO_Conf_Model_addE_True_ordp_p0.3_beta0.015_mu0.07.png}
+		\caption{Order Parameter dependence on $D$ with fixed COVID-19 parameters}
+		%\label{fig:Ordp_OPSW_COVID-19_p0.3}
+	\end{subfigure}
+	\begin{subfigure}{0.48\linewidth}
+		\includegraphics[width=\linewidth, keepaspectratio]{Results/PSW/OPSW/OrdParam/p0.3/NNO_Conf_Model_addE_True_ordp_p0.3_beta0.05_mu1.0.png}
+		\caption{Higher $D_c$ since recovery rate is higher than the transmission rate}
+		%\label{fig:Ordp_OPSW_highmu_p0.3}
+	\end{subfigure}
+	\caption{Long Range Order Parameter of different pathogens and recovery rates.}
+\end{figure}
 
 
 \chapter{Conclusions}
