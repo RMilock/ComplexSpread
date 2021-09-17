@@ -22,15 +22,17 @@ def rmv_folder(folder, rmv_flag = False):
   from definitions import my_dir
   import sys
   import shutil
-
   # Get directory name
   if rmv_flag:
     my_dir = my_dir()+folder
     if os.path.exists(my_dir):
-      try:
-        shutil.rmtree(my_dir)
-      except OSError as e:
-        print("Error: %s - %s." % (e.filename, e.strerror))
+      rmv_flag = input("Really need to delete it (1) or no(0)?")
+      if bool(int(rmv_flag)):
+        print(f"I'm deleting since b(rmv_flag) is {bool(int(rmv_flag))}")
+        try:
+          shutil.rmtree(my_dir)
+        except OSError as e:
+          print("Error: %s - %s." % (e.filename, e.strerror))
 
 def my_dir():
   import datetime as dt
@@ -67,10 +69,14 @@ def func_file_name(folder, adj_or_sir, N, D, p, R0 = -1, m = 0, N0 = 0, beta = 0
       #name = "".join(folder, "_%s_N%s_D%s_p%s_m%s_N0_%s" % (
       #adj_or_sir, N, rhu(D), rhu(p,3), m, N0),".png")  
       return name
+    elif folder == "Caveman_Model":
+      return f'{folder}_{adj_or_sir}_{N}_{rhu(D,1)}_{rhu(p,3)}.png'
     else: return f'{folder}_{adj_or_sir}_{N}_{rhu(D)}_{rhu(p,3)}.png' #folder + "_%s_N%s_D%s_p%s.png" % (adj_or_sir, N,rhu(D),rhu(p,3)) 
     
 
   if adj_or_sir == "SIR":
+    if folder == "Caveman_Model":
+      return f'{folder}_{adj_or_sir}_{N}_{rhu(D,3)}_{rhu(p,3)}.png'
     return folder + "_%s_R0_%s_N%s_D%s_p%s_beta%s_d%s"% (
             adj_or_sir, int(rhu(R0)),
             N,rhu(D), rhu(p,3), rhu(beta,3), rhu(mu**(-1)) ) + ".png"
@@ -329,7 +335,7 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-2, mu = 0.05, start_i
       dni_totcases = np.array(avg_traj[idx_cl])#[1-x for x in avg_traj[idx_cl]]
       t_c = 0
       for i in np.arange(len(dni_totcases)-1):
-        if dni_totcases[i] <= p_c <= dni_totcases[i+1]:
+        if dni_totcases[i] <= p_c < dni_totcases[i+1]:
           print("limit", RcR0, p_c)
           y1 = dni_totcases[i+1]; x1 = np.where(dni_totcases == dni_totcases[i+1])[0][0]
           dy = y1 - dni_totcases[i]; dt = 1
@@ -337,8 +343,9 @@ def itermean_sir(G, mf = False, numb_iter = 200, beta = 1e-2, mu = 0.05, start_i
           t_c =  1/m * (p_c - y1) + x1
           #t_c = t_c[0][0]
           print(
-            "\n dni_totalcases[i], yc, dni[i+1],x1, np.where, tc, mu, beta",
+            "\n dni_totalcases[i], p_c, dni[i+1],x1, np.where, tc, mu, beta",
             dni_totcases[i],p_c, dni_totcases[i+1], x1, np.where(dni_totcases == dni_totcases[i])[0][0], t_c, mu, beta)
+          break
           print("End of t_c")
         #else: t_c = 0
 
@@ -371,9 +378,9 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
   #from matplotlib import cm
   #green = cmap.get_cmap("Greens")(avg_traj[1][-1] / std_avg_traj[1][-1])
   #orange = cmap.get_cmap("Oranges")(mf_avg_traj[1][-1] / mf_std_avg_traj[1][-1])
-  colors = ["paleturquoise","burlywood","lawngreen", "thistle"]
-  if beta*D/mu <= 1: colors = ["paleturquoise","coral","limegreen", "thistle"]
-  ax1.grid(color = "grey", ls = "--", lw = 1)
+  colors = ["paleturquoise", "tan", "limegreen", "thistle"] #mediumaquamarine
+  if beta*D/mu <= 1: colors = ["paleturquoise","coral","seagreen", "thistle"]
+  ax1.grid(color = "darkgrey", ls = "--", lw = 1)
   ax2 = ax1.twinx()
   ax3 = ax1.twiny()
 
@@ -398,7 +405,7 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
     color = "tab:orange", lw = lw_totc, ls = ls_totc)
   ax3.plot(avg_traj[1], label=r"Net:TotalCases (%s%%$\pm$%s%%)" %
     (np.round(avg_traj[1][-1]*100,1), np.round(std_avg_traj[1][-1]*100,1) ), \
-    color = "tab:green", lw = lw_totc, ls = ls_totc) #net:cd_inf
+    color = "green", lw = lw_totc, ls = ls_totc) #net:cd_inf
 
   'plot horizontal line to highlight the initial infected'
   ax1.axhline(start_inf/N, color = "r", ls="dashed", \
@@ -429,16 +436,18 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
     color = "cadetblue", ms = 8, marker = "o", lw = 0) #prevalence
   
   label = r"Net:$t_c,p_c$" + f" = ({rhu(t_c)}d,{rhu(p_c,2)})"
-  ms = 40
+  ms = 50
+  gcolor = "#003312"
   if t_c > 0: 
-    ax3.plot(t_c, p_c, color = "#003312", marker = "*", markersize = ms - 10, mec = "black",
+    ax3.plot(t_c, p_c, color = gcolor, marker = "*", markersize = ms - 10, mec = "k",
             label = label)
-  else: ax3.plot([], marker = "*", mfc = "#003312", mec = "k", ms = ms - 10, label = label)
+  else: ax3.plot([], marker = "*", mfc = gcolor, mec = "k", ms = ms - 10, label = label)
   
   label = r"MF:$t_c,p_c$" + f" = ({rhu(mf_t_c)}d,{rhu(mf_p_c,2)})"
-  if mf_t_c > 0: ax3.plot(mf_t_c, mf_p_c, color = "orange", marker = "*", markersize = ms - 10, mec = "black",
+  mfmc = "orange"
+  if mf_t_c > 0: ax3.plot(mf_t_c, mf_p_c, color = mfmc, marker = "*", markersize = ms - 10, mec = "black",
             label = label)
-  else: ax3.plot([], marker = "*", mfc = "orange", mec = "k", ms = ms - 10, label = label)
+  else: ax3.plot([], marker = "*", mfc = mfmc, mec = "k", ms = ms - 10, label = label)
 
   'exclude first and last yticks'
   
@@ -509,7 +518,7 @@ def mean_std_avg_pl(G, N = 0):
                       nx.average_shortest_path_length(C) for C in (G.subgraph(c).copy() for c in \
                       nx.connected_components(G))
                       ])
-        print(f'avg_pl: {avg_pl}',)
+        print(f'avg_pl in mean_std: {avg_pl}',)
         #print(f'The total time of avg_pl is: {dt.datetime.now()-start}')
         
         'calculate the std_avg_pl'
@@ -523,10 +532,10 @@ def mean_std_avg_pl(G, N = 0):
             std_avg_pl += sum(sq_deviation) / (N/2*(N-1)-1)
             #print(f'std_avg_pl: {std_avg_pl}',)
         std_avg_pl = sqrt(std_avg_pl)
-        print(f'std_avg_pl: {std_avg_pl}',)
+        print(f'std_avg_pl in mean_std: {std_avg_pl}',)
         return avg_pl, std_avg_pl
 
-def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 10, numb_iter = 50, numb_inring_links = 0, avg_pl = -1, std_avg_pl = -1):
+def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 3, numb_iter = 50, numb_inring_links = 0, avg_pl = -1, std_avg_pl = -1):
   import os.path
   from definitions import my_dir, func_file_name, N_D_std_D, mean_std_avg_pl
   import datetime as dt
@@ -661,6 +670,7 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
         r"$< k^{2} >: %s(%s)$"%(rhu(avgk2,3),rhu(std_avgk2,3)),
         r"$%s: %s(%s)$"%(delta, rhu(avg_pl,2), rhu(std_avg_pl,2)),
         r"$R_0 / \delta = $"+f"{rhu(R0/avg_pl,3)} "+R0pl_sign+f" {rhu(Rc_net/avg_pl,3)}",
+        r"$\Delta R_0 / \delta: %s$"%(rhu((R0 - Rc_net)/avg_pl,3)),
         #r"$R_{c-IBM}: %s$"%(rhu(D/np.max(nx.adjacency_spectrum(G).real),3)),
         r"OrdPar: %s(%s)"%(rhu(avg_ordp_net,3), string_format),
         ))
@@ -760,8 +770,9 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
                  label = "".join((r"$D_{c-ER \, model}$",f": {rhu(D_cer,3)}")) )
       ax.axvline(x = D_chomo, color = "darkslategrey", lw = 4, ls = "--", 
                  label = "".join((r"$D_{c-homog \, model}: \mu / \beta$",f": {rhu(D_chomo,3)}")) )
-      
-      print(f'D_cRcfuse: {D_cRcfuse}',)
+
+
+      '''print(f'D_cRcfuse: {D_cRcfuse}',)
       print(f'D_cRcer: {D_cRcer}',)
       
       if D_cRcfuse:
@@ -769,7 +780,7 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
                   label = "".join((r"$D_{Rc-fuse \, model}$",f": {rhu(D_cRcfuse,3)}")) )
       if D_cRcer:
         ax.axvline(x = D_cRcer, color = "darkblue", lw = 4, ls = "-.", ms = 12,
-                  label = "".join((r"$D_{Rc-ER \, model}$",f": {rhu(D_cRcer,3)}")) )
+                  label = "".join((r"$D_{Rc-ER \, model}$",f": {rhu(D_cRcer,3)}")) )'''
       leg = ax.legend(fontsize = 35, loc = "best")
       leg.get_frame().set_linewidth(2.5)
 
@@ -792,7 +803,7 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
 
       'pretty print the dictionary of the ordp'
       pp_ordp_pmbD_dic = json.dumps(ordp_pmbD_dic, sort_keys=False, indent=4)
-      print("Final dic to be saved", pp_ordp_pmbD_dic)
+      #print("Final dic to be saved", pp_ordp_pmbD_dic)
       ordp_file = "".join((ordp_path,"saved_ordp_dict.txt"))
       with open(ordp_file, 'w') as file:
         file.write(pp_ordp_pmbD_dic) # use `json.loads` to do the reverse
@@ -1045,9 +1056,8 @@ def save_nes(
     if adj_or_sir == "AdjMat": 
       'pass the average path length to save_sir onyl if calculated here'
       'calculate once for all the avg_pl and its std_avg_pl'
+      print("Printing avg_pl from save_nes AdjMat")
       avg_pl, std_avg_pl = mean_std_avg_pl(G)
-      print(f'avg_pl in AdjMat: {avg_pl}',)  
-      print(f'std_avg_pl in AdjMat: {std_avg_pl}',)
       save_net(G = G, pos = pos, partition = partition, m = m, N0 = N0, 
                folder = folder, p = p, done_iterations = done_iterations, 
                numb_inring_links = numb_inring_links, avg_pl = avg_pl, std_avg_pl = std_avg_pl)
@@ -1204,29 +1214,32 @@ def replace_lredges(G, p = 0):
     'replace long range edges'
     import random
     from itertools import chain
+    from definitions import pos_deg_nodes
 
     def fnode_edges(G, node):
         return G.edges(node)
 
-    random.seed(0)
+    random.seed(2)
     len_start = len(list(G.edges()))
     for node in G.nodes():
-        if random.random() < p:
-            #print(f"\nI'm looking for a new neighbors for {node}")
-            node_edges = fnode_edges(G, node)
-            #print(f'Inside: {node_edges}',)
-            neighbors = list(G.neighbors(node))
-            #print(f'neighbors: {neighbors}',)
-            rm_neigh = random.choice(neighbors)
+      if random.random() < p and len(G.edges(node)):
+        #print(f"\nI'm looking for a new neighbors for {node}")
+        node_edges = fnode_edges(G, node)
+        #print(f'Inside: {node_edges}',)
+        neighbors = list(G.neighbors(node))
+        #print(f'neighbors: {neighbors}',)
+
+        'rm only if node as deg > 0'
+        rm_neigh = random.choice(neighbors)
+        add_lrnode = random.choice(list(G.nodes()))
+        G.remove_edge(node, rm_neigh)
+        'dont select any present node (no // edges and loop)'
+        while(add_lrnode in list(chain.from_iterable([[rm_neigh], [node], neighbors]))):
             add_lrnode = random.choice(list(G.nodes()))
-            G.remove_edge(node, rm_neigh)
-            'dont select any present node (no // edges and loop)'
-            while(add_lrnode in list(chain.from_iterable([[rm_neigh], [node], neighbors]))):
-                add_lrnode = random.choice(list(G.nodes()))
-            #print(f'(rm_neigh: {rm_neigh} --> add_lrnode): {add_lrnode}',)
-            G.add_edge(node, add_lrnode)
-            node_edges = fnode_edges(G, node)
-            #print(f'final G.edges(node): {node_edges}',)
+        #print(f'(rm_neigh: {rm_neigh} --> add_lrnode): {add_lrnode}',)
+        G.add_edge(node, add_lrnode)
+        node_edges = fnode_edges(G, node)
+        #print(f'final G.edges(node): {node_edges}',)
     if  len(list(G.edges())) != len_start: 
         raise ValueError(f"Error value: {len(list(G.edges()))} not {len_start}") 
 
@@ -1730,8 +1743,9 @@ def caveman_defs():
 
           if ci != cj:
               try:
-                #print("ci,cj", ci,cj)
-                edges[(ci, cj)] = [(ni, nj)] #SHOULD BE += [(NI,NJ)] HERE
+                edges[(ci, cj)] += [(ni, nj)] #SHOULD BE += [(NI,NJ)] HERE
+                #print("ni, nj", ni, nj)
+                #print("ci,cj", ci,cj); print("edgesij", edges[(ci, cj)])
               except KeyError:
                   edges[(ci, cj)] = [(ni, nj)]
 
@@ -1790,7 +1804,7 @@ def caveman_defs():
       y = y0 + radius * np.sin(random_angle)
       return np.array([x, y])
 
-  def comm_caveman_relink(cliques = 8, clique_size = 7, p = 0,  relink_rnd = 0, numb_inring_links = 1):
+  def comm_caveman_relink(cliques = 8, clique_size = 7, p = 0,  relink_rnd = 0, numb_inring_links = 1, p_clique = 0):
     import numpy as np
     import numpy.random as npr
     from definitions import my_dir
@@ -1800,8 +1814,6 @@ def caveman_defs():
     print("G.nodes are", len(G.nodes()))
     print("size/cliq: %s, cliq/size: %s" % (clique_size/cliques, cliques/clique_size) )
 
-
-
     'decide how many nodes are going to relink to the neighbor "cave" (cfr numb_inring_links'
     total_nodes = clique_size*cliques
     
@@ -1809,29 +1821,48 @@ def caveman_defs():
     for clique in range(cliques):
       if numb_inring_links != 0:
         first_cl_node = clique_size*clique
-        nodes_inclique = np.arange(first_cl_node, first_cl_node+numb_inring_links)
-        attached_nodes = npr.choice( np.arange(clique_size*(1+clique), 
-                                    clique_size*(2+clique)), 
-                                    size = len(nodes_inclique) )
-        attached_nodes = attached_nodes % np.max((total_nodes,1))
-        for test, att_node in zip(nodes_inclique, attached_nodes):
-            #print("NN - clique add:", (test,att_node))
-            G.add_edge(test,att_node)
-        
-      'add a new edge by relinking one of the existing node'
-      'decide how many nodes in the clique would go into rnd relink via relink_rnd'
-      'In the last way, avg_degree is preserved'
-      if p != 0:
-        relink_rnd = clique_size #all nodes in the clique are tried to be relinked
-        first_cl_node = clique_size*clique
-        nodes_inclique = np.arange(first_cl_node, first_cl_node + relink_rnd)
-        attached_nodes = npr.choice([x for x in pos_deg_nodes(G) if x not in nodes_inclique], 
-                                    size = len(nodes_inclique))
-        for test, att_node in zip(nodes_inclique, attached_nodes):
-          #print("relink", (test,att_node))
-          if npr.uniform() < p: G.add_edge(test,att_node)
+        #nodes_inclique = np.arange(first_cl_node, first_cl_node+numb_inring_links)
+        nodes_inclique = np.arange(first_cl_node, first_cl_node+clique_size)
+        next_clique_nodes = np.arange(clique_size*(1+clique), clique_size*(2+clique)) % total_nodes
 
-    #remove_loops_parallel_edges(G)
+        #attached_nodes = npr.choice( np.arange(clique_size*(1+clique), 
+        #                            clique_size*(2+clique)), 
+        #                            size = len(nodes_inclique) )
+        #attached_nodes = attached_nodes % np.max((total_nodes,1))
+        from itertools import product
+        import random
+        prod = random.sample(list(product(nodes_inclique, next_clique_nodes)), k = numb_inring_links)
+        G.add_edges_from(prod)
+        #for test, att_node in prod:
+            #print("NN - clique add:", (test,att_node))
+        #    G.add_edge(test,att_node)
+        
+      'add a new edge by relinking one of the existing node to a new link in the sequent clique'
+      'decide how many nodes in the clique would go into rnd relink via relink_rnd'
+      '--comment from the fu'
+      if p:
+        #relink_rnd = clique_size #all nodes in the clique are tried to be relinked
+        first_cl_node = clique_size*clique
+        nodes_inclique = np.arange(first_cl_node, first_cl_node + clique_size)
+        lr_target_nodes = npr.choice(
+                                    [x for x in pos_deg_nodes(G) if x not in nodes_inclique], 
+                                    size = len(nodes_inclique))
+        for test, lr_node in zip(nodes_inclique, lr_target_nodes):
+          if npr.uniform() < p: 
+            #print(f"with probability {p}, added relink {(test,lr_node)}")
+            G.add_edge(test,lr_node)
+      if p_clique:
+        first_cl_node = clique_size*clique
+        nodes_inclique = np.arange(first_cl_node, first_cl_node + clique_size)
+        next_clique_nodes = np.arange(clique_size*(1+clique), clique_size*(2+clique)) % total_nodes
+        from itertools import product
+        for source, next_clique_node in product(nodes_inclique, next_clique_nodes):
+          if npr.uniform() < p_clique:
+            #print(f"with probability {p_clique}, added relink {(source,next_clique_node)}")
+            G.add_edge(source,next_clique_node)
+      
+    remove_loops_parallel_edges(G)
+    
 
     '''
     if deg_for_ordp != False:
@@ -1922,17 +1953,19 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
   import json
 
   print("Datetime of this log is:", datetime.now())
-
   'load a dic to save D-order parameter'
   ordp_pmbD_dic = NestedDict()
+  'these are the links among near communities'
+  numb_inring_links = [1]
+  if folder == "Caveman_Model": numb_inring_links = [1,3]
   
   'unique try of saving both, but generalize to all other nets'
   'try only with p = 0.1'
   total_iterations, done_iterations = 0,0
   print("k_prog", k_prog)
-  for D,mu,p,beta in product(k_prog, mu_prog, p_prog, beta_prog): 
+  for D,mu,beta in product(k_prog, mu_prog, beta_prog): 
       if R0_min <= beta*D/mu <= R0_max:
-        total_iterations+=1
+        total_iterations+=1*len(p_prog)*len(numb_inring_links)
   print("Total Iterations:", total_iterations)
   
   text = "N %s;\nk_prog %s, len: %s;\np_prog %s, len: %s;\nbeta_prog %s, len: %s;\nmu_prog %s, \
@@ -1940,11 +1973,6 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
         % (N, k_prog, len(k_prog), p_prog, len(p_prog), beta_prog, len(beta_prog), \
         mu_prog, len(mu_prog),  R0_min, R0_max, total_iterations)
   save_log_params(folder = folder, text = text)
-
-  #saved_nets = []
-  'these are the links among near communities'
-  numb_inring_links = [1]
-  if folder == "Caveman_Model": numb_inring_links = np.arange(1,D+1)
 
   for D,numb_inring_links,p,beta,mu in product(k_prog, numb_inring_links, p_prog, beta_prog, mu_prog): #long product
       'since D_real ~ 2*D (D here is fixing only the m and N0), R0_max-folder ~ 2*R0_max'
@@ -1973,7 +2001,7 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
         
         'intro regD has the "regularized D" even for D < 1'
         if D <= 1: 
-          if folder == ["Caveman_Model"]: regD = 2
+          if folder == ["vvvCaveman_Model"]: regD = 2
           else: regD = 1
         else: regD = D
         regD = int(regD)
@@ -2013,7 +2041,7 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
           cliques = int(N/clique_size)
           clique_size = int(clique_size) #clique_size is a np.float64!
           G = comm_caveman_relink(cliques=cliques, clique_size = clique_size, 
-                                  p = p, relink_rnd = clique_size, numb_inring_links = numb_inring_links)
+                                  p = p, relink_rnd = clique_size, p_clique = 0, numb_inring_links = numb_inring_links)
           
           for node in range(clique_size*cliques):
             if node == 0: print("node", node, type(node), 
@@ -2067,13 +2095,13 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
                  numb_inring_links = numb_inring_links, avg_pl = avg_pl, std_avg_pl = std_avg_pl)
         print("\nThe end-time of the generation of one SIR plot is", dt.datetime.now()-start_time)
 
-def parameters_net_and_sir(folder = None, p_max = 0.3):
+def parameters_net_and_sir(folder = None):
   'progression of net-parameters'
   import numpy as np
   'WARNING: put SAME beta, mu, D and p to compare at the end the different topologies'
   #k_prog = np.concatenate(([1.0],np.arange(2,20,2)))
   p_prog = [0, 0.3] #0.2 misses
-  beta_prog = [0.015, 0.05, 0.1, 0.2, 0.4, 0.6]; 
+  beta_prog = [0.015, 0.05, 0.1, 0.2, 0.4]; 
   days_prog = [14,9,6,4,1] #mu_prog = [0.07, 0.11, 0.167, 0.25, 1]
   mu_prog = [1/x for x in days_prog]
   # old @ 5.9.2021: mu_prog = [0.14, 0.16, 0.2, 0.25, 0.8]#, 0.33,0.5]
@@ -2094,6 +2122,7 @@ def parameters_net_and_sir(folder = None, p_max = 0.3):
     R0_max = 300     
   if folder == "Caveman_Model": 
     k_prog = [3]
+    p_prog = [0, 0.3, 0.5]
     'k_prog = np.arange(1,11,2)' #https://www.prb.org/about/ -> Europe householdsize = 3
     #beta_prog = np.linspace(0.001,1,6); mu_prog = beta_prog
   if folder[:5] == "NNO_C": 
