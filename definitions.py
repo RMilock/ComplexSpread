@@ -371,7 +371,9 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
   
   print("Final avg_ordp_net", avg_ordp_net)
   print("\nMF-SIR loading...")
-  mf_trajectories, mf_avg_traj, mf_std_avg_traj, mf_t_c, mf_p_c = \
+  plot_mf = False
+  if plot_mf:
+    mf_trajectories, mf_avg_traj, mf_std_avg_traj, mf_t_c, mf_p_c = \
     itermean_sir(G, mf = True, mu = mu, beta = beta, start_inf = start_inf, numb_iter = numb_iter,)
 
   'plotting the many realisations'  
@@ -386,28 +388,30 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
 
   lw_traj = 1
   for j in range(numb_iter):
-    ax1.plot(mf_trajectories[1][j], color = colors[1], lw = lw_traj) #MF_dni_totcases
+    if plot_mf: ax1.plot(mf_trajectories[1][j], color = colors[1], lw = lw_traj) #MF_dni_totcases
     ax1.plot(trajectories[1][j], color = colors[2], lw = lw_traj) #NET_dni_totcases
     ax2.plot(trajectories[0][j], color = colors[0], lw = 0) #NET_dni_cases
-    ax2.plot(mf_trajectories[0][j], color = colors[3], lw = 0) #MF_dni_cases
+    if plot_mf: ax2.plot(mf_trajectories[0][j], color = colors[3], lw = 0) #MF_dni_cases
     #ax2.plot(trajectories[2][j], color = colors[0], lw = 0) #NET_infected
     #ax2.plot(mf_trajectories[2][j], color = colors[3], lw = 0) #MF_infected'''
   
   'define a string_format to choose the best way to format the std of the mean'
-  value = mf_std_avg_traj[1][-1]
-  string_format = str(np.round(value*100,1))[:3]
-  if string_format == "0.0" and np.isclose(value, 0):
-    string_format = format(value, ".1e")
+  if plot_mf:
+    value = mf_std_avg_traj[1][-1]
+    string_format = str(np.round(value*100,1))[:3]
+    if string_format == "0.0" and np.isclose(value, 0):
+      string_format = format(value, ".1e")
 
   lw_totc, ls_totc = 5, "solid"
-  ax3.plot(mf_avg_traj[1], label=r"MF:TotalCases (%s%%$\pm$%s%%)"\
-    % (np.round(mf_avg_traj[1][-1]*100,1), string_format ), \
-    color = "tab:orange", lw = lw_totc, ls = ls_totc)
+  if plot_mf:
+    ax3.plot(mf_avg_traj[1], label=r"MF:TotalCases (%s%%$\pm$%s%%)"\
+      % (np.round(mf_avg_traj[1][-1]*100,1), string_format ), \
+      color = "tab:orange", lw = lw_totc, ls = ls_totc)
   ax3.plot(avg_traj[1], label=r"Net:TotalCases (%s%%$\pm$%s%%)" %
     (np.round(avg_traj[1][-1]*100,1), np.round(std_avg_traj[1][-1]*100,1) ), \
     color = "green", lw = lw_totc, ls = ls_totc) #net:cd_inf
 
-  'plot horizontal line to highlight the initial infected'
+  'plot horizontal line to highlight the initial infected'  
   ax1.axhline(start_inf/N, color = "r", ls="dashed", \
             label = "Start_Inf/N (%s%%) "% np.round(start_inf/N*100,1))
   ax2.axhline(start_inf/N, color = "r", ls="dashed")
@@ -425,7 +429,8 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
         pass
     return lst
 
-  ax2.plot(mf_avg_traj[0], label="MF:DailyNewInf", \
+  if plot_mf:
+    ax2.plot(mf_avg_traj[0], label="MF:DailyNewInf", \
     color = "darkviolet", lw = lw_totc) #prevalence
   ax2.plot(avg_traj[0], label="Net:DailyNewInf", \
     color = "tab:blue", lw = lw_totc) #prevalence
@@ -443,11 +448,12 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
             label = label)
   else: ax3.plot([], marker = "*", mfc = gcolor, mec = "k", ms = ms - 10, label = label)
   
-  label = r"MF:$t_c,p_c$" + f" = ({rhu(mf_t_c)}d,{rhu(mf_p_c,2)})"
-  mfmc = "orange"
-  if mf_t_c > 0: ax3.plot(mf_t_c, mf_p_c, color = mfmc, marker = "*", markersize = ms - 10, mec = "black",
-            label = label)
-  else: ax3.plot([], marker = "*", mfc = mfmc, mec = "k", ms = ms - 10, label = label)
+  if plot_mf:
+    label = r"MF:$t_c,p_c$" + f" = ({rhu(mf_t_c)}d,{rhu(mf_p_c,2)})"
+    mfmc = "orange"
+    if mf_t_c > 0: ax3.plot(mf_t_c, mf_p_c, color = mfmc, marker = "*", markersize = ms - 10, mec = "black",
+              label = label)
+    else: ax3.plot([], marker = "*", mfc = mfmc, mec = "k", ms = ms - 10, label = label)
 
   'exclude first and last yticks'
   
@@ -482,67 +488,66 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
   handles = handles + handles2 + handles3
   labels = labels + labels2 + labels3
 
-  order = [4,5,2,3,1,6,7,0]
+
+  if plot_mf: order = [4,5,2,3,1,6,7,0]
+  else: order = [0,1,2,3]
   #print("handles, labels", handles, labels)
   loc = "best"
   folders = ["WS_Pruned"]
   #if "WS_Pruned" in folders: loc = "center right"
-  if True: #R0 <= 1:
-    leg = ax3.legend([handles[idx] for idx in order],[labels[idx] for idx in order],
-              bbox_to_anchor=(1.07, 1), edgecolor="black", shadow = False, framealpha = 0.6, loc='upper left')
-    leg.get_frame().set_linewidth(2.5)
-  else:  leg = ax3.legend([handles[idx] for idx in order],[labels[idx] for idx in order],
-              edgecolor="black", shadow = False, framealpha = 0.6, loc=loc)
-    
+  leg = ax3.legend([handles[idx] for idx in order],[labels[idx] for idx in order],
+            bbox_to_anchor=(1.07, 1), edgecolor="black", shadow = False, framealpha = 0.6, loc='upper left')
+  leg.get_frame().set_linewidth(2.5)
+  
   leg.set_zorder(ax3.get_zorder()+1)
 
   return avg_ordp_net, std_avg_ordp_net, Rc_net, avgk2, std_avgk2,
 
 def rhu(n, decimals=0, integer = False): #round_half_up
-    import math
-    multiplier = 10 ** decimals
-    res = math.floor(n*multiplier + 0.5) / multiplier
-    if integer: return int(res)
-    return res
+  import math
+  multiplier = 10 ** decimals
+  res = math.floor(n*multiplier + 0.5) / multiplier
+  if integer: return int(res)
+  return res
 
 def mean_std_avg_pl(G, N = 0):
-        import datetime as dt
-        import networkx as nx
-        from math import sqrt
-        if not N:
-          N = G.number_of_nodes()
+  import datetime as dt
+  import networkx as nx
+  from math import sqrt
+  if not N:
+    N = G.number_of_nodes()
 
-        import datetime as dt
-        start = dt.datetime.now()
-        avg_pl = max([  
-                      nx.average_shortest_path_length(C) for C in (G.subgraph(c).copy() for c in \
-                      nx.connected_components(G))
-                      ])
-        print(f'avg_pl in mean_std: {avg_pl}',)
-        #print(f'The total time of avg_pl is: {dt.datetime.now()-start}')
-        
-        'calculate the std_avg_pl'
-        #start = dt.datetime.now()
-        std_avg_pl = 0
-        for node in G:
-            path_length=nx.single_source_shortest_path_length(G, node)
-            #print(f'path_length.values(): {path_length.values()}',)
-            sq_deviation = [(x-avg_pl)**2/2 for x in path_length.values()]
-            #print(f'sq_deviation: {sq_deviation}',)
-            std_avg_pl += sum(sq_deviation) / (N/2*(N-1)-1)
-            #print(f'std_avg_pl: {std_avg_pl}',)
-        std_avg_pl = sqrt(std_avg_pl)
-        print(f'std_avg_pl in mean_std: {std_avg_pl}',)
-        return avg_pl, std_avg_pl
+  import datetime as dt
+  start = dt.datetime.now()
+  avg_pl = max([  
+                nx.average_shortest_path_length(C) for C in (G.subgraph(c).copy() for c in \
+                nx.connected_components(G))
+                ])
+  print(f'avg_pl in mean_std: {avg_pl}',)
+  #print(f'The total time of avg_pl is: {dt.datetime.now()-start}')
+  
+  'calculate the std_avg_pl'
+  #start = dt.datetime.now()
+  std_avg_pl = 0
+  for node in G:
+      path_length=nx.single_source_shortest_path_length(G, node)
+      #print(f'path_length.values(): {path_length.values()}',)
+      sq_deviation = [(x-avg_pl)**2/2 for x in path_length.values()]
+      #print(f'sq_deviation: {sq_deviation}',)
+      std_avg_pl += sum(sq_deviation) / (N/2*(N-1)-1)
+      #print(f'std_avg_pl: {std_avg_pl}',)
+  std_avg_pl = sqrt(std_avg_pl)
+  print(f'std_avg_pl in mean_std: {std_avg_pl}',)
+  return avg_pl, std_avg_pl
 
-def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 3, numb_iter = 50, numb_inring_links = 0, avg_pl = -1, std_avg_pl = -1):
+def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001, mu = 0.16, R0_max = 16,  start_inf = 10, numb_iter = 50, numb_inring_links = 0, avg_pl = -1, std_avg_pl = -1):
   import os.path
   from definitions import my_dir, func_file_name, N_D_std_D, mean_std_avg_pl
   import datetime as dt
   import matplotlib.pylab as plt
   start_time = dt.datetime.now()
 
-  print("numb_iter", numb_iter)
+  print("numb_iter", numb_iter)  
   mode = "a"
   #if done_iterations == 1: mode = "w"
   my_dir = my_dir() #"/home/hal21/MEGAsync/Thesis/NetSciThesis/Project/Plots/Tests/"
@@ -698,7 +703,7 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
       #pp_ordp_pmbD_dic = json.dumps(ordp_pmbD_dic, sort_keys=False, indent=4)
       #print("Start dic", pp_ordp_pmbD_dic)
 
-      print("\nTo be added pmbD itermean:", p, mu, beta, D, value)
+      print("\nTo be added pmbD itermean:", p, mu, beta, D, value)        
       
       if folder == "WS_Pruned":
         d = ordp_pmbD_dic #rename ordp_pmbD_dic to have compact wrinting
@@ -719,7 +724,40 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
           else: d[p] = {**d[p], **{mu:{beta:{D:[std_D,value,std]}}} }
         else:
           d[p][mu][beta][D] = [std_D,value,std]
+      '''   
+          NEED TO TEST IT
+            def update(d, D, std_D, p, beta, mu, value, std):
+          def update_ordp_dict(d, D, std_D, p, beta, mu, value, std):
+              if p in d.keys():
+                if mu in d[p].keys():
+                    if beta in d[p][mu].keys():
+                        d[p][mu][beta][D] = [std_D,value,std]
+                    else: d[p][mu] = { **d[p][mu], **{beta: {D:[std_D, value, std]}} }
+                else: d[p] = {**d[p], **{mu:{beta:{D:[std_D,value,std]}}} }
+              else:
+                d[p][mu][beta][D] = [std_D,value,std]
 
+          #print(f'starting d: {d}',)
+          try: 
+              #print(f'Entered in try',)        
+              Dkeys = list(d[p][mu][beta].keys())
+              #print(f'Dkeys: {Dkeys}',)
+              for Dkey in Dkeys:
+                  if Dkey-1 < D < Dkey+1: 
+                      #print("Inside the if")
+                      #print(f'Not saving dic, D similar: {Dkey}')
+                  else:
+                      #print(f'Check updating dict',)
+                      update_ordp_dict(d, D, std_D, p, beta, mu, value, std)
+                      #print(f'd: {d}',)         
+          except:
+              #print(f'turned into except',)
+              update_ordp_dict(d, D, std_D, p, beta, mu, value, std)
+              #print(f'd: {d}',)
+      '''
+          
+      print(f'\nAfter Dic Insertion:',)
+      
       _, ax = plt.subplots(figsize = (24,14))
 
       'WARNING: here suptitle has beta // mu but the dict is ordp[p][mu][beta][D] = [std_D, ordp, std_ordp]'
@@ -1219,7 +1257,7 @@ def replace_lredges(G, p = 0):
     def fnode_edges(G, node):
         return G.edges(node)
 
-    random.seed(2)
+    #random.seed(2)
     len_start = len(list(G.edges()))
     for node in G.nodes():
       if random.random() < p and len(G.edges(node)):
