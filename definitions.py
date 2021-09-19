@@ -26,7 +26,7 @@ def rmv_folder(folder, rmv_flag = False):
   if rmv_flag:
     my_dir = my_dir()+folder
     if os.path.exists(my_dir):
-      rmv_flag = input("Really need to delete it (1) or no(0)?")
+      #rmv_flag = input("Really need to delete it (1) or no(0)?")
       if bool(int(rmv_flag)):
         print(f"I'm deleting since b(rmv_flag) is {bool(int(rmv_flag))}")
         try:
@@ -75,8 +75,8 @@ def func_file_name(folder, adj_or_sir, N, D, p, R0 = -1, m = 0, N0 = 0, beta = 0
     
 
   if adj_or_sir == "SIR":
-    if folder == "Caveman_Model":
-      return f'{folder}_{adj_or_sir}_{N}_{rhu(D,3)}_{rhu(p,3)}.png'
+    #if folder == "Caveman_Model":
+    #  return f'{folder}_{adj_or_sir}_{N}_{rhu(D,3)}_{rhu(p,3)}.png'
     return folder + "_%s_R0_%s_N%s_D%s_p%s_beta%s_d%s"% (
             adj_or_sir, int(rhu(R0)),
             N,rhu(D), rhu(p,3), rhu(beta,3), rhu(mu**(-1)) ) + ".png"
@@ -371,7 +371,7 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
   
   print("Final avg_ordp_net", avg_ordp_net)
   print("\nMF-SIR loading...")
-  plot_mf = False
+  plot_mf = True
   if plot_mf:
     mf_trajectories, mf_avg_traj, mf_std_avg_traj, mf_t_c, mf_p_c = \
     itermean_sir(G, mf = True, mu = mu, beta = beta, start_inf = start_inf, numb_iter = numb_iter,)
@@ -380,13 +380,13 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
   #from matplotlib import cm
   #green = cmap.get_cmap("Greens")(avg_traj[1][-1] / std_avg_traj[1][-1])
   #orange = cmap.get_cmap("Oranges")(mf_avg_traj[1][-1] / mf_std_avg_traj[1][-1])
-  colors = ["paleturquoise", "tan", "limegreen", "thistle"] #mediumaquamarine
+  colors = ["paleturquoise", "tan", "tab:green", "thistle"] #limegreen
   if beta*D/mu <= 1: colors = ["paleturquoise","coral","seagreen", "thistle"]
   ax1.grid(color = "darkgrey", ls = "--", lw = 1)
   ax2 = ax1.twinx()
   ax3 = ax1.twiny()
 
-  lw_traj = 1
+  lw_traj = 1.3
   for j in range(numb_iter):
     if plot_mf: ax1.plot(mf_trajectories[1][j], color = colors[1], lw = lw_traj) #MF_dni_totcases
     ax1.plot(trajectories[1][j], color = colors[2], lw = lw_traj) #NET_dni_totcases
@@ -435,8 +435,6 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
   ax2.plot(avg_traj[0], label="Net:DailyNewInf", \
     color = "tab:blue", lw = lw_totc) #prevalence
   
-  #ax2.plot(mf_avg_traj[2], label="MF:ODE_Inf", \
-  #  color = "darkviolet", lw = 0, ls = ls_totc) #prevalence
   ax2.plot(avg_traj[2], label="Net:Infected", \
     color = "cadetblue", ms = 8, marker = "o", lw = 0) #prevalence
   
@@ -490,7 +488,7 @@ def plot_sir(G, ax1, folder = None, beta = 1e-3, mu = 0.05, start_inf = 10, numb
 
 
   if plot_mf: order = [4,5,2,3,1,6,7,0]
-  else: order = [0,1,2,3]
+  else: order = [3,2,1,0]
   #print("handles, labels", handles, labels)
   loc = "best"
   folders = ["WS_Pruned"]
@@ -958,7 +956,7 @@ def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = Fals
   plot_params()
 
   'plot G, adj_mat, degree distribution'
-  plt.figure(figsize = (20,20), ) #20,20
+  plt.figure(figsize = (22,22), ) #20,20
 
   ax = plt.subplot(221)  
   'start with degree distribution'
@@ -970,10 +968,11 @@ def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = Fals
   else: print("len(long_range_edges)", length_long_range)
   #folders = ["WS_Pruned","BA_Model"]
   #if folder in folders: 
-  width = min(3,0.2*N/max(1,len(long_range_edges)))
+  width = min(3,0.8*N/max(1,len(long_range_edges)))
   if folder== "Caveman_Model":
     nx.draw(G, pos, node_color=list(partition.values()), node_size = 5, width = 0.5, with_labels = False)
   else: nx.draw_circular(G, ax=ax, with_labels=False, font_size=20, node_size=25, width=width)
+
   
   #ax.text(0,1,transform=ax.transAxes, s = "D:%s" % D)
 
@@ -1010,8 +1009,9 @@ def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = Fals
   axs.set_xlim(bins[0],bins[-1]) 
 
   if folder == "BA_Model": 
+    print("")
     #axs.set_xscale("log")
-    axs.set_yscale("log")
+    #axs.set_yscale("log")
 
   leg = axs.legend(loc = "best")
   leg.get_frame().set_linewidth(2.5)
@@ -1026,7 +1026,6 @@ def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = Fals
     
   if std_avg_pl == -1 or avg_pl == -1: raise ValueError("avg_pl = -1 or std_avg_pl = -1")
   plt.suptitle(suptitle_AdjMat(G, folder, D, std_D, p, numb_inring_links, avg_pl = avg_pl, std_avg_pl = std_avg_pl))
-
 
   'TO SAVE PLOTS'
   if not os.path.exists(my_dir): os.makedirs(my_dir)
@@ -1070,7 +1069,9 @@ def save_nes(
   G, p, folder, adj_or_sir, R0_max = 12, m = 0, N0 = 0, 
   beta = 0.3, mu = 0.3, my_print = True, pos = None, 
   partition = None, dsc_sorted_nodes = False, done_iterations = 1, 
-  chr_min = 0, ordp_pmbD_dic = 0, numb_inring_links = 1, avg_pl = -1, std_avg_pl = -1): #save new_entrys
+  chr_min = 0, ordp_pmbD_dic = 0, numb_inring_links = 1, avg_pl = -1, std_avg_pl = -1,
+  start_inf = 10
+  ): #save new_entrys
 
   'save net only if does not exist in the .txt. So, to overwrite all just delete .txt'
   from definitions import already_saved_list, func_file_name, N_D_std_D
@@ -1105,7 +1106,8 @@ def save_nes(
     if adj_or_sir == "SIR": 
       save_sir(G, folder = folder, beta = beta, mu = mu, p = p, R0_max = R0_max, 
               done_iterations = done_iterations, ordp_pmbD_dic = ordp_pmbD_dic, 
-              numb_inring_links = numb_inring_links, avg_pl = avg_pl, std_avg_pl = std_avg_pl)
+              numb_inring_links = numb_inring_links, avg_pl = avg_pl, std_avg_pl = std_avg_pl,
+              start_inf = start_inf)
 
 
 def save_log_params(folder, text):
@@ -1774,18 +1776,17 @@ def caveman_defs():
   def _find_between_community_edges(g, partition):
 
       edges = dict()
-
+      #print(f'edges: {g.edges()}', len(g.edges()))
       for (ni, nj) in g.edges():
           ci = partition[ni]
           cj = partition[nj]
-
           if ci != cj:
-              try:
-                edges[(ci, cj)] += [(ni, nj)] #SHOULD BE += [(NI,NJ)] HERE
-                #print("ni, nj", ni, nj)
-                #print("ci,cj", ci,cj); print("edgesij", edges[(ci, cj)])
-              except KeyError:
-                  edges[(ci, cj)] = [(ni, nj)]
+            if (ci,cj) in edges.keys():
+              edges[(ci, cj)] = [*edges[(ci, cj)], (ni, nj)] #SHOULD BE += [(NI,NJ)] HERE
+              print("ni, nj", ni, nj)
+              print("ci,cj", ci, cj); print("edgesij", edges[(ci, cj)])
+            else:
+              edges[(ci, cj)] = [(ni, nj)]
 
       return edges
 
@@ -1889,7 +1890,9 @@ def caveman_defs():
           if npr.uniform() < p: 
             #print(f"with probability {p}, added relink {(test,lr_node)}")
             G.add_edge(test,lr_node)
-      if p_clique:
+      
+      'rnd rewiring clique by clique -- it produces disc net => go w/ the first numb_inring_links.'
+      if p_clique: 
         first_cl_node = clique_size*clique
         nodes_inclique = np.arange(first_cl_node, first_cl_node + clique_size)
         next_clique_nodes = np.arange(clique_size*(1+clique), clique_size*(2+clique)) % total_nodes
@@ -1983,7 +1986,7 @@ class NestedDict(dict):
 
 '===main, i.e. automatize common part for different nets'
 def main(folder, N, k_prog, p_prog, beta_prog, mu_prog, 
-  R0_min, R0_max, epruning = False):
+  R0_min, R0_max, start_inf, epruning = False):
   from definitions import save_log_params, save_nes, \
     NestedDict, jsonKeys2int, my_dir, mean_std_avg_pl
   from itertools import product
@@ -2007,9 +2010,9 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
   print("Total Iterations:", total_iterations)
   
   text = "N %s;\nk_prog %s, len: %s;\np_prog %s, len: %s;\nbeta_prog %s, len: %s;\nmu_prog %s, \
-        len: %s;\nR0_min %s, R0_max %s; \nTotal Iterations: %s;\n---\n" \
+        len: %s;\nR0_min %s, R0_max %s; \nstart_inf: %s; \nTotal Iterations: %s;\n---\n" \
         % (N, k_prog, len(k_prog), p_prog, len(p_prog), beta_prog, len(beta_prog), \
-        mu_prog, len(mu_prog),  R0_min, R0_max, total_iterations)
+        mu_prog, len(mu_prog),  R0_min, R0_max, start_inf, total_iterations)
   save_log_params(folder = folder, text = text)
 
   for D,numb_inring_links,p,beta,mu in product(k_prog, numb_inring_links, p_prog, beta_prog, mu_prog): #long product
@@ -2123,14 +2126,15 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
         import datetime as dt
         start_time = dt.datetime.now()       
         avg_pl, std_avg_pl = save_nes(G, m = m, N0 = N0, pos = pos, partition = partition,
-                 p = p, folder = folder, adj_or_sir="AdjMat", done_iterations=done_iterations, numb_inring_links = numb_inring_links, avg_pl = avg_pl, std_avg_pl = std_avg_pl)
+                 p = p, folder = folder, adj_or_sir="AdjMat", done_iterations=done_iterations, numb_inring_links = numb_inring_links, avg_pl = avg_pl, std_avg_pl = std_avg_pl,
+                 start_inf = start_inf)
         print("\nThe end-time of 1 generation of one AdjMat plot is", dt.datetime.now()-start_time)
 
         start_time = dt.datetime.now()       
         save_nes(G, m = m, N0 = N0,
                  p = p, folder = folder, adj_or_sir="SIR", R0_max = R0_max, beta = beta, mu = mu, 
                  ordp_pmbD_dic = ordp_pmbD_dic, done_iterations=done_iterations, 
-                 numb_inring_links = numb_inring_links, avg_pl = avg_pl, std_avg_pl = std_avg_pl)
+                 numb_inring_links = numb_inring_links, avg_pl = avg_pl, std_avg_pl = std_avg_pl, start_inf = start_inf)
         print("\nThe end-time of the generation of one SIR plot is", dt.datetime.now()-start_time)
 
 def parameters_net_and_sir(folder = None):
@@ -2138,6 +2142,7 @@ def parameters_net_and_sir(folder = None):
   import numpy as np
   'WARNING: put SAME beta, mu, D and p to compare at the end the different topologies'
   #k_prog = np.concatenate(([1.0],np.arange(2,20,2)))
+  start_inf = 10
   p_prog = [0, 0.3] #0.2 misses
   beta_prog = [0.015, 0.05, 0.1, 0.2, 0.4]; 
   days_prog = [14,9,6,4,1] #mu_prog = [0.07, 0.11, 0.167, 0.25, 1]
@@ -2159,11 +2164,11 @@ def parameters_net_and_sir(folder = None):
     #k_prog = np.hstack((np.arange(1,13,2),np.arange(14,34,5)))
     R0_max = 300     
   if folder == "Caveman_Model": 
-    k_prog = [3]
-    p_prog = [0, 0.3, 0.5]
+    k_prog = [3, 5, 8]
+    p_prog = [0.3, 0.5, 1]
     'k_prog = np.arange(1,11,2)' #https://www.prb.org/about/ -> Europe householdsize = 3
     #beta_prog = np.linspace(0.001,1,6); mu_prog = beta_prog
   if folder[:5] == "NNO_C": 
     'beta_prog = [0.05, 0.1, 0.2, 0.25]; mu_prog = beta_prog #np.linspace(0.01,1,4)'
 
-  return k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max 
+  return k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max, start_inf
