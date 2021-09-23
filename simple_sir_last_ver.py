@@ -7,7 +7,7 @@ from itertools import product
 import os #to create a folder
 from definitions import save_nes, pow_max, save_log_params, parameters_net_and_sir
 from definitions import save_log_params, save_nes, \
-    NestedDict, jsonKeys2int, my_dir, rhu
+    NestedDict, jsonKeys2int, my_dir, rhu, rmv_folder, mean_std_avg_pl
 from itertools import product
 import networkx as nx
 import json
@@ -21,25 +21,27 @@ I "round_half_up" since, as for N = 15, k = N/2 = 8, in many cases
 it drives to a nearer pruning.
 '''
 
+rmv_flag = False
+
 'rewire all the edges with a probability of p'
-N = int(1e2); p_max = 0.3
+N = int(1e2)
 
 def even_int(x):
   if int(x) % 2 != 0: return int(x-1)
   return int(x)
-
-for pruning in [False]: 
+1e2
+for pruning in [True]: 
   if pruning:
     folder = "WS_Pruned"
+    rmv_folder(folder, rmv_flag)
 
     'load a dic to save D-order parameter'
     ordp_pmbD_dic = NestedDict()  
-    _, p_prog, _, mu_prog, R0_min, R0_max =  parameters_net_and_sir(folder = folder, p_max = p_max) 
+    _, p_prog, _, mu_prog, R0_min, R0_max, start_inf =  parameters_net_and_sir(folder = folder) 
     #old mu_prog: np.linspace(0.16,1,10)
     #R0_min = 0; R0_max = 4
-    #p_prog = np.linspace(0,p_max,int(p_max*10)+1)
     print("---I'm pruning!")
-    betas = [5e-4]
+    betas = [8.9e-5]
 
     'In WS model, if D = odd, D = D - 1. So, convert it now'
     k_prog = [even_int(N/x) for x in \
@@ -59,9 +61,9 @@ for pruning in [False]:
     print("Total SIR Pruned Iterations:", total_iterations)
 
     'save parameters'
-    text = "N %s;\nk_prog %s, len: %s;\np_prog %s, len: %s;\nbeta_prog %s, len: %s;\nmu_prog %s, len: %s;\nR0_min %s, R0_max %s; \nTotal Iterations: %s;\n---\n" \
+    text = "N %s;\nk_prog %s, len: %s;\np_prog %s, len: %s;\nbeta_prog %s, len: %s;\nmu_prog %s, len: %s;\nR0_min %s, R0_max %s; start_inf %s; \nTotal Iterations: %s;\n---\n" \
             % (N, k_prog, len(k_prog), p_prog, len(p_prog), beta_prog, len(beta_prog), \
-            mu_prog, len(mu_prog),  R0_min, R0_max, total_iterations)
+            mu_prog, len(mu_prog),  R0_min, R0_max, start_inf, total_iterations)
     save_log_params(folder = folder, text = text)  
     print("text", text)  
 
@@ -92,16 +94,18 @@ for pruning in [False]:
 
           G = nx.connected_watts_strogatz_graph( n = N, k = D, p = p, seed = 1 )
 
+          avg_pl, std_avg_pl = -1,-1
+
           import datetime as dt
           start_time = dt.datetime.now()       
-          save_nes(G, m = m, N0 = N0, pos = pos, partition = partition,
-          p = p, folder = folder, adj_or_sir="AdjMat", done_iterations=done_iterations)
+          avg_pl, std_avg_pl = save_nes(G, m = m, N0 = N0, pos = pos, partition = partition,
+                   p = p, folder = folder, adj_or_sir="AdjMat", done_iterations=done_iterations, avg_pl = avg_pl, std_avg_pl = std_avg_pl, start_inf = start_inf)
           print("\nThe total-time of one main-loop of one AdjMat is", dt.datetime.now()-start_time)
   
           start_time_total = dt.datetime.now()       
           save_nes(G, m = m, N0 = N0,
-          p = p, folder = folder, adj_or_sir="SIR", R0_max = R0_max, beta = beta, mu = mu, 
-          ordp_pmbD_dic = ordp_pmbD_dic, done_iterations=done_iterations)
+                   p = p, folder = folder, adj_or_sir="SIR", R0_max = R0_max, beta = beta, mu = mu, 
+                   ordp_pmbD_dic = ordp_pmbD_dic, done_iterations=done_iterations, avg_pl = avg_pl, std_avg_pl = std_avg_pl, start_inf = start_inf)
           print("\nThe total-time of one main-loop of one SIR is", dt.datetime.now()-start_time)
     
 
@@ -112,11 +116,13 @@ for pruning in [False]:
     
     'progression of net-parameters'
     folder = "WS_Epids"
-    k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max \
-      = parameters_net_and_sir(folder, p_max = p_max)
+    rmv_folder(folder, rmv_flag)
+
+    k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max, start_inf \
+      = parameters_net_and_sir(folder)
 
     main(folder = folder, N = N, k_prog = k_prog, p_prog = p_prog, \
-      beta_prog = beta_prog, mu_prog = mu_prog, R0_min = R0_min, R0_max = R0_max)
+      beta_prog = beta_prog, mu_prog = mu_prog, R0_min = R0_min, R0_max = R0_max, start_inf = start_inf)
 
     '''total_iterations = 0
     for D, p, beta, mu in product(k_prog, p_prog, beta_prog, mu_prog):

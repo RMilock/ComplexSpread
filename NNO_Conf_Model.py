@@ -1,18 +1,19 @@
 #import numpy as np
 #from itertools import product
-from definitions import main, parameters_net_and_sir
+from definitions import main, parameters_net_and_sir, rmv_folder
 #NNOverl_pois_net, save_log_params, plot_save_nes, \
 #  , NestedDict, my_dir, jsonKeys2int
 #import os; import json
 #import matplotlib.pylab as plt
 
-N = int(1e3); add_edges_only = True
-folder = f"NNO_Conf_Model_addE_{add_edges_only}" #add edges instead of delete&rewiring
+N = int(1e3)
+folder = f"NNO_Conf_Model" #add edges instead of delete&rewiring
+rmv_folder(folder, False)
 
-k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max =  parameters_net_and_sir(folder = folder) 
+k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max, start_inf =  parameters_net_and_sir(folder = folder) 
 
 main(folder = folder, N = N, k_prog = k_prog, p_prog = p_prog, \
-  beta_prog = beta_prog, mu_prog = mu_prog, R0_min = R0_min, R0_max = R0_max)
+  beta_prog = beta_prog, mu_prog = mu_prog, R0_min = R0_min, R0_max = R0_max, start_inf = start_inf)
 
 '''
 'progression of net-parameters'
@@ -23,7 +24,6 @@ p_prog = np.linspace(0,p_max,int(p_max*10)+1)
 beta_prog = np.linspace(0.01,1,10)
 mu_prog = np.linspace(0.01,1,8)
 R0_min = 0; R0_max = 30
-
 
 ordp_pmbD_dic = NestedDict()
 ordp_path = "".join( (my_dir(),folder,"/OrdParam/saved_ordp_dict.txt") )

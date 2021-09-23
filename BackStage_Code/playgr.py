@@ -1,38 +1,35 @@
-import matplotlib.pylab as plt
+import networkx as nx
 import numpy as np
-def rhu(n, decimals=0, integer = False): #round_half_up
-    import math
-    multiplier = 10 ** decimals
-    res = math.floor(n*multiplier + 0.5) / multiplier
-    if integer: return int(res)
-    return res
+
+# with is like your try .. finally block in this case
+dir = "/home/hal21/MEGAsync/Tour_Physics2.0/Thesis/NetSciThesis/Project/ComplexSpread/BackStage_Code/"
+txtname = "stats.txt"
+file_name = dir + txtname
+with open(file_name, 'r') as file:
+    # read a list of lines into data
+    data = file.readlines()
 
 
-
-def poisson(k, mu):
-    import math
-    return math.exp(-mu)*(mu**k) / math.factorial(k)
-
-def bernoulli(N,k,p):
-    import math
-    import scipy.special as sp
-    return sp.binom(N-1, k)*p**k*(1-p)**(N-1-k)
-
-mu, N = 30, 1e2
-p = mu / (N-1)
-k = [int(x) for x in np.arange(mu-30,mu+30)]
-k = list(filter(lambda x: x > 0, k))
-print(f'mu/N-1: {mu/(N-1)}',)
-print(f'mu: {mu}',)
+for x in data:
+    if "N" in x and "=" in x:
+        print(f'data: {data}',f'x: {x}',)
+        print('np.where(data == x)', data.index(x), )
+        data[data.index(x)] = "N = int(1e3)\n"
+    if "N" in x and "=" in x:
+        print(f'data: {data}',f'x: {x}',)
+        print('np.where(data == x)', data.index(x), )
+        data[data.index(x)] = "N = int(1e3)\n"
+    break
 
 
-yp = [poisson(x,mu) for x in k]
-yb = [bernoulli(N,x,p) for x in k]
+print("data",data)
+print("Your name: ", data[0])
 
-plt.plot(k,yp, label = "Poissonian")
-plt.plot(k,yb, label = "Bernoullian")
-plt.title(rf"Bernoullian VS Poissonian: D: {rhu(mu,3)}, D / N-1 = p = {rhu(mu/(N-1),3)}")
-plt.legend()
-plt.grid(color = "grey", lw = 0.4, ls = "--")
-plt.show()
+# now change the 2nd line, note that you have to add a newline
+#data[1] = 'Mage\n'
 
+# and write everything back
+txtname = "new_"+txtname
+file_name = dir+txtname
+with open(file_name, 'w') as file:
+    file.writelines( data )  
