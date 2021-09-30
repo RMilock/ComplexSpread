@@ -183,7 +183,7 @@ Complex systems are systems where the collective behavior of their parts entails
 In other words, the non-linear interactions among the parts of which a complex system is composed let emerge a behavior which could not be understood simply by applying the fundamental laws to its constituents.
 
 The first representation of this weaved system is by considering entities and connections among them. Thus, a powerful tool to describe it is the Network Science.
-In particular, the purpose of this thesis is to study the epidemic spreading of the COVID-19 over different topologies of the underlying social network of individuals. This phenomenon is regarded as a complex system through the analysis of the SIR model, which grasps the emergent features rather than the microscopic behavior of the disease.
+In particular, the purpose of this thesis is to study the epidemic spreading of the COVID-19 over different network topologies that mimic the underlying social network of contacts. The phenomenon is, thus, regarded as a complex system through the analysis of the SIR model, which grasps the emergent features rather than the microscopic behavior of the disease.
 
 \subsection{Models Ecosystem}
 Infectious epidemics are responsible for a significant health and economic burden on society. New diseases appear frequently and old diseases persist. Therefore, many mathematical models have been used recently to guide policy makers to mitigate the impact of new infectious diseases (e.g. Polio, H1N1 influenza and Ebola) or established ones (such as HIV, cholera and seasonal influenza).
@@ -199,64 +199,70 @@ Inside the "ecosystems" of models, there are the simple models which allow to an
 	\label{fig:perfect_model}
 \end{figure}	
 
-As suggested by the \autoref{fig:perfect_model}\footnote{\textit{"Est modus in rebus"} \label{cit:GM}} (\cite{Kiss::Ch1MathOfEpiOnNet}), models provide maximum insight where the right balance of realism (circle filled with dots, e.g. regarding epidemiology Graph-Neural-Network to predict $R_t$ \cite{Davahli::USA_predicting_COVID19}) and simplicity (circle with vertical lines e.g. on epidemics the deterministic SIR model ) is met\footnote{The equilibrium point may depend on the specific posed question} (central circle with oblique lines).
+As suggested by the \autoref{fig:perfect_model}\footnote{\textit{"Est modus in rebus"} \label{cit:GM}} (\cite{Kiss::Ch1MathOfEpiOnNet}), models provide maximum insight where the right balance of realism (circle filled with dots, e.g. regarding epidemiology Graph-Neural-Network to predict $R_t$ \cite{Davahli::USA_predicting_COVID19}) and simplicity (circle with vertical lines e.g. on epidemics the deterministic SIR model) is met\footnote{The equilibrium point may depend on the specific posed question} (central circle with oblique lines).
 
 In this middle region, there could be found several works that use network analysis as the underlying structure for a phenomenon(\cite{Thurner::NetBasedExpl} \cite{VespignaniSatorras2001Epidemic} \cite{pizzuti::2020_ItalyCOVIDnetwork}); while other, more involved, that incorporate human mobility data in several hybrid models \cite{ZEROUAL::DL_COVID19, Stubinger::Incidence_Diff_Countries} in order to predict its diffusion. For the sake of simplicity, the present thesis is going to deepen the paper of \cite{Thurner::NetBasedExpl}. In particular, Thurner et al. \cite{Thurner::NetBasedExpl}, by focusing on the COVID-19 spreading in Austria and in the USA, are able to find a scenario, i.e. a combination of the SIR spreading parameters\footnote{the infection rate $\beta$, recover rate $\mu$, the long-range attachment probability $p$}, such that the outbreak is (quasi-)linear for a value of the average number of contact $D$. This behavior of the SIR model is qualitatively comparable with the curves reported by the JHUniversity reported below. 
 Hence, inspired by \cite{Thurner::NetBasedExpl}, the aim of this project is to analyze how the SIR model behaves by changing its "inner" epidemic parameters but also the topology of the underlying social network, i.e. the susceptible people.
 
 \section{A Technical Introduction}
 \label{sec:ATechIntro}
-At $8 \, \textnormal{May} \, 2020$, none of the affected COVID-19 states have reached "herd immunity" but still they reached the "epidemic peak" due to the containment restrictions on social contacts. One paradigmatic example is the case of Austria, for which the total infected cases at the first peak were $0.16\%$ of the total population, remarkably low with respect to the SARS-COV-2 "herd-immunity" level that are supposed to be at $0.8\%$ (\cite{Zingano:2021_HI_hom_pop}) of the entire (susceptible) population. 
+At $8 \, \textnormal{May} \, 2020$, none of the affected COVID-19 states have reached "herd immunity" but still they reached the "epidemic peak" due to the containment restrictions on social contacts. One paradigmatic example is the case of Austria, for which the total infected cases at the 08/05/2020 were $0.18\%$ of the total population, remarkably low with respect to the SARS-COV-2 "herd-immunity" level that are supposed to be at $0.8\%$ (\cite{Zingano:2021_HI_hom_pop}) of the entire (susceptible) population. 
 
-We produced a graphical representation of the total cases \autoref{fig:USA-AUT-ITAtotalcasesOWID} for the Austria, Italy and USA according to the reported cases of \cite{JHUGitHub:2020_TotalCases}. The purpose of this figure is to show the effect of the policies over the COVID-19 curves. Therefore, even if USA has got many more contagions of AUT and ITA, it has the lowest curve due to not restricted lockdowns. In the legend, there are reported two important quantities:
+To qualitatively show the behaviors of Austria, USA and Italy, we produced a graph of the total cases \autoref{fig:USA-AUT-ITAtotalcasesOWID} according to the reported cases of \cite{JHUGitHub:2020_TotalCases} from the first detection of COVID-19 (25/02/2020) to the starting days of May (08/05/2020). The purpose of this figure is to show the effect of the policies over the COVID-19 curves.
+Indeed, the beginning and ending dates where exhibited by the colored big marks on the curves of the total cases. Since for the USA all the states could behave differently, we chose to display the starting date of the first (California) and the last (Missouri and South Dakota) states; while we report only one ending date as the quoted states ended the stay-at-home restriction at the same time.
+Therefore, even if USA has got many more contagions of Austra and Italy, it has the lowest curve due to not restricted lockdowns which did not flatten the number of total cases. 
+In the legend, there are reported two important quantities:
 \begin{itemize}
 	\item $max/min$ is defined as the "growth factor" f (see \autoref{ch:Methodology}) is the ratio among $max$ (the total cases at the end of the figure) and $min$ (the total cases at the beginning of the figure);
 	\item $max / totp$ where "$max$" is the total cases at the end, while "$totp$" is the total population for each state according to \cite{PopulationEstimate}.
 \end{itemize}
-In particular the infected per state range are: 2-15774 (AUT), 453-217185 (ITA), 16-1295396 (USA) \cite{Anderson:1972_MoreIsDifferent}. In turn, this means that Austria could track down the COVID-19 since its early stages; while Italy began already with a considerable amount of cases. This means that even if Austria temporally started the lockdown restrictions after Italy, considering also its starting cases it has anticipated much the italian policies. Therefore at 08/05/2020, the total infected were smaller than the italian ones.
-Moreover, the starting and ending dates where exhibited by the colored big marks on the curves of the total cases. Since for the USA all the states could behave differently, we chose to display the starting date of the first (California) and the last (Missouri and South Dakota) states; while we report only one ending date as the quoted states ended the stay-at-home restriction at the same time.
+In particular, the ranges of infected individuals displayed by the each state are the following: 2-15774 (AUT), 453-217185 (ITA), 16-1295396 (USA) \cite{Anderson:1972_MoreIsDifferent}. In turn, this means that Austria could track down the COVID-19 since its early stages; while Italy began already with a considerable amount of cases. Furthermore, the infected at the beginning of the lockdown (for the USA the stay-at-home-order of the California) are also reported in the legend: 1018 (AUT), 12462 (ITA), 13663 (USA). This means that even if Austria temporally started the lockdown restrictions after Italy, considering also its starting cases it has anticipated much the italian policies. Therefore at 08/05/2020, the total infected were smaller than the italian ones.
 \begin{figure}[tbp]
 	\centering
 	\includegraphics[width = \textwidth]{Introduction/COVID-RealStates_2020-03-25.png}
 	\caption{The number of total cases normalized to their maximum value in the period 25/02/20 - 08/05/20. The dates of the first lockdown are: 16/03 - 14/04/20 (AUT); 11/03 - 04/05/20 (ITA); California: 19/03 - 04/05; Missouri: 6/04 - 04/05. USA states with no-stay-at-home restrictions: Arkansas,	Iowa,Nebraska,North Dakota,	South Dakota}
 	\label{fig:USA-AUT-ITAtotalcasesOWID}
 \end{figure}
-The most striking observation is that the number of total cases (\autoref{fig:USA-AUT-ITAtotalcasesOWID}), after early-stages when Non-Pharmaceutical-Interventions (NPIs), i.e. lockdown, were at work, exhibits a (quasi-)linear growth for an extended time interval in contrast with the "S-shaped" logistic curve predicted by the standard compartmental models. The extension of the linear regime depends on the onset of the measures; while for early stages, as it was the case for many countries \cite{Thurner::NetBasedExpl} ($8 \, \textnormal{May} \, 2020$), an exponential growth dominates the spreading of the disease.
-By taking care of the modification of the underlying social network structure, in this present thesis, we want to (qualitatively) recover the spreading trends for the states that have or have not applied the NPIs measures. \newline
+The most striking observation is that the number of total cases (\autoref{fig:USA-AUT-ITAtotalcasesOWID})for USA, after early-stages when the stay-at-home order was not at work, exhibits a (quasi-)linear growth for an extended time interval in contrast with the "S-shaped" logistic curve predicted by the standard compartmental models. The extension of the linear regime depends on the onset of the measures; while for early stages, as it was the case for many countries \cite{Thurner::NetBasedExpl} ($8 \, \textnormal{May} \, 2020$), an exponential growth dominates the spreading of the disease as in \autoref{fig:USA-AUT-ITAtotalcasesOWID}.
+By taking care of the modification of the underlying social network structure, in this present thesis, we want to (qualitatively) recover the spreading trends for the states that have or have not applied the Non-Pharmaceutical-Intervations (NPIs). \newline
 Specifically, an infection may occur for two reasons:
 \begin{enumerate}
     \item interaction between an infected and a susceptible person;
     \item contact is "intense" (e.g. long, close,...) enough to lead to a disease transmission.
 \end{enumerate}
 Hence, the rationale behind the social distancing is that it takes to a reduction of both of these factors.
-On the other hand, the analytically solvable SIR model assumes that, defined $N, D$ as the total number of individuals in the population and the average number of contacts respectively, there is the same probability that an individual encounters an infected person ("well-mixed population") and all the nodes have the same number of neighbors ($N-1$ or $D$). This approach allow to recover analytical results for an epidemic spreading but it annihilates the underlying network structure. Therefore, as claimed in \cite{VespignaniSatorras2001Epidemic}, there is the need of studying how the network affects the spreading of a disease, but still no focus is put on the spreading below the epidemic threshold \cite{Thurner::NetBasedExpl} as it is the case if nodes were separated through NPIs. 
+On the other hand, the analytically solvable SIR model assumes that, defined $N, D$ as the total number of individuals in the population and the average number of contacts respectively, there is the same probability that an individual encounters an infected person ("well-mixed population") and all the nodes have the same number of neighbors ($N-1$ or $D$). This approach allows to recover analytical results for an epidemic spreading but it annihilates the underlying network structure. Therefore, as claimed in \cite{VespignaniSatorras2001Epidemic}, there is the need of studying how the network affects the spreading of a disease, but still no focus is put on the spreading below the epidemic threshold \cite{Thurner::NetBasedExpl} as it is the case if nodes were separated through NPIs. 
 In this thesis, the main goal is to grasp the relevant features of a complex social network in presence of NPIs and compare them with respect to a "well-mixed" population model.
-In detail, by changing the epidemic parameters, we let the SIR Model evolve in different network topologies such as standard models of the graph-theory ("Erdös-Rényi","Scale-Free", "Caveman Model") but also a new involved topology, i.e. a poissonian Small-World Network. As a benchmark of a "well-mixed" population, it has been used an "annealed" mean-field (see ??) which is a natural realization of a mean-field network with a fixed average number of contacts per node.
-Furthermore, $R_0 := \beta \cdot D/\mu$ is heuristically defined as the the average number of new infections caused by an individual in a completely susceptible population\footnote{The susceptible individuals are chosen according to "epidemic targets", e.g. only children for the measles} \cite{Kiss::MathOfEpiOnNet}. Moreover, it is well consolidated that for $R_0 > 1$ an epidemic is possible (not guaranteed); while for $R_0 < 1$ the disease will die out. 
-Thus, these informations drive naturally to suppose that $R_0$ could also be a signal of the strength of an epidemic outbreak. Instead, this is not the case, since, as reported in the section \autoref{ch:Results}, for equal $R_0$ values there could be different behavior of a disease. Thus, a new parameter has to be introduced that has to:
+In detail, by changing the epidemic parameters, we let the SIR Model evolve in different network topologies such as standard models of the graph-theory ("Watts-Strogatz","Scale-Free", "Caveman Model") but also a new involved topology, i.e. a poissonian Small-World Network. As a benchmark of a "well-mixed" population, it has been used an "annealed" mean-field (see \autoref{sec:Annealed_MF_Network}) which is a natural realization of a mean-field network with a fixed average number of contacts per node.
+To account for the epidemic onset at early times, we used the \textit{basic reproduction number}, namely  $R_0 := \beta \cdot D/\mu$. This quantity is defined as the the average number of new infections caused by an individual in a completely susceptible population\footnote{The susceptible individuals are chosen according to "epidemic targets", e.g. only children for the measles} \cite{Kiss::MathOfEpiOnNet}. Moreover, it is well consolidated that for $R_0 > 1$ an epidemic is possible (not guaranteed); while for $R_0 < 1$ the disease will die out. 
+Thus, these informations drive naturally to suppose that $R_0$ could also be a signal of the strength of an epidemic outbreak. Instead, this is not the case, since, as reported in the section \autoref{sec:RegLat_p0}, for equal $R_0$ values there could be different behavior of the disease. Thus, to account for the "epidemic severity", i.e. the final outbreak size, a new parameter has to be introduced that has to:
 \begin{itemize}
 	\item grasp the different behavior of epidemics;
 	\item depend only on the initial condition, i.e. network metrics (e.g. "long-range" parameter $p$) and disease parameters ($\beta \textnormal{ and } \mu$).
 \end{itemize}
-In particular, $R_0$ should depend on the underlying topology, but it worths anticipating that the considered epidemics model are not designed for this scope: both the homogeneous and the heterogeneous models are averaging the network properties \autoref{ch:sir-models}. 
+In particular, $R_0$ should depend on the underlying topology, but it worths anticipating that the considered epidemics model are not designed for this scope: both the homogeneous and the heterogeneous models are averaging the network properties \autoref{ch:sir-models}. Hence, we propose a new quantity called \textit{epidemic severity} which is formally defined as 
+\begin{equation}
+	\Delta R_0 (\delta):= \frac{R_0 - R_{c-net}}{\delta}
+\end{equation}
+where $\delta:=\langle l \rangle $ is the average path length. We will describe it more deeply in \autoref{sec:def_epidemic_severity}
 
-Finally, as in \cite{Thurner::NetBasedExpl}, a "epidemic" order parameter\footnote{Precisely (see \autoref{sec:OrderParam4LinContagion}), it is the standard deviation of the daily new infected} is computed for each spread to classify a light outbreak, i.e. an outbreak which infect less than the $30\%$ of the entire population, with a stronger one. In this way, a first-order phase transition could be obtained by plotting, for sufficiently high $p$\footnote{$p$ is the long-range rewiring probability.} the order parameter against the average degree of contacts.
+Finally, as in \cite{Thurner::NetBasedExpl}, an "epidemic" order parameter\footnote{Precisely, it is the standard deviation of the daily new infected (see \autoref{sec:OrderParam4LinContagion}).} is computed for each spread to classify a light outbreak, i.e. an outbreak which infect less than the $30\%$ of the entire population, from a stronger one, with an outbreak size of $\sim 80\%$ of individuals. In this way, a kind of first-order phase transition could be obtained by plotting the order parameter against the average degree of contacts as done in \autoref{fig:Ordp_OPSW_COVID19_p0.3_panel}.
 
-On the top of the presentation of the work developed, it seems natural to deepen the area of the Network Science.
+Acquired the purposes and intentions of the thesis, it seems natural to deepen the area of the Network Science.
 
 
 \section{Network Science}
 
-Two aspects contribute to the popularity of Network Science: its universality nature of networks and the availability of large datasets\footnote{and the computational power to analyze them} which map huge networks of the furthest kind, e.g. "food-webs" or the Science of Science.
-Its roots could be found in the Graph Theory, devoted to the analysis of the networks (or graphs), and Statistical Mechanics, committed to the formalization of the dynamical processes on network, such as self-organization and information theory.
-For our purpose, the Graph Theory allows to formalize a "networky" - complex system such as the social network of the individuals over which a disease spreads; while Statistical Mechanics to develop a model focusing on its emergent characteristic.
+Two aspects contribute to the popularity of Network Science: its universality nature of networks and the availability of large datasets\footnote{In reality, also the computational power to analyze them should be remarked.} which map huge networks of the furthest kind, e.g. "food-webs" or the Science of Science.
+Its roots could be found in the Graph Theory, a mathematical branch devoted to the analysis of the networks (or graphs), and Statistical Mechanics, committed to the formalization of the dynamical processes on networks, such as self-organization and information theory.
+For our purpose, the Graph Theory allows to formalize a "networky" - complex system such as the social network of the individuals over which a disease spreads; while Statistical Mechanics to develop a model focusing on its emergent characteristic, such as a SIR model.
 
 \subsection{Graph Theory}
 \label{sec:GraphTheory}
 \begin{figure}[htbp]
 	\centering
 	\includegraphics[scale = 0.7, trim = {3cm 2cm 4cm 5cm}, clip]{Basic_SN}
-	\caption{Contacts interaction Network. A contact is defined as the droplets that reach one individual. Therefore, a symmetric edge could represent a chat among two persons; where directed edges would be a "one-way" interaction such as in a room with pre-existent droplets. The number above each edge are the weights, which could be the minutes spent in the previous quoted room}
+	\caption{Contacts interaction Network. As far as the COVID-19 interaction is concerned, a (risky) contact is defined as the human-droplets that reach one individual. Therefore, a symmetric edge could represent a chat among two persons; where directed edges would be a "one-way" interaction such as in a room with pre-existent droplets. The number above each edge are the weights, which could be the minutes spent in the previous quoted room. Lastly, we will focus on undirected and weigth-less graphs.}
 	\label{fig:basicSN}
 \end{figure}
 
@@ -264,7 +270,7 @@ A graph is a tuple (V,E) where the "V" stands for "vertexes" (1,2,3,4) while "E"
 With the same notation, an edge connecting the node\footnote{In the context of a social network, a vertex represents a person/individual} $i$ to $j$ is, often, identified by $(i,j)$.
 Formally, the labels of the vertexes are the image of any bijective embedding from the nodes to a chosen set, e.g. integer numbers. The relationship among vertexes are accounted by the edges, which could be unsymmetrical, as for $(1,4)$, and with different strength of the connection, such as $(1,4) \text{ and } (1,3)$ which. If all the edges are symmetric, i.e. if (A,B) implies (B,A), the graph is said undirected, e.g. the friendship network; otherwise it is said directed, e.g. the phone contacts network. 
 With the given definitions, it is now clear that roughly everything could be divided in vertexes connected by am arbitrary relation.
-The simplest example, is the \textit{simple graph}, which is an unweighted, undirected graph containing no graph loops, i.e. $(i,i)$ edges, or multiple edges such as multiples-$(i,j)$.
+The simplest example, is the \textit{simple graph}, which is an unweighted, undirected graph containing no graph loops, i.e. $(i,i)$ edges, or multiple edges such as multiples-$(i,j)$. It could be represented as the \autoref{fig:basicSN} forcing all the edges to be weightless and undirected.
 \begin{figure}[ht]
 	\includegraphics[width = \linewidth]{SimpleGraph_950.png}
 	\caption{Edges peculiarities. The labels are $1,2,3,4$ assigned anti-clockwise starting from the bottom}
@@ -324,7 +330,7 @@ A =
 0 & 0 & 0 & 0 \\ 
 \end{bmatrix}
 \]
-where it is encoded the direct edges since $A$ is not symmetric.
+where it is encoded the direct edges since $A$ is not symmetric. Wheter there would be a self-loop, such at $ 1 \longleftrightarrow 1 $, there would be a 1 at the first entry (position $(1,1)$) of the matrix $A$.
 
 \subsection{Degree}
 
@@ -336,8 +342,6 @@ where it is encoded the direct edges since $A$ is not symmetric.
         \label{fig:degree_clustcoefficient_pathlength}
     \end{subfigure}
 \end{figure}
-
-
 As quoted before, a (real) network could be very tangled. Thus, the degree distribution, i.e. the normalized number of vertexes with a certain degree, allows to check whether all the nodes have, or not, the same number of contacts even at a plain eye inspection. 
 
 Formally, the degree of a vertex, in a (undirected) graph, is the number of edges connected to it. We denote the degree of node $i$ by $k_i$ and, by mean of $A$, $$k_i := \sum_{i=1}^{N} A_{ij},$$ where $N$ is the number of total nodes.
@@ -348,55 +352,51 @@ For directed graphs, as in \autoref{fig:basicSN}, a distinction between the ente
 \end{equation}
 where $k_i^{in(out)}$ is the number of in-going (out-going) number of edges. 
 
-\begin{figure}[t]
-\begin{subfigure}{.5\linewidth}
-	\begin{tikzpicture}
-	\begin{axis}[ybar interval, 
-		width = \linewidth,
-		xtick align=inside,
-		ymin = 0,%, ymax=55,ymin=0, minor y tick num = 3]
-		ylabel = {Number of Nodes},
-		xlabel = {In-degrees},]
-	\addplot coordinates { (0, 0) (1, 3) (2, 0) (3, 0) (4, 0) (5, 1) (6, 0) };
-	\end{axis}
-	\end{tikzpicture}
-\end{subfigure}%
-\hfill
-\begin{subfigure}{.5\linewidth}
-	\begin{tikzpicture}
-	\begin{axis}[ybar interval, 
-		width = \linewidth,
-		xtick align=inside,
-		ymin = 0,%, ymax=55,ymin=0, minor y tick num = 3]
-		ylabel = {Number of Nodes},
-		xlabel = {Out-degrees},]
-	\addplot coordinates { (0, 0) (1, 1) (2, 0) (3, 0) (4, 0) (5, 0) (6, 0) (7,1) (8,0) };
-	\end{axis}
-	\end{tikzpicture}
-\end{subfigure}
-\caption{Degree Distribution of the \autoref{fig:basicSN}}
-\label{fig:degreed_basicSN}
-\end{figure}
+Therefore, by applying the \autoref{eq:kin_kout}\footnote{A practical check is to count the tails for the out-degree and arrows for the inner-degree. Ultimately, each sum has to equate the number of edges (a undirected edge has to be count doubled)} to \autoref{fig:basicSN}, it is possible to recover the degree distribution of the vertexes as in the \autoref{fig:degreed_basicSN}. Thus, a possibile way to build a graph would be to draw the nodes degrees from a fixed distribution and, then, connecting the nodes according to their degree. In fact, this approach, generating a \textit{Configurational Model Network}, is going to be exploited in the further chapters by using a poissonian degree distribution and connecting the vertexes only to nearest neighbors via an ad-hoc algorithm \autoref{sec:PSW_network}.
 
-Therefore, by applying the \autoref{eq:kin_kout}\footnote{A practical check is to count the tails for the out-degree and arrows for the inner-degree. Ultimately, each sum has to equate the number of edges (a undirected edge has to be count doubled)} to \autoref{fig:basicSN}, it is possible to recover the degree distribution of the vertexes as in the \autoref{fig:degreed_basicSN}. Thus, a possibile way to build a graph would be to draw the nodes degrees from a fixed distribution and, then, connecting the nodes according to their degree. In fact, this approach is going to be exploited in the further chapters by using a poissonian degree distribution and connecting the vertexes only to nearest neighbors via an ad-hoc algorithm.
-
-\section{Chapters Outline}
-In \autoref{ch:network-models}, the models used in this thesis are going to be exposed: starting from a "regular" Watts-Strogatz and Caveman models, passing to the random ones (Erdös-Rényi, Watts-Strogatz, Poissonian-Small-World models); then, ending with the scale-free ones, such as the Barabási-Albert model. 
-
-In \autoref{ch:sir-models}, two kind of SIR models are presented: the mean-field SIR model and the network one, which combine the mean-field SIR with the network structure.
+\newpage
+\begin{figure}[h]
+	\begin{subfigure}{.5\linewidth}
+		\begin{tikzpicture}
+		\begin{axis}[ybar interval, 
+			width = \linewidth,
+			xtick align=inside,
+			ymin = 0,%, ymax=55,ymin=0, minor y tick num = 3]
+			ylabel = {Number of Nodes},
+			xlabel = {In-degrees},]
+		\addplot coordinates { (0, 0) (1, 3) (2, 0) (3, 0) (4, 0) (5, 1) (6, 0) };
+		\end{axis}
+		\end{tikzpicture}
+	\end{subfigure}%
+	\hfill
+	\begin{subfigure}{.5\linewidth}
+		\begin{tikzpicture}
+		\begin{axis}[ybar interval, 
+			width = \linewidth,
+			xtick align=inside,
+			ymin = 0,%, ymax=55,ymin=0, minor y tick num = 3]
+			ylabel = {Number of Nodes},
+			xlabel = {Out-degrees},]
+		\addplot coordinates { (0, 0) (1, 1) (2, 0) (3, 0) (4, 0) (5, 0) (6, 0) (7,1) (8,0) };
+		\end{axis}
+		\end{tikzpicture}
+	\end{subfigure}
+	\caption{Degree Distribution of the \autoref{fig:basicSN}}
+	\label{fig:degreed_basicSN}
+	\end{figure}
 
 \chapter{The Network Models}
 \label{ch:network-models}
-As it could be perceived, modeling a complex (social) phenomenon\footnote{The "social" nature has been only evoked for concreteness. Nevertheless, this in-depth presentation of models is interdisciplinary as Network Science itself.}, as the epidemic spreading, in a network has two main tasks. The first is the identification of the nodes, which is a fairly simple task. The second is to pinpoint the emergent correlations in order to connect the vertexes and reproduce the phenomenon. The latter one is the real challenge in network theory.
+As it could be perceived, modeling a complex (social) phenomenon\footnote{The "social" nature has been only evoked for concreteness. Nevertheless, this in-depth presentation of models is interdisciplinary as Network Science itself.}, as the epidemic spreading, in a network has two main tasks. The first is the identification of the nodes, which is a fairly simple task. The hard one is to pinpoint the emergent correlations in order to connect the vertexes and reproduce the phenomenon. The latter one is the real challenge in network theory.
 
 %Thus, the goal is to artificially reproduce the main topological features of the real networks. 
 Many networks are characterized by strong constraints on the node degree which forces a satisfying regularity to be present, e.g. the radial architecture of a spider net or the map of the main streets of Manhattan.
-Inspired by this, a first insight, the pathogen is left to act on a regular society, which individual contact are differing at most by one, e.g. "regular" Watts-Strogatz and Caveman model.
+Inspired by this, as a first tackle, the pathogen is left to act on a regular society, which individual contact are differing at most by one: famous examples are the "regular" Watts-Strogatz and the Caveman model.
 
 Most of the real networks, however, do not show a comforting orderliness. 
 %add an image of spider net, Manhattan and Internet Network
-Rather, their inner structure seems to be characterized by a certain degree of randomness, e.g. the internet network \cite{barabasi::2016networkbook}. Random network theory embraces this feature by constructing network models that are truly random, e.g. Erdös-Rényi. Meanwhile, they are not able to capture the presence of hubs, alias the "Scale-Free" property. Thus, new models as to be proposed to generate those highly connected degree nodes, such as the Watts-Strogatz and Barabási-Albert models.
-A review of these is reported in the following sections; alongside with the newly proposed "Poissonian Small World" network (see \autoref{sec:ATechIntro}, \cite{Thurner::NetBasedExpl}).
+Rather, their inner structure seems to be characterized by a certain degree of randomness, e.g. the internet network \cite{barabasi::2016networkbook}. Random network theory embraces this feature by constructing network models that are truly random, e.g. Erdös-Rényi. By contrast, they are not able to capture the presence of hubs, alias the "Scale-Free" property. Thus, new models as to be proposed to generate those highly connected degree nodes, such as the Barabási-Albert models.
+A review of these is reported in the following sections; alongside with the newly proposed "Poissonian Small World" network (see \cite{Thurner::NetBasedExpl} or \autoref{sec:PSW_network}).
 
 \section{Regular Networks}
 \label{sec:RLN-Caveman_Description}
@@ -410,11 +410,10 @@ A review of these is reported in the following sections; alongside with the newl
     \end{subfigure}
 \end{figure}
 
-As briefly reported, the "Regular Networks" are characterized by a fixed number of neighbors per node $D = \langle k \rangle$. Thus, they are expected as the constituent graphs for the class of systems which constraints $D$ to a certain value, e.g. solids in the physics of matter.
+The "Regular Networks" are characterized by a fixed number of neighbors per node $D = \langle k \rangle$. Thus, they are expected as the constituent graphs for the class of systems which constraints $D$ to a certain value, e.g. solids in the physics of matter.
 Ultimately, by trying to study a new phenomenon, it is fundamental to test its behavior on a controlled environment as the one provided by the regular networks.
 
-In \autoref{sec:WS_Model}, there will be presented the "Watts-Strogatz" model which depending by an inner parameter $p$ can interpolate between a regular graph for $p = 0$(\autoref{fig:RegGraph}) and a random network ($p=1$).
-Hence, setting $N$ as the number of nodes, chosen $p=0$ and starting from a fully-connected network ( (a) figure in \autoref{fig:RegGraph}), the average degree $D = N-1$ is halved at each time-step. Thus, to preserve the secondary cases $R_0$, the infectivity of the pathogen $\beta$ is doubled at each time-step.
+In \autoref{sec:WS_Model}, there will be presented the "Watts-Strogatz" model which depending by an inner parameter $p$ can interpolate between a regular graph for $p = 0$ (\autoref{fig:RegGraph}) and a random network ($p=1$).
 
 \subsection{Connected Caveman Graph}
 \begin{figure}[ht]
@@ -426,8 +425,7 @@ Hence, setting $N$ as the number of nodes, chosen $p=0$ and starting from a full
     \end{subfigure}
 \end{figure}
 
-
-By analogy with the NPIs measures which allowed only for the household interactions, it has been considered the "Caveman Model".
+By analogy with the Non-Pharmaceutical-Interventions (NPIs) which accounts only for the household interactions, it has been considered the "Caveman Model".
 
 The rationale is to consider as if one node, of the previously modeled networks, would be a family composed by a fixed number of people. This idea drives to the "coarse-graining" approach seen in the previous sections.
 In detail, the Caveman model enables to fix both the number of "caves"/families and the number of individual for each family. 
@@ -858,8 +856,8 @@ The final goal would be to find the evolving number of new daily infected at eac
 \section{Homogeneous Mixing}
 
 \begin{figure}[ht]
-	\includegraphics[scale = 0.38]{Ch_TheEpidModels_Methodology/D4_ws_graph_sir.png}
-	\caption{Mean-Field SIR using a Complete Graph with $N = 10^{3}, \langle k \rangle = 999, \beta = 0.001,  \mu = 0.2$}
+	\includegraphics[scale = 0.38]{Ch_TheEpidModels_Methodology/Homogeneous_MF_SIR.png}
+	\caption{Mean-Field SIR with $N = 10^{3}, \langle k \rangle = 5, \beta = 0.2,  \mu = 0.2$.As shown, at the end of an epidemic, i.e. $ i(t) = 0$, a non-zero fraction of susceptible survives which, in turn, account for a $ r(t_{end}) = 1- s(t_{end}) \neq 1$ fraction of recovered nodes.}
 	\label{fig:MF_SIR}
 \end{figure}
 
@@ -929,7 +927,7 @@ To be precise, $R_0$ is the number of second infections in a naive population, i
 \label{sec:degree-basedMF}
 \begin{figure}[ht]
 	\includegraphics[scale = 0.38]{Ch_TheEpidModels_Methodology/D4_ws_graph_sir.png}
-	\caption{Degree-Based SIR using Erdös-Rényi Graph with $N = 10^{3}, p = 0.5, \langle k \rangle = 500, \beta = 0.001,  \mu = 0.2$}
+	\caption{Degree-Based SIR using Erdös-Rényi Graph with $N = 10^{3}, p = 0, \langle k \rangle = 4, \beta = 0.3, \mu = 0.25$. $R_0 \sim 4.8 > R_{c-net} \sim 1.2$ where $R_{c-net}$ is defined in \autoref{eq:def_R_cnet}. Thus, the pathogen could evolve in the network. The dotted evolution are a obtained by solving the \autoref{eqs:homo_SIR_MF} for the standard compartments S-I-R; while the continuum line accounts for the daily new infected $ C(t)$, the total cases $ \pi(t) = P(t)$ and the susceptible as $ \tilde{s}(t) = 1 - \pi(t)$. Eventually, the recovered nodes shifted by the average recovered time $d = 1/ \mu$ are similar but not the same of the total cases (solid green line). Lastly, by means of the \autoref{eq:picrit_network}, the green star ($Crit (t_c,P_c)$) is a good estimate of the maximum of $ i(t)$, as it predicts the critical time $ t_c$ and the value of $P_c$ correctly.}
 	\label{fig:DB_SIR}
 \end{figure}
 As described in the previous chapter, within a well-mixed population, every node could infect, at any time, $\langle k \rangle$ susceptible neighbors. This is not the case for a pletora of real networks, e.g. Barabási-Albert model as they are "scale-free", namely $\langle k^2 \rangle$ typically diverges for the \textit{degree exponent} $\gamma \leq 3$. Thus, imposing that each individual must have $\langle k \rangle$ contacts, it drives to a model that underestimate the number of infected. This, in turn, could have worser effect than overestimating it.
@@ -1089,7 +1087,7 @@ where $C:= \frac{\beta (\langle k \rangle -1)}{\tau}$ since $\langle k \rangle \
 Summarizing, the degree-block approximation is itself a "mean-field" framework, since all the nodes with degree $k$  are equivalent. However, this approach, although simplifying the calculations, it is not completely correct. Indeed, for the SIS model (with reinfection), the formal mathematical calculations drive to a vanishing epidemic threshold even for $\gamma>3$ \cite{barabasi::2016networkbook}.
 
 \textbf{A new quantity for the epidemic severity} 
-
+\label{sec:def_epidemic_severity}
 As it is clear from \autoref{fig:sir_RegLat_D61430}, $R_0$ should be modified as it represents only the initial strength of the pathogen without considering the underlying topology, e.g. the "long-range" contacts $pN$. Concretely, it could drive to completely different scenarios where the epidemic either brutally invade the population or is limited to a small percantage. Thus, we introduced a new "severity quantity" $ \Delta R_0 (\delta)$ defined as
 \begin{equation}
 	\Delta R_0 (\delta):= \frac{R_0 - R_{c-net}}{\delta}
@@ -1196,7 +1194,7 @@ Hence, inserting the derived $ n(t)$,
 where the fraction of susceptible $ \nu(t) \sim 1/2$ on average.  
 Formally, averaging the initial and the final fraction of susceptible, 
 \begin{equation}
-	\nu(t_{max}) = 1-\frac{vt_{max}+0}{2} = 1/2
+	\nu(t_{max}) \sim 1-\frac{vt_{max}+0}{2} = 1/2
 \end{equation}
 where $1 = N$ is the (normalized) total population; $ t_{max}:= N/v = 1/v$ is the maximum time of the infection; $v$ the velocity of propagation of the epidemic front.  
 Indeed, the infection roughly propagates as a wave at constant velocity $v$ . Thus, the "right-part" of the "fuse" is composed by susceptible nodes ($\nu(t) \sim 1/2$), while the "left-part" by the infected or recovered vertexes.
