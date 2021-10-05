@@ -23,6 +23,7 @@ def rmv_folder(folder, rmv_flag = False):
   import sys
   import shutil
   # Get directory name
+  rmv_flag = False
   if rmv_flag:
     my_dir = my_dir()+folder
     if os.path.exists(my_dir):
@@ -207,8 +208,6 @@ def sir(G, mf = False, beta = 1e-3, mu = 0.05, seed = False, start_inf = 10):
     if len(pos_dni_cases) > 1:
       if len([x for x in pos_dni_cases if x == 0]) > 0: 
         raise Exception("Error There's 0 dni_cases: dni_cases, arr_daily, std", daily_new_inf, pos_dni_cases, op)
-
-    
     return op, prevalence, dni_cases, dni_totcases
 
   return prevalence, dni_cases, dni_totcases
@@ -323,9 +322,14 @@ def itermean_sir(G, p = 0, mf = False, numb_iter = 200, beta = 1e-2, mu = 0.05, 
         #print(f'k2: {k2}',)
         print(f'avgk2: {avgk2}',)
         print(f'std_avgk2: {std_avgk2}',)
-        Rc_net = D**2/(avgk2-D); lmd = beta/mu
-        RcR0 = Rc_net / (R0 - lmd)
-        p_c = (1 - RcR0) / (1-p)
+        Rc_net = D**2/(avgk2-D) 
+        lmd = beta/mu
+        if D == 1: 
+          print(f'R0 - lmd: {R0 - lmd}',)
+          p_c = 0
+        else:
+          RcR0 = Rc_net / (R0 - lmd)
+          p_c = (1 - RcR0) / (1-p)
       if mf and int(D)>1:
         D = int(D)
         Rc_net = 1/(1-D**(-1))
@@ -373,7 +377,7 @@ def plot_sir(G, ax1, p = 0, folder = None, beta = 1e-3, mu = 0.05, start_inf = 1
   
   print("Final avg_ordp_net", avg_ordp_net)
   print("\nMF-SIR loading...")
-  plot_mf = False
+  plot_mf = True
   if plot_mf:
     mf_trajectories, mf_avg_traj, mf_std_avg_traj, mf_t_c, mf_p_c = \
     itermean_sir(G, mf = True, mu = mu, beta = beta, start_inf = start_inf, numb_iter = numb_iter,)
@@ -501,7 +505,7 @@ def plot_sir(G, ax1, p = 0, folder = None, beta = 1e-3, mu = 0.05, start_inf = 1
   
   leg.set_zorder(ax3.get_zorder()+1)
 
-  return avg_ordp_net, std_avg_ordp_net, Rc_net, avgk2, std_avgk2,
+  return avg_ordp_net, std_avg_ordp_net, Rc_net, avgk2, std_avgk2, avg_traj[1][-1], std_avg_traj[1][-1]
 
 def rhu(n, decimals=0, integer = False): #round_half_up
   import math
@@ -595,15 +599,14 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
       _, ax = plt.subplots()
       #if vertical: _, ax = plt.subplots(figsize = (24,20)) #init = (24,14); BA_Model = (20,20) should change also the subplots_adjust!!!
       
-      'plot sir'
+      'plot sir with end_ANS = end_ Average Net SIR'
       
       print("\nThe model has N: %s, D: %s(%s), beta: %s, d: %s, p: %s, R0: %s" % 
       (N,rhuD2,rhu(std_D,2),rhu(beta,5),rhu(mu**(-1)),rhu(p,3), beta*D/mu ))
-      avg_ordp_net, std_avg_ordp_net, Rc_net, avgk2, std_avgk2, = \
+      avg_ordp_net, std_avg_ordp_net, Rc_net, avgk2, std_avgk2, end_ANS, std_end_ANS = \
         plot_sir(G, p = p, ax1=ax, folder = folder, beta = beta, mu = mu, start_inf = start_inf, 
                 numb_iter = numb_iter)
-
-
+      
       right = 0.95
       #folders = ["WS_Pruned"]
       if True: right = 0.72 #if R0 <= 1 #0.73
@@ -650,7 +653,11 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
 
       'estimate the StDs'
       std_Rc_net = fstd_Rc_net(Rc_net, D, avgk2, std_D, std_avgk2)
-      std_DeltaR0Rc = np.sqrt(std_R0**2+std_Rc_net**2)
+      std_DR0Rc = np.sqrt(std_R0**2+std_Rc_net**2)
+      DR0_delta = (R0 - Rc_net)/avg_pl
+      add1 = DR0_delta * std_avg_pl / avg_pl
+      add2 = std_DR0Rc / avg_pl
+      std_DR0delta = np.sqrt(add1**2+add2**2)
 
       if folder == "Caveman_Model":
           ax.set_title(r"$R_0:%s, D_{%s}:%s(%s), OnRing:%s, p:%s, \beta:%s, d:%s$"
@@ -671,11 +678,11 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
       
       textstr = '\n'.join((
         "Other Measures:",
-        r"$\Delta R_0: %s(%s)$"%(rhu(R0 - Rc_net,3), rhu(std_DeltaR0Rc,3)),
+        r"$\Delta R_0: %s(%s)$"%(rhu(R0 - Rc_net,3), rhu(std_DR0Rc,3)),
         r"$< k^{2} >: %s(%s)$"%(rhu(avgk2,3),rhu(std_avgk2,3)),
         r"$%s: %s(%s)$"%(delta, rhu(avg_pl,2), rhu(std_avg_pl,2)),
         r"$R_0 / \delta = $"+f"{rhu(R0/avg_pl,3)} "+R0pl_sign+f" {rhu(Rc_net/avg_pl,3)}",
-        r"$\Delta R_0 / \delta: %s$"%(rhu((R0 - Rc_net)/avg_pl,3)),
+        r"$\Delta R_0 / \delta: %s (%s)$"%(rhu(DR0_delta,3), rhu( std_DR0delta,3)),
         #r"$R_{c-IBM}: %s$"%(rhu(D/np.max(nx.adjacency_spectrum(G).real),3)),
         r"OrdPar: %s(%s)"%(rhu(avg_ordp_net,3), string_format),
         ))
@@ -694,8 +701,9 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
         text_file.write(file_name + "\n")            
       plt.close()
 
+      'from here starts the OrderParameter part'
       del my_dir
-      from definitions import my_dir; import json; from definitions import NestedDict
+      import json; from definitions import NestedDict
       ordp_pmbD_dic = NestedDict(ordp_pmbD_dic)
       value = avg_ordp_net
       std = std_avg_ordp_net
@@ -709,8 +717,12 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
         d = ordp_pmbD_dic #rename ordp_pmbD_dic to have compact wrinting
         if p in d.keys():
           if mu in d[p].keys():
-              d[p][mu] = { **d[p][mu], **{D:[std_D, value, std]} }
-          else: d[p] = {**d[p], **{mu:{D:[std_D,value,std]}}}
+              d[p][mu] = { **d[p][mu], **{D:[std_D, value, std, 
+                                             end_ANS, std_end_ANS,
+                                             DR0_delta, std_DR0delta]} }
+          else: d[p] = {**d[p], **{mu:{D:[std_D, value, std, 
+                                          end_ANS, std_end_ANS,
+                                          DR0_delta, std_DR0delta]}}}
         else:
           d[p][mu][D] = [std_D,value,std]
 
@@ -719,11 +731,19 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
         if p in d.keys():
           if mu in d[p].keys():
               if beta in d[p][mu].keys():
-                  d[p][mu][beta][D] = [std_D,value,std]
-              else: d[p][mu] = { **d[p][mu], **{beta: {D:[std_D, value, std]}} }
-          else: d[p] = {**d[p], **{mu:{beta:{D:[std_D,value,std]}}} }
+                  d[p][mu][beta][D] = [std_D, value, std, 
+                                       end_ANS, std_end_ANS,
+                                       DR0_delta, std_DR0delta]
+              else: d[p][mu] = { **d[p][mu], **{beta: {D:[std_D, value, std, 
+                                                          end_ANS, std_end_ANS,
+                                                          DR0_delta, std_DR0delta]}} }
+          else: d[p] = {**d[p], **{mu:{beta:{D:[std_D, value, std, 
+                                                end_ANS, std_end_ANS,
+                                                DR0_delta, std_DR0delta]}}} }
         else:
-          d[p][mu][beta][D] = [std_D,value,std]
+          d[p][mu][beta][D] = [std_D, value, std, 
+                               end_ANS, std_end_ANS,
+                               DR0_delta, std_DR0delta]
       '''   
           NEED TO TEST IT
             def update(d, D, std_D, p, beta, mu, value, std):
@@ -757,94 +777,75 @@ def save_sir(G, folder, ordp_pmbD_dic, done_iterations = 1, p = 0, beta = 0.001,
       '''
           
       print(f'\nAfter Dic Insertion:',)
+      def plot_ordp_endsir_DR0delta(toplot, ordp_pmbD_dic, p, mu, beta, folder):
+        from definitions import my_dir
+        _, ax = plt.subplots(figsize = (24,14))
+
+        'WARNING: here suptitle has beta // days but the dict is ordp[p][mu][beta][D] = [std_D, ordp, std_ordp]'
+        'since in the article p and days are fixed!'
+
+        if folder == "WS_Pruned":
+          fix_pmb = ordp_pmbD_dic[p][mu]
+        else: fix_pmb = ordp_pmbD_dic[p][mu][beta]
+        #print("ordp_pmbD_dic, p0, mu0, beta0, fix_pmb", \
+        #  ordp_pmbD_dic, p, mu, beta, fix_pmb)
+        x = sorted(fix_pmb.keys())
+
+        if toplot == "OrdPar":
+          plt.suptitle("Average SD (Daily New Cases) : "+r"$p:%s,\beta:%s,d:%s$"%(rhu(p,3),rhu(beta,3),rhu(mu**(-1))))
+          ax.set_xlabel("Avg Degree D [Indivs]")
+          ax.set_ylabel("Avg SD (Cases)")
+          xerr = [fix_pmb[i][0] for i in x]
+          y = [fix_pmb[i][1] for i in x]
+          yerr = [fix_pmb[i][2] for i in x]
+          label = "Avg SD(Cases)"
+
+        #print("y", y)
+        ax.grid(color='grey', linestyle='--', linewidth = 1)
+        ax.errorbar(x,y, xerr = xerr, yerr = yerr, color = "tab:blue", marker = "*", linestyle = "-",
+                    markersize = 30, mfc = "tab:red", mec = "black", linewidth = 3, label = label)
+
+        if toplot in ["OrdPar","EndSirD"]:
+          lmbd = beta/mu
+          D_cfuse = 1 + 2*mu/(beta*(1+p)) #Rc_net = 1 assumption
+          D_cer = 1 + mu/beta
+          D_chomo = mu/beta
+          ax.axvline(x = D_cfuse, color = "maroon", lw = 4, ls = "--", 
+                      label = "".join((r"$D_{c-fuse \, model}$",f": {rhu(D_cfuse,3)}")) )
+          ax.axvline(x = D_cer, color = "darkblue", lw = 4, ls = "--", 
+                      label = "".join((r"$D_{c-ER \, model}$",f": {rhu(D_cer,3)}")) )
+          ax.axvline(x = D_chomo, color = "darkslategrey", lw = 4, ls = "--", 
+                      label = "".join((r"$D_{c-homog \, model}: \mu / \beta$",f": {rhu(D_chomo,3)}")) )
+
+        leg = ax.legend(fontsize = 35, loc = "best")
+        leg.get_frame().set_linewidth(2.5)
+
+        plt.subplots_adjust(
+        top=0.91,
+        bottom=0.122,
+        left=0.080,
+        right=0.99)
+
+        if folder == "WS_Pruned":
+          ordp_path = f"{my_dir()}{folder}/{toplot}/p{rhu(p,3)}/d{rhu(mu**(-1))}/" 
+          if not os.path.exists(ordp_path): os.makedirs(ordp_path)
+          plt.savefig("".join((ordp_path,"%s_ordp_p%s_d%s.png" % (folder, rhu(p,3),rhu(mu**(-1))))))
+        else: 
+          ordp_path = my_dir() + folder + f"/{toplot}/p%s/beta%s/" % (rhu(p,3),rhu(beta,3))
+          if not os.path.exists(ordp_path): os.makedirs(ordp_path)
+          plt.savefig("".join((ordp_path,"%s_ordp_p%s_beta%s_d%s.png" % (folder, rhu(p,3),rhu(beta,3),rhu(mu**(-1))))))
+        plt.close()
+
+        'pretty print the dictionary of the ordp'
+        pp_ordp_pmbD_dic = json.dumps(ordp_pmbD_dic, sort_keys=False, indent=4)
+        #print("Final dic to be saved", pp_ordp_pmbD_dic)
+        ordp_file = "".join((ordp_path,"saved_ordp_dict.txt"))
+        with open(ordp_file, 'w') as file:
+          file.write(pp_ordp_pmbD_dic) # use `json.loads` to do the reverse
       
-      _, ax = plt.subplots(figsize = (24,14))
+      plot_ordp_endsir_DR0delta("OrdPar", ordp_pmbD_dic, p, mu, beta, folder)
 
-      'WARNING: here suptitle has beta // mu but the dict is ordp[p][mu][beta][D] = [std_D, ordp, std_ordp]'
-      'since in the article p and mu are fixed!'
-      plt.suptitle("Average SD(Daily New Cases) : "+r"$p:%s,\beta:%s,d:%s$"%(rhu(p,3),rhu(beta,3),rhu(mu**(-1))))
-      ax.set_xlabel("Avg Degree D [Indivs]")
-      ax.set_ylabel("Avg SD(Cases)")
       
-      if folder == "WS_Pruned":
-        fix_pmb = ordp_pmbD_dic[p][mu]
-      else: fix_pmb = ordp_pmbD_dic[p][mu][beta]
-      #print("ordp_pmbD_dic, p0, mu0, beta0, fix_pmb", \
-      #  ordp_pmbD_dic, p, mu, beta, fix_pmb)
-      x = sorted(fix_pmb.keys())
-      xerr = [fix_pmb[i][0] for i in x]
-      y = [fix_pmb[i][1] for i in x]
-      yerr = [fix_pmb[i][2] for i in x]
-
-      #print("y", y)
-      ax.grid(color='grey', linestyle='--', linewidth = 1)
-      ax.errorbar(x,y, xerr = xerr, yerr = yerr, color = "tab:blue", marker = "*", linestyle = "-",
-         markersize = 30, mfc = "tab:red", mec = "black", linewidth = 3, label = "Avg SD(Cases)")
-      
-      def D_cRc(lmbd, avgk2):
-        from math import sqrt
-        delta = avgk2**2 * lmbd - 2*avgk2*lmbd - 4*avgk2 + lmbd
-        if delta >= 0:
-          print(f'delta: {delta}',)
-          add1 = sqrt(delta*lmbd)        
-          num_less = - add1 + avgk2 * lmbd + lmbd
-          num_great = + add1 + avgk2 * lmbd + lmbd
-          den = 2*(lmbd+1)
-          D_great = num_great /den
-          D_less = num_less /den
-          return D_great, D_less
-        else: return 0,0
-
-      lmbd = beta/mu
-      D_cfuse = 1 + 2*mu/(beta*(1+p)) #Rc_net = 1 assumption
-      D_cer = 1 + mu/beta
-      D_chomo = mu/beta
-      D_cRcfuse, _ = D_cRc(lmbd = lmbd*(1+p)/2, avgk2 = avgk2)
-      D_cRcer, _ = D_cRc(lmbd = lmbd, avgk2 = avgk2)
-
-      ax.axvline(x = D_cfuse, color = "maroon", lw = 4, ls = "--", 
-                 label = "".join((r"$D_{c-fuse \, model}$",f": {rhu(D_cfuse,3)}")) )
-      ax.axvline(x = D_cer, color = "darkblue", lw = 4, ls = "--", 
-                 label = "".join((r"$D_{c-ER \, model}$",f": {rhu(D_cer,3)}")) )
-      ax.axvline(x = D_chomo, color = "darkslategrey", lw = 4, ls = "--", 
-                 label = "".join((r"$D_{c-homog \, model}: \mu / \beta$",f": {rhu(D_chomo,3)}")) )
-
-
-      '''print(f'D_cRcfuse: {D_cRcfuse}',)
-      print(f'D_cRcer: {D_cRcer}',)
-      
-      if D_cRcfuse:
-        ax.axvline(x = D_cRcfuse, color = "maroon", lw = 4, marker='o', ls='dashed', ms = 12,
-                  label = "".join((r"$D_{Rc-fuse \, model}$",f": {rhu(D_cRcfuse,3)}")) )
-      if D_cRcer:
-        ax.axvline(x = D_cRcer, color = "darkblue", lw = 4, ls = "-.", ms = 12,
-                  label = "".join((r"$D_{Rc-ER \, model}$",f": {rhu(D_cRcer,3)}")) )'''
-      leg = ax.legend(fontsize = 35, loc = "best")
-      leg.get_frame().set_linewidth(2.5)
-
-      plt.subplots_adjust(
-      top=0.91,
-      bottom=0.122,
-      left=0.080,
-      right=0.99)
-      
-      if folder == "WS_Pruned":
-        ordp_path = f"{my_dir()}{folder}/OrdParam/p{rhu(p,3)}/d{rhu(mu**(-1))}/" 
-        if not os.path.exists(ordp_path): os.makedirs(ordp_path)
-
-        plt.savefig("".join((ordp_path,"%s_ordp_p%s_d%s.png" % (folder, rhu(p,3),rhu(mu**(-1))))))
-      else: 
-        ordp_path = my_dir() + folder + "/OrdParam/p%s/beta%s/" % (rhu(p,3),rhu(beta,3))
-        if not os.path.exists(ordp_path): os.makedirs(ordp_path)
-        plt.savefig("".join((ordp_path,"%s_ordp_p%s_beta%s_d%s.png" % (folder, rhu(p,3),rhu(beta,3),rhu(mu**(-1))))))
-      plt.close()
-
-      'pretty print the dictionary of the ordp'
-      pp_ordp_pmbD_dic = json.dumps(ordp_pmbD_dic, sort_keys=False, indent=4)
-      #print("Final dic to be saved", pp_ordp_pmbD_dic)
-      ordp_file = "".join((ordp_path,"saved_ordp_dict.txt"))
-      with open(ordp_file, 'w') as file:
-        file.write(pp_ordp_pmbD_dic) # use `json.loads` to do the reverse
       
   if os.path.exists(log_path):
     'sort line to have the new ones at first'
@@ -2023,9 +2024,12 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
         done_iterations+=1
 
         print("\nIterations left: %s" % ( total_iterations - done_iterations ) )
+
+        if folder in ["WS_Epids", "WS_Pruned"] and p != 0:
+          p = p / D        
         
-        ordp_path = "".join((my_dir(), folder, "/OrdParam/p%s/beta%s/" % (rhu(p,3),rhu(beta,3)) ))
-        #ordp_path = "".join((my_dir(), folder, "/OrdParam/"))#p%s/beta_%s/" % (rhu(p,3),rhu(beta,3)) ))
+        ordp_path = "".join((my_dir(), folder, "/OrdPar/p%s/beta%s/" % (rhu(p,3),rhu(beta,3)) ))
+        #ordp_path = "".join((my_dir(), folder, "/OrdPar/"))#p%s/beta_%s/" % (rhu(p,3),rhu(beta,3)) ))
         ordp_path = "".join( (ordp_path, "saved_ordp_dict.txt"))
         if os.path.exists(ordp_path): 
           with open(ordp_path,"r") as f:
@@ -2102,7 +2106,7 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
 
         'generate solo nodes to reduce <k>'
         
-        if k_prog[0] < 1: epruning = True
+        if folder == "WS_Epids": epruning = False
         if epruning:
           i = 1
           print("\nCreating solo-nodes to match the wanted D...")
@@ -2145,11 +2149,10 @@ def parameters_net_and_sir(folder = None):
   import numpy as np
   'WARNING: put SAME beta, mu, D and p to compare at the end the different topologies'
   #k_prog = np.concatenate(([1.0],np.arange(2,20,2)))
-  start_inf = 1
+  start_inf = 10
   p_prog = [0, 0.3] #0.2 misses
-  beta_prog = [0.015, 0.05, 0.1, 0.2, 0.4]; 
-  days_prog = [14,9,6,4,1] 
-  days_prog = [14,6,4]
+  beta_prog = [0.015, 0.1]
+  days_prog = [14,4]
   mu_prog = [1/x for x in days_prog] #mu_prog = [0.07, 0.11, 0.167, 0.25, 1]
   # old @ 5.9.2021: mu_prog = [0.14, 0.16, 0.2, 0.25, 0.8]#, 0.33,0.5]
   k_prog = np.hstack((np.arange(1,13,2),[14,19,24,40,50]))
@@ -2168,7 +2171,7 @@ def parameters_net_and_sir(folder = None):
     #k_prog = np.hstack((np.arange(1,13,2),np.arange(14,34,5)))
     R0_max = 300     
   if folder == "Caveman_Model": 
-    k_prog = [3, 5, 8, 9, 11, 14, 24]
+    k_prog = [6] #[3, 5, 8, 9, 11, 14, 24]
     'k_prog = np.arange(1,11,2)' #https://www.prb.org/about/ -> Europe householdsize = 3
     #beta_prog = np.linspace(0.001,1,6); mu_prog = beta_prog
   if folder[:5] == "NNO_C": 
