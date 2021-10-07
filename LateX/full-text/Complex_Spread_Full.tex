@@ -1,6 +1,6 @@
-\documentclass[a4paper,10pt,twoside]{book} %%{book}
+\documentclass[a4paper,10pt]{book} %%{book}
 
-\usepackage[top=5cm,bottom=5cm,inner=5cm,outer=3cm]{geometry}
+\usepackage{geometry} %[top=5cm,bottom=5cm,inner=5cm,outer=3cm]
 \usepackage{graphicx, caption, subcaption} %per poter inserire le figure
 \usepackage{csquotes} %handle " and ""
 \MakeOuterQuote{"}  %handle opening/closing quotation
@@ -90,7 +90,7 @@ urlcolor=blue
 \frontmatter
 
 
-\newgeometry{top=2cm,bottom=2cm,left=2cm,right=2cm}
+\newgeometry{top=2cm,bottom=2cm}
 %%old for {book}: \frontmatter
 %below: textsc = font "small caps"
 \begin{titlepage}
@@ -141,13 +141,14 @@ urlcolor=blue
 %-----------------------------------------------------------------------
 
 %\newgeometry{top=4cm,left=4cm}
-\newgeometry{left = 4cm, bottom = 2cm, right = 2cm, top=4cm}
+\newgeometry{left = 2cm, bottom = 2cm, right = 2cm, top=4cm}
+\addcontentsline{toc}{chapter}{Abstract}
 \chapter*{Abstract}
-The usual simplified description of epidemic dynamics predicts an exponential growth. This is due to the mean field character of the dynamical equations. However, a recent paper (Thurner S, Klimek P and Hanel R 2020 Proc. Nat. Acad. Sci. 117, 22684) \cite{Thurner::NetBasedExpl} showed
-that in a network with fixed connectivity, the nodes become infected at a rate that increases linearly rather than exponentially.
-Experimental data for COVID-19 seem to validate this approach. In this thesis we plan to study this model by tuning its parameters.
-In particular, we monitor the effect induced by a significant presence of hubs in the network.
+The usual simplified description of epidemic dynamics predicts an exponential growth. This is due to the mean field character of the dynamical equations. However, a recent paper (Thurner S, Klimek P and Hanel R 2020 Proc. Nat. Acad. Sci. 117, 22684) \cite{Thurner::NetBasedExpl} showed that in a network with fixed connectivity, the nodes become infected at a rate that increases linearly rather than exponentially.
+Experimental data for COVID-19 seem to validate this approach. In this thesis we plan to study this model by tuning its parameters. We will obtain a "sub-exponential" growth of the total cases for a plethora of social networks. This is supported by the presence of a kind of phase transition of the standard deviation of the new cases. In particular, we monitor the effect induced by a significant presence of hubs in the network.
+Ultimately, we introduce the epidemic severity to account for the outbreak size of COVID-19.
 
+\addcontentsline{toc}{chapter}{Motivations}
 \chapter*{Motivations}
 Last Update: \today
 "The COVID-19 pandemics has led to a dramatic loss of human life worldwide and presents an unprecedented challenge to public health, food systems and the world of work"\cite{Chriscaden::2021_ImpactCOVID19}. In this scenario, monitoring and forecasting the diffusion of the virus is an essential tool for policymakers to handle the health-care resources and restrictions among individuals. To this purpose, many academics, e.g. \href{https://web.unipd.it/covid19/en/}{UniPD against COVID-19}\footnote{https://web.unipd.it/covid19/en/}, have been trying to tackle the COVID-19 spreading as well as its side-effects, which have to be considered on the "path to normality". This drastic shift with respect to the "path to herd immunity" comes from a recent study \cite{GU::2021_SitePathToNormality} which shed light on the fact that "herd immunity", due to delay on vaccinations, could probably not be reached for the end of 2021. On the other hand, due to few practical points \cite{Nature:18.3.2021_NoHerdImmunity}, it is also probabile that the long-term prospects include COVID-19 becoming an endemic disease, much like influenza. 
@@ -199,7 +200,7 @@ Inside the "ecosystems" of models, there are the simple models which allow to an
 	\label{fig:perfect_model}
 \end{figure}	
 
-As suggested by the \autoref{fig:perfect_model}\footnote{\textit{"Est modus in rebus"} \label{cit:GM}} (\cite{Kiss::Ch1MathOfEpiOnNet}), models provide maximum insight where the right balance of realism (circle filled with dots, e.g. regarding epidemiology Graph-Neural-Network to predict $R_t$ \cite{Davahli::USA_predicting_COVID19}) and simplicity (circle with vertical lines e.g. on epidemics the deterministic SIR model) is met\footnote{The equilibrium point may depend on the specific posed question} (central circle with oblique lines).
+As suggested by the \autoref{fig:perfect_model}\footnote{\textit{"Est modus in rebus"} \label{cit:GM}} (\cite{Kiss::MathOfEpiOnNet}), models provide maximum insight where the right balance of realism (circle filled with dots, e.g. regarding epidemiology Graph-Neural-Network to predict $R_t$ \cite{Davahli::USA_predicting_COVID19}) and simplicity (circle with vertical lines e.g. on epidemics the deterministic SIR model) is met\footnote{The equilibrium point may depend on the specific posed question} (central circle with oblique lines).
 
 In this middle region, there could be found several works that use network analysis as the underlying structure for a phenomenon(\cite{Thurner::NetBasedExpl} \cite{VespignaniSatorras2001Epidemic} \cite{pizzuti::2020_ItalyCOVIDnetwork}); while other, more involved, that incorporate human mobility data in several hybrid models \cite{ZEROUAL::DL_COVID19, Stubinger::Incidence_Diff_Countries} in order to predict its diffusion. For the sake of simplicity, the present thesis is going to deepen the paper of \cite{Thurner::NetBasedExpl}. In particular, Thurner et al. \cite{Thurner::NetBasedExpl}, by focusing on the COVID-19 spreading in Austria and in the USA, are able to find a scenario, i.e. a combination of the SIR spreading parameters\footnote{the infection rate $\beta$, recover rate $\mu$, the long-range attachment probability $p$}, such that the outbreak is (quasi-)linear for a value of the average number of contact $D$. This behavior of the SIR model is qualitatively comparable with the curves reported by the JHUniversity reported below. 
 Hence, inspired by \cite{Thurner::NetBasedExpl}, the aim of this project is to analyze how the SIR model behaves by changing its "inner" epidemic parameters but also the topology of the underlying social network, i.e. the susceptible people.
@@ -272,7 +273,6 @@ The simplest example, is the \textit{simple graph}, which is an unweighted, undi
 	\caption{Edges peculiarities. The labels are $1,2,3,4$ assigned anti-clockwise starting from the bottom}
 	\label{fig:simple}
 \end{figure}
-\newpage
 
 \subsection{Adjacency Matrix}
 Typically for real networks, the number of involved nodes is big, e.g. the Google web-graph available at \href{https://snap.stanford.edu/data/#socnets}{Standford University Network Dataset} is of the order of the $800k$ nodes and $5milion$ edges. Thus, despite the clearness of \autoref{fig:basicSN}, the most suitable way of representing a graph is by grouping all its properties in a matrix called the adjacency matrix $A$. 
@@ -1463,7 +1463,7 @@ Formally,
 	R_0 = constant = \frac{D}{q} \cdot \frac{\beta q}{ \mu}
 \end{equation}
 where $q$ goes from 1 to the maximum power of $2$ s.t. $D/q > 1$.
-Hence, $\mu$ fixes the value of the \textit{basic reproduction number} $ R_0$  since $ R_0 = \, constant / \mu$. The resulting progression is \\$D \in [999,500,124,62,30,14,6,2]$ where, since the WS algorithm works only with even $D$, we, arbitrarily, rounded all the odd $D$ to the lower (even) integer. Furthermore, we also simulated the epidemics on a Watts-Strogatz graph with short-cut probability $p = 0.3$ (called "Long-Range WS") in \autoref{sec:res_RegLat_p0.3}. The network panel in \autoref{fig:net_RegLat} shows a WS network with $D = 500$ for both $ p=0 \textnormal{ and } p=0.3$.\\
+Hence, $\mu$ fixes the value of the \textit{basic reproduction number} $ R_0$  since $ R_0 = \, constant / \mu$. The resulting progression is \\$D \in [999,500,124,62,30,14,6,2]$ where, since the WS algorithm works only with even $D$, we, arbitrarily, rounded all the odd $D$ to the lower (even) integer. Furthermore, we also simulated the epidemics on a Watts-Strogatz graph with short-cut probability $p = 0.3$ (called "Long-Range WS") in \autoref{sec:res_RegLat_p0.3}. The network panel in \autoref{fig:net_RegLat} shows a WS network with $D = 500$ for both $ p=0 \textnormal{ and } p=0.3$.
 
 For a rough representation, every node connects with its neighboring vertexes producing a $\vee$ structure of edges. The overlap among the $ \vee$'s increases as $D$ is enhanced (see \autoref{fig:net_RegLat}). In this way, the pathogen is constrained to move locally, yielding a limited number of new daily cases $C(t)$ (blue curve) and, in turn, total cases $ \pi(t)$ (green one).\\
 Finally, since the transmissibility $\beta \textnormal{ and the average number of contacts } D$ are arranged in a peculiar way, we do not report the Order Parameter $SD(C)$. 
@@ -2010,7 +2010,7 @@ As the network enhances the possibility of a pathogen to diffuse, for the COVID-
 
 
 \chapter{Conclusions}
-The main purpose of this thesis was to study the evolution of an pathogen over different (social) networks. The rationale was to simulate the lockdown restrictions either through a drop of the average number of contacts $D$, as reported by \cite{Liu::2021_Review_SContactPattern}; and changing the network structure. Moreover, we introduce the \textit{epidemic severity} (\autoref{ch:Methodology}) to capture the final outbreak size of different graphs and epidemic parameters. By contrast, we showed that the \textit{basic reproduction number} $ R_0 $ is informative only at early times.
+The main purpose of this thesis was to study the evolution of an pathogen over different (social) networks. The rationale was to simulate the lockdown restrictions either through a drop of the average number of contacts $D$, as reported by \cite{Liu::2021_Review_SContactPattern}; and changing the network structure. Moreover, we introduce the \textit{epidemic severity} (\autoref{ch:Methodology}) $ \Delta R_0 (\delta)$ to capture the final outbreak size of different graphs and epidemic parameters. By contrast, we showed that the \textit{basic reproduction number} $ R_0 $ is informative only at early times.
 Finally, we used the standard deviation of the daily cases to underline the presence of a transition among the linear and the exponential regimes. The point, where this transition occurred, is called \textit{critical degree}  $D_c$.
 
 In \autoref{sec:res_RegLat} we used a Watts-Strogatz model to analyze $ R_0$ and $ \Delta R_0 (\delta)$. We obtained that the \textit{epidemic severity} accounts for a variety of different final outbreak size.\\
@@ -2020,7 +2020,7 @@ Considering also the relink to distant nodes $ p = 0.3$, the result does not cha
 In addition, we recovered that the fuse-model better estimates the (simulated) $ D_c$ for the $ d = 14$ cases. For $d=4$, the fuse-model overestimates the critical degree, since the fuse model constrains the epidemic in a more suited way than the Poissonian models. Thus, the \textit{critical degree} is lower for a Poissonian model. For $ p = 0.3$, the estimates is marginally cured, due to the removal of distant nodes. 
 
 In \autoref{sec:res_CM}, we aggregated the individuals into families and locally connected them.
-As the Caveman model is more constrained, we observed a lower final outbreak size than the Poissonian Small-World and the Watts-Strogatz graphs.
+As the Caveman model is the most constrained graph, we observed a lower final outbreak size than the Poissonian Small-World and the Watts-Strogatz graphs.
 
 In \autoref{sec:res_BA}, we considered a Barabási-Albert network which accounts for the hubs. As reported in \autoref{sec:degree-basedMF}, this "scale-free" networks enhanced the total cases more than the other models. 
 Moreover, we obtained that a clear \textit{critical degree} does not exists for the COVID-19 parameters; while, taking advantage of the Pharmaceutical Interventions (PIs), the $d = 4$ case is characterized by a sharper transition. This suggest that a pathogen could be limited by vaccinating the hubs at first.
@@ -2033,9 +2033,9 @@ In most of the cases, we recovered that many networks account for a "sub-exponen
 \section{Future Developments}
 The real social networks are highly non trivial structure, by including a multilevel organization; weak ties between communities; and temporal aspects that suggest a degree of fluidity with stable social cores \cite{Thurner::NetBasedExpl}. Therefore, in this thesis, we grasped the relevant feature of the contact networks but our study leaves room for future developments. For example, the Caveman model could be generalized to account for a variable number of individuals inside a family. 
 In addition, we classified the individuals as "susceptible"(S), "infected"(I) or "recovered"(R). As said in \autoref{ch:sir-models}, one can add other compartments, such as the quarantined individuals (Q) or asymptomatic person (A). This extension will be effortless, since the implementation of the new classes will be the same as for the older ones (S,I,R).
-Moreover, we introduced the \textit{epidemic severity} as an experimental value to account for the total outbreak size, while a theoretical explanation still misses. Furthermore, we tried to predict the maximum of the infected but more work has to be done to estimate its value. Another improvement could be to plot the total outbreak sizes as a function of $ D$, since we expect that it will exhibit a phase transition similar to the the one of the epidemic threshold \autoref{fig:ER_Epidem_Thr}. On the other hand, the prediction of the \textit{critical degree} is a hard problem since it is related to the number of infected as seen in \autoref{ch:Methodology}. 
+Moreover, we introduced the \textit{epidemic severity} as an experimental value to account for the total outbreak size, while a theoretical explanation still misses. Furthermore, we tried to predict the maximum of the infected $ i(t)$\footnote{As reported in \autoref{ch:Methodology} they differ from the new daily cases $ C(t)$, since $ i(t)$ embodies the total infected at a fixed time $ t$.} but more work has to be done to estimate its value. Another improvement could be to plot the total outbreak sizes as a function of $ D$, since we expect that it will exhibit a phase transition similar to the the one of the epidemic threshold \autoref{fig:ER_Epidem_Thr}. On the other hand, the prediction of the \textit{critical degree} is a hard problem since it is related to the number of infected as seen in \autoref{ch:Methodology}. 
 
-Lastly, the COVID-19 pandemic was characterized both by an initial uncertainty on how to trace the infected and by the changing of restriction measures. Thus, the social network could rapidly change driving to a new behavior of the pathogen. A way of tackling this problem is by mean of "Deep Learning for Graphs" \cite{Bacciu_Micheli:2020_IntroDGNPisa}. Specifically, by generating a "functional network" of the US states of America, one may capture the relationship among the states and use this information to predict the \textit{instantaneous reproduction number} R(t) \cite{Davahli::USA_predicting_COVID19}.
+Lastly, the COVID-19 pandemic was characterized both by an initial uncertainty on how to trace the infected and by the changing of restriction measures. Thus, the social network could rapidly change driving to a new behavior of the pathogen. A way of tackling this problem is by mean of "Deep Learning for Graphs" \cite{Bacciu_Micheli:2020_IntroDGNPisa}. Specifically, by generating a "functional network" of the United States of America, one may capture the relationship among the states and use this information to predict the \textit{instantaneous reproduction number} R(t) \cite{Davahli::USA_predicting_COVID19}.
 
 In conclusion, this thesis was a starting point, devoted to the study of a SIR model diffusing on networks. According to the theory and our perception of the phenomenon, we obtained some important results while there is a lot of room for future studies.
 
