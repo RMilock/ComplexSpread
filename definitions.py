@@ -329,6 +329,7 @@ def itermean_sir(G, p = 0, mf = False, numb_iter = 200, beta = 1e-2, mu = 0.05, 
           p_c = 0
         else:
           RcR0 = Rc_net / (R0 - lmd)
+          'This is a new definition of p_c, i.e. p_c = (1 - Rc_net / (R0(1-p)) )'
           p_c = (1 - RcR0) / (1-p)
       if mf and int(D)>1:
         D = int(D)
@@ -971,9 +972,9 @@ def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = Fals
   else: print("len(long_range_edges)", length_long_range)
   #folders = ["WS_Pruned","BA_Model"]
   #if folder in folders: 
-  width = min(3,width*N/max(1,len(long_range_edges)))
+  width = min(3,.5*width*N/max(1,len(long_range_edges)))
   if folder== "Caveman_Model":
-    nx.draw(G, pos, node_color=list(partition.values()), node_size = 5, width = 0.5, with_labels = False)
+    nx.draw(G, pos, node_color=list(partition.values()), node_size = 5, width = width, with_labels = False)
   else: nx.draw_circular(G, ax=ax, with_labels=False, font_size=20, node_size=25, width=width)
 
   
@@ -1225,8 +1226,8 @@ def replace_edges_from(G,list_edges=[]):
   if list_edges!=[]: return G.add_edges_from(list_edges)
   return G
 
-'addition of distant nodes'
 def add_lredges(G, p = 0, time_int = False):
+  'this function adds 1 distant node to the source. By contrast, the WS alg tries to rewired all the edges'
   from itertools import chain
   import random
   import datetime as dt
@@ -1252,39 +1253,50 @@ def add_lredges(G, p = 0, time_int = False):
   remove_loops_parallel_edges(G, True)
   if time_int: print(f"Time for add edges over ddistr:", dt.datetime.now()-start_time)
 
-'replace lr-edges with local ones'
-def replace_lredges(G, p = 0): 
-    'replace long range edges'
+def replace_lredges(G, p = 0, rm_neig = True): 
+    'new updated @ 5.10.2021'
+    'replace 1 long range node to the local one'
     import random
     from itertools import chain
     from definitions import pos_deg_nodes
 
+    '!!!Since a Watts-Strogatz model uses half of the nodes to make the rewire'
+    p = p/2
+    start_edges = len(G.edges())
+    print(f'Before replace_lredges len(G.edges()): {start_edges}',)
     def fnode_edges(G, node):
         return G.edges(node)
-
+    rnd_counter = 0
     #random.seed(2)
     len_start = len(list(G.edges()))
     for node in G.nodes():
-      if random.random() < p and len(G.edges(node)):
-        #print(f"\nI'm looking for a new neighbors for {node}")
+      if len(G.edges(node)):
         node_edges = fnode_edges(G, node)
         #print(f'Inside: {node_edges}',)
         neighbors = list(G.neighbors(node))
         #print(f'neighbors: {neighbors}',)
-
-        'rm only if node as deg > 0'
-        rm_neigh = random.choice(neighbors)
-        add_lrnode = random.choice(list(G.nodes()))
-        G.remove_edge(node, rm_neigh)
-        'dont select any present node (no // edges and loop)'
-        while(add_lrnode in list(chain.from_iterable([[rm_neigh], [node], neighbors]))):
-            add_lrnode = random.choice(list(G.nodes()))
-        #print(f'(rm_neigh: {rm_neigh} --> add_lrnode): {add_lrnode}',)
-        G.add_edge(node, add_lrnode)
-        node_edges = fnode_edges(G, node)
-        #print(f'final G.edges(node): {node_edges}',)
-    if  len(list(G.edges())) != len_start: 
-        raise ValueError(f"Error value: {len(list(G.edges()))} not {len_start}") 
+        for neighbor in neighbors:
+          if random.random() < p:
+            rnd_counter +=1
+            'rm only if node as deg > 0'
+            if rm_neig:
+              rm_neigh = neighbor #random.choice(neighbors)
+              G.remove_edge(node, rm_neigh)
+            'if no rewiring on existing neighbors --> edges are dimishing even for N = 1000, D = 10'
+            targets = [x for x in G.nodes() if x != node] 
+            #print(f'targets: {targets}',)
+            add_lrnode = random.choice(targets)
+            
+            'dont select the removed neighbors, the node itself or neighbors'
+            #print(f'(rm_neigh: {rm_neigh} --> add_lrnode): {add_lrnode}',)
+            G.add_edge(node, add_lrnode)
+            node_edges = fnode_edges(G, node)
+            #print(f'final G.edges(node): {node_edges}',)
+    print(f'rnd_counter: {rnd_counter}',)
+    print(f'The fraction of new edges @ end: {(len(G.edges())-start_edges)/start_edges}',)
+    
+    #if  len(list(G.edges())) != len_start: 
+    #    raise ValueError(f"Error value: {len(list(G.edges()))} not {len_start}") 
 
 'forcing connection of a net'
 def connect_net(G, conn_flag): #set solo_nodes = False to have D < 1 nets
@@ -1310,176 +1322,6 @@ def connect_net(G, conn_flag): #set solo_nodes = False to have D < 1 nets
     if len(list(nx.connected_components(G)))>1: print("Disconnected net!"); raise Exception("G is not connected")
     else: print("The network is connected!")
     return sorted_disc_components
-
-'''
-def NN_pois_net(N, folder, ext_D, p = 0, conn_flag = True):
-  'p is not used right now'
-  from definitions import config_pois_model, connect_net
-  import numpy as np
- 
-  G = config_pois_model(N, ext_D, seed = 123, folder = folder)
-
-  verbose = False
-  def verboseprint(*args):
-    if verbose == True:
-      print(*args)
-    elif verbose == False:
-      None
-
-  'for random rewiring with p -- select pos_deg nodes since need to rewiring to them'
-  l_nodes = list(pos_deg_nodes(G))
-
-  edges = set() #avoid to put same link twice (+ unordered)
-  nodes_degree = {}
-
-  'list of the nodes sorted by their degree'
-  for node in pos_deg_nodes(G):
-    nodes_degree[node] = G.degree(node)
-  sorted_nodes_degree = {k: v for k, v in sorted(nodes_degree.items(), key=lambda item: item[1])}
-  sorted_nodes = list(sorted_nodes_degree.keys())
-  verboseprint("There are the sorted_nodes", sorted_nodes) #, "\n", sorted_nodes_degree.values())
-  
-  'cancel all the edges'
-  replace_edges_from(G)
-
-  '------ Start of Rewiring with NNR! ---------'
-  'Hint: create edges rewiring from ascending degree'
-  print("Start of NN-Rewiring")
-  def get_var_name(my_name):
-    variables = dict(globals())
-    for name in variables:
-        if variables[name] is my_name:
-            #verboseprint("v[n]", variables[name], "my_n", my_name)
-            return name
-  def ls_nodes_remove(node): l_nodes.remove(node); sorted_nodes.remove(node)
-  def zero_deg_remove(node): 
-    if nodes_degree[node] == 0 and node in l_nodes and node in sorted_nodes: 
-      ls_nodes_remove(node)
-      verboseprint("\n", get_var_name(node), "=", node, "is removed via if deg == 0")
-
-  verboseprint("\nStart of the wiring:")
-  while( len(l_nodes) > 1 ):
-    node = sorted_nodes[0]
-    verboseprint("---------------------------")
-    verboseprint("Wire node", node, " with degree", nodes_degree[node], \
-          "\nto be rew with:", l_nodes, "which are in total", len(l_nodes))
-    
-    L = len(l_nodes)
-    'define aa_attached'
-    aa_attached = l_nodes[(l_nodes.index(node)+1)%L]; verboseprint("the anticlock-nearest is ", aa_attached)
-    
-    if node in l_nodes:
-      'if degreees[node] > 1, forced-oscillation-wiring'
-      for j in range(1,nodes_degree[node]//2+1): #neighbors attachment and no self-loops "1"
-        L = len(l_nodes)
-        if len(l_nodes) == 1: break
-        verboseprint("entered for j:",j)
-        idx = l_nodes.index(node)
-        verboseprint("idx_node:", idx, "errored idx", (idx-j)%L)
-        a_attached = l_nodes[(idx+j)%L] #anticlockwise-linked node
-        c_attached = l_nodes[(idx-j)%L]
-        aa_attached = l_nodes[(idx+nodes_degree[node]//2+1)%L]
-        verboseprint(node,a_attached); verboseprint(node,c_attached)
-        if node != a_attached: edges.add((node,a_attached)); nodes_degree[a_attached]-=1; \
-        verboseprint("deg[%s] = %s" % (a_attached, nodes_degree[a_attached]))
-        if node != c_attached: edges.add((node,c_attached)); nodes_degree[c_attached]-=1; \
-        verboseprint("deg[%s] = %s"%(c_attached,nodes_degree[c_attached]))
-
-        'remove node whenever its degree is = 0:'
-        zero_deg_remove(a_attached)
-        zero_deg_remove(c_attached)
-
-      if len(l_nodes) == 1: break       
-      'if nodes_degree[i] is odd  and the aa_attached, present in l_nodes, has a stub avaible, then, +1 anticlock-wise'
-      if nodes_degree[node] % 2 != 0 and nodes_degree[aa_attached] != 0: 
-        edges.add((node, aa_attached)); nodes_degree[aa_attached]-=1
-        verboseprint("edge with aa added: (", node, aa_attached, ") and deg_aa_att[%s] = %s"%(aa_attached,nodes_degree[aa_attached]))
-      
-      'aa_attached == 0 should not raise error since it should be always present in l_n and s_n'
-      if nodes_degree[aa_attached] == 0 and aa_attached in l_nodes and aa_attached in sorted_nodes: 
-        ls_nodes_remove(aa_attached)
-        verboseprint("\naa_attached node", aa_attached, "is removed via if deg == 0")
-      if node in l_nodes and node in sorted_nodes: ls_nodes_remove(node);  verboseprint(node, "is removed since it was the selected node")
-      if len(l_nodes)==1: verboseprint("I will stop here"); break
-
-  replace_edges_from(G, edges)
-  check_loops_parallel_edges(G)
-  infos_sorted_nodes(G, num_sorted_nodes=False)
-  
-  long_range_edge_add(G, p = p)
-  connect_net(G, conn_flag = conn_flag)
-
-  print(f"There are {len([j for i,j in G.degree() if j == 0])} 0 degree node as")
-  _,D,_ = N_D_std_D(G)
-  print(f"End of wiring with average degree {D} vs {ext_D}")
-  
-
-  return G
-
-'This kind of network is similar to a WS'
-def NNOverl_pois_net(N, ext_D, p, add_edges_only = False):
-  #Nearest Neighbors Overlapping
-  from itertools import chain
-  from definitions import replace_edges_from, remove_loops_parallel_edges
-  import datetime as dt
-  import random
-
-  def edges_node(x):
-      return [(i,j) for i,j in all_edges if i == x]
-
-  G = config_pois_model(N,ext_D)
-  adeg_ConfM = sum([j for i,j in G.degree()])/G.number_of_nodes()
-
-  'rewire left and right for the max even degree'
-  dsc_sorted_nodes = {k: v for k,v in sorted( G.degree(), key = lambda x: x[1], reverse=True)}
-  edges = set()
-  for node in dsc_sorted_nodes.keys():
-    k = dsc_sorted_nodes[node]//2
-    for i in range(1, k + 1):
-        edges.add((node, (node+i)%N))
-        edges.add((node, (node-i)%N))
-    if dsc_sorted_nodes[node] % 2 == 1: edges.add((node, (node+k+1)%N))
-    elif dsc_sorted_nodes[node] % 2 != 0: print("Error of Wiring: dsc[node]%2", dsc_sorted_nodes[node] % 2); break
-  replace_edges_from(G, edges)
-  remove_loops_parallel_edges(G)
-
-  D = np.sum([j for i,j in G.degree()])/G.number_of_nodes()
-  if D != adeg_ConfM: print("!! avg_deg_Overl_Rew - avg_deg_Conf_Model = ", D - adeg_ConfM)
-  
-  if add_edges_only and p != 0: #add on top of the distr, a new long-range edge
-    long_range_edge_add(G, p = p)
-
-  else: #remove local edge and add long-range one
-    start_time = dt.datetime.now()
-    all_edges = [list(G.edges(node)) for node in pos_deg_nodes(G)]
-    all_edges = list(chain.from_iterable(all_edges))
-    initial_length = len(all_edges)
-    for node in pos_deg_nodes(G):
-      left_nodes = list(pos_deg_nodes(G))
-      left_nodes.remove(node) 
-      #print("edges of the node %s: %s" % (node, edges_node(node)) ) 
-      i_rmv, j_rmv = random.choice(edges_node(node))  
-      if random.random() < p and len(edges_node(j_rmv)) > 1: #if, with prob p, the "node" is not the only friend of "j_rmv" 
-          all_edges.remove((i_rmv,j_rmv)); all_edges.remove((j_rmv,i_rmv))
-          re_link = random.choice(left_nodes)
-          #print("rmv_choice: (%s,%s)" % (i_rmv, j_rmv), "relink with node: ", re_link)
-          all_edges.append((node, re_link)); all_edges.append((re_link, node))
-          all_edges = [(node,j) for node in range(len(all_edges)) for j in [j for i,j in all_edges if i == node] ]
-          #print("all_edges", all_edges)
-    print("len(all_edges)_final", len(all_edges), "is? equal to start", initial_length )
-    replace_edges_from(G, all_edges)
-    remove_loops_parallel_edges(G, False)
-    print(f"Time for add_edges = {add_edges_only}:", dt.datetime.now()-start_time)
-
-  adeg_OR = sum([j for i,j in G.degree()])/G.number_of_nodes()
-  print("Rel Error wrt to ext_D %s %%" % (rhu((adeg_OR - ext_D)/ext_D,1 )*100))
-  print("Rel Error wrt to adeg_ConfM %s %%" % (rhu( (adeg_OR - adeg_ConfM)/adeg_ConfM,1 )*100))
-  
-  # from definitions import NN_pois_net
-  # while(not nx.is_connected(G)): G = NN_pois_net(N, ext_D = D)
-  
-  return G
-'''
 
 'New Cluster of defs for Poissonian Small World Network'
 def pois_pos_degrees(N, D):
@@ -1669,7 +1511,7 @@ def NNOverl_pois_net(N, ext_D, p, conn_flag = False, return_dic_nodes = False):
     if D != deg_mean: print("!! avg_deg_Overl_Rew - avg_deg_Conf_Model = ", D - deg_mean)
 
     if p != 0: #add on top of the distr, a new long-range edge
-        replace_lredges(G, p = p)
+      replace_lredges(G, p = p)
     
     adeg_OR = sum([j for i,j in G.degree()])/G.number_of_nodes()
     print("Rel Error wrt to ext_D %s %%" % (rhu((adeg_OR - ext_D)/ext_D,1 )*100))
@@ -1846,7 +1688,7 @@ def caveman_defs():
       y = y0 + radius * np.sin(random_angle)
       return np.array([x, y])
 
-  def comm_caveman_relink(cliques = 8, clique_size = 7, p = 0,  relink_rnd = 0, numb_onring_links = 1, p_clique = 0):
+  def comm_caveman_relink(cliques = 8, clique_size = 7, p = 0,  relink_rnd = 0, numb_onring_links = 1):
     import numpy as np
     import numpy.random as npr
     from definitions import my_dir
@@ -1882,7 +1724,8 @@ def caveman_defs():
       'add a new edge by relinking one of the existing node to a new link in the sequent clique'
       'decide how many nodes in the clique would go into rnd relink via relink_rnd'
       '--comment from the fu'
-      if p:
+
+      '''if p:
         #relink_rnd = clique_size #all nodes in the clique are tried to be relinked
         first_cl_node = clique_size*clique
         nodes_inclique = np.arange(first_cl_node, first_cl_node + clique_size)
@@ -1892,19 +1735,11 @@ def caveman_defs():
         for test, lr_node in zip(nodes_inclique, lr_target_nodes):
           if npr.uniform() < p: 
             #print(f"with probability {p}, added relink {(test,lr_node)}")
-            G.add_edge(test,lr_node)
+            G.add_edge(test,lr_node)'''
+        
+      'to add only new eges rm_neig == False'
       
-      'rnd rewiring clique by clique -- it produces disc net => go w/ the first numb_onring_links.'
-      if p_clique: 
-        first_cl_node = clique_size*clique
-        nodes_inclique = np.arange(first_cl_node, first_cl_node + clique_size)
-        next_clique_nodes = np.arange(clique_size*(1+clique), clique_size*(2+clique)) % total_nodes
-        from itertools import product
-        for source, next_clique_node in product(nodes_inclique, next_clique_nodes):
-          if npr.uniform() < p_clique:
-            #print(f"with probability {p_clique}, added relink {(source,next_clique_node)}")
-            G.add_edge(source,next_clique_node)
-      
+    replace_lredges(G, p, False)
     remove_loops_parallel_edges(G)
     
 
@@ -2001,7 +1836,7 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
   ordp_pmbD_dic = NestedDict()
   'these are the links among near communities'
   numb_onring_links = [1]
-  if folder == "Caveman_Model": numb_onring_links = [1,2]
+  if folder == "Caveman_Model": numb_onring_links = [1]
   
   'unique try of saving both, but generalize to all other nets'
   'try only with p = 0.1'
@@ -2025,8 +1860,8 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
 
         print("\nIterations left: %s" % ( total_iterations - done_iterations ) )
 
-        if folder in ["WS_Epids", "WS_Pruned"] and p != 0:
-          p = p / D        
+        #if folder in ["WS_Epids", "WS_Pruned"] and p != 0:
+        #  p = p / D        
         
         ordp_path = "".join((my_dir(), folder, "/OrdPar/p%s/beta%s/" % (rhu(p,3),rhu(beta,3)) ))
         #ordp_path = "".join((my_dir(), folder, "/OrdPar/"))#p%s/beta_%s/" % (rhu(p,3),rhu(beta,3)) ))
@@ -2089,7 +1924,7 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
           cliques = int(N/clique_size)
           clique_size = int(clique_size) #clique_size is a np.float64!
           G = comm_caveman_relink(cliques=cliques, clique_size = clique_size, 
-                                  p = p, relink_rnd = clique_size, p_clique = 0, numb_onring_links = numb_onring_links)
+                                  p = p, relink_rnd = clique_size, numb_onring_links = numb_onring_links)
           
           for node in range(clique_size*cliques):
             if node == 0: print("node", node, type(node), 
@@ -2155,7 +1990,7 @@ def parameters_net_and_sir(folder = None):
   days_prog = [14,4]
   mu_prog = [1/x for x in days_prog] #mu_prog = [0.07, 0.11, 0.167, 0.25, 1]
   # old @ 5.9.2021: mu_prog = [0.14, 0.16, 0.2, 0.25, 0.8]#, 0.33,0.5]
-  k_prog = np.hstack((np.arange(1,13,2),[14,19,24,40,50]))
+  k_prog = np.hstack((np.arange(2,14,2),[14,20,24,40,50]))
   R0_min = 0; R0_max = 100
 
   'this should be deleted to have same params and make comparison more straight-forward'
@@ -2171,7 +2006,7 @@ def parameters_net_and_sir(folder = None):
     #k_prog = np.hstack((np.arange(1,13,2),np.arange(14,34,5)))
     R0_max = 300     
   if folder == "Caveman_Model": 
-    k_prog = [6] #[3, 5, 8, 9, 11, 14, 24]
+    k_prog = np.arange(4,16,1) #[3, 5, 6, 8, 9, 11, 14, 24]
     'k_prog = np.arange(1,11,2)' #https://www.prb.org/about/ -> Europe householdsize = 3
     #beta_prog = np.linspace(0.001,1,6); mu_prog = beta_prog
   if folder[:5] == "NNO_C": 
