@@ -959,9 +959,9 @@ def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = Fals
   plot_params()
 
   'plot G, adj_mat, degree distribution'
-  plt.figure(figsize = (22,22), ) #20,20
+  _, ax = plt.subplots(figsize = (22,22), ) #20,20
 
-  ax = plt.subplot(221)  
+  #ax = plt.subplot(221)  
   'start with degree distribution'
   'set edges width according to how many "long_range_edges'
   width = 0.8
@@ -977,6 +977,9 @@ def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = Fals
     nx.draw(G, pos, node_color=list(partition.values()), node_size = 5, width = width, with_labels = False)
   else: nx.draw_circular(G, ax=ax, with_labels=False, font_size=20, node_size=25, width=width)
 
+  my_dir = "/home/hal21/MEGAsync/Tour_Physics2.0/Thesis/NetSciThesis/Project/ComplexSpread/LateX/images/Networks/my_nets/"
+  plt.savefig(my_dir+folder)
+  plt.close()
   
   #ax.text(0,1,transform=ax.transAxes, s = "D:%s" % D)
 
@@ -1973,10 +1976,10 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
         print("\nThe end-time of 1 generation of one AdjMat plot is", dt.datetime.now()-start_time)
 
         start_time = dt.datetime.now()       
-        save_nes(G, m = m, N0 = N0,
+        '''save_nes(G, m = m, N0 = N0,
                  p = p, folder = folder, adj_or_sir="SIR", R0_max = R0_max, beta = beta, mu = mu, 
                  ordp_pmbD_dic = ordp_pmbD_dic, done_iterations=done_iterations, 
-                 numb_onring_links = numb_onring_links, avg_pl = avg_pl, std_avg_pl = std_avg_pl, start_inf = start_inf)
+                 numb_onring_links = numb_onring_links, avg_pl = avg_pl, std_avg_pl = std_avg_pl, start_inf = start_inf)'''
         print("\nThe end-time of the generation of one SIR plot is", dt.datetime.now()-start_time)
 
 def parameters_net_and_sir(folder = None):
