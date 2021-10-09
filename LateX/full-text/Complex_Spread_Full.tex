@@ -1,6 +1,6 @@
-\documentclass[a4paper,10pt]{book} %%{book}
+\documentclass[a4paper,10pt, oneside]{book} %%{book}
 
-\usepackage{geometry} %[top=5cm,bottom=5cm,inner=5cm,outer=3cm]
+\usepackage[bottom = 2cm, top=4cm, left = 2cm, right = 2cm]{geometry} %[top=5cm,bottom=5cm,inner=5cm,outer=3cm]
 \usepackage{graphicx, caption, subcaption} %per poter inserire le figure
 \usepackage{csquotes} %handle " and ""
 \MakeOuterQuote{"}  %handle opening/closing quotation
@@ -32,7 +32,6 @@
 \usepackage{verbatim}
 \usepackage{color}
 \usepackage{titlesec}
-\usepackage{fancyhdr}
 \usepackage{tocbibind}
 \usepackage{wrapfig}
 \usepackage{booktabs}
@@ -45,7 +44,6 @@
 
 \usepackage{pgfplots} % to make plot inside LateX
 \pgfplotsset{compat = 1.16}
-
 \usepackage{enumitem}
 \usepackage{hyperref}
 \usepackage{xcolor}
@@ -90,14 +88,14 @@ urlcolor=blue
 \frontmatter
 
 
-\newgeometry{top=2cm,bottom=2cm}
+\newgeometry{top=2cm, bottom=2cm}
 %%old for {book}: \frontmatter
 %below: textsc = font "small caps"
 \begin{titlepage}
 \vspace{5mm}
 \begin{figure}[hbtp]
 \centering
-\includegraphics[scale=.13]{../images/unipd_logo.png}
+\includegraphics[scale=.13]{/home/hal21/MEGAsync/Tour_Physics2.0/Thesis/NetSciThesis/Project/ComplexSpread/LateX/images/unipd_logo.png}
 \end{figure}
 \vspace{5mm}
 \begin{center}
@@ -114,9 +112,9 @@ urlcolor=blue
 \end{center}
 
 \begin{spacing}{2}
-\begin{tabular}{lccccccccccl}
-	{\Large{\bf Candidate}} &&&&&&&&&& {\Large{\bf Thesis supervisor}}\\
-	{\Large{\bf Riccardo Milocco}} &&&&&&&&&& {\Large{\bf Prof./Dr. Marco Baiesi}}\\
+\begin{tabular}{cccccccccc}
+	& {\Large{\bf Candidate}} &&&&&&&& {\Large{\bf Thesis supervisor}}\\
+	& {\Large{\bf Riccardo Milocco}} &&&&&&&& {\Large{\bf Prof./Dr. Marco Baiesi}}\\
 \end{tabular}
 \end{spacing}
 \vspace{15 mm}
@@ -141,33 +139,32 @@ urlcolor=blue
 %-----------------------------------------------------------------------
 
 %\newgeometry{top=4cm,left=4cm}
-\newgeometry{left = 2cm, bottom = 2cm, right = 2cm, top=4cm}
-\addcontentsline{toc}{chapter}{Abstract}
-\chapter*{Abstract}
+%\newgeometry{left = 2cm, bottom = 2cm, right = 2cm, top=4cm}
+\restoregeometry
+%\addcontentsline{toc}{chapter}{Abstract}
+\chapter{Abstract}
 The usual simplified description of epidemic dynamics predicts an exponential growth. This is due to the mean field character of the dynamical equations. However, a recent paper (Thurner S, Klimek P and Hanel R 2020 Proc. Nat. Acad. Sci. 117, 22684) \cite{Thurner::NetBasedExpl} showed that in a network with fixed connectivity, the nodes become infected at a rate that increases linearly rather than exponentially.
-Experimental data for COVID-19 seem to validate this approach. In this thesis we plan to study this model by tuning its parameters. We will obtain a "sub-exponential" growth of the total cases for a plethora of social networks. This is supported by the presence of a kind of phase transition of the standard deviation of the new cases. In particular, we monitor the effect induced by a significant presence of hubs in the network.
-Ultimately, we introduce the epidemic severity to account for the outbreak size of COVID-19.
+Experimental data for COVID-19 seem to validate this approach. In this thesis describe the evolution of the COVID-19 pandemic with the SIR model \cite{pizzuti::2020_ItalyCOVIDnetwork}, on different network topologies in order to simulate the different containment policies, i.e. "lock-downs". We will obtain a "sub-exponential" growth of the total cases for a plethora of social networks. This is supported by the presence of a kind of phase transition of the standard deviation of the new cases. In particular, we monitor the effect induced by a significant presence of hubs in the network.
+Ultimately, we introduce a parameter that we term the epidemic severity to account for the outbreak size of COVID-19.
 
-\addcontentsline{toc}{chapter}{Motivations}
-\chapter*{Motivations}
+%\addcontentsline{toc}{chapter}{Motivations}
+\chapter{Motivations}
 Last Update: \today
+
 "The COVID-19 pandemics has led to a dramatic loss of human life worldwide and presents an unprecedented challenge to public health, food systems and the world of work"\cite{Chriscaden::2021_ImpactCOVID19}. In this scenario, monitoring and forecasting the diffusion of the virus is an essential tool for policymakers to handle the health-care resources and restrictions among individuals. To this purpose, many academics, e.g. \href{https://web.unipd.it/covid19/en/}{UniPD against COVID-19}\footnote{https://web.unipd.it/covid19/en/}, have been trying to tackle the COVID-19 spreading as well as its side-effects, which have to be considered on the "path to normality". This drastic shift with respect to the "path to herd immunity" comes from a recent study \cite{GU::2021_SitePathToNormality} which shed light on the fact that "herd immunity", due to delay on vaccinations, could probably not be reached for the end of 2021. On the other hand, due to few practical points \cite{Nature:18.3.2021_NoHerdImmunity}, it is also probabile that the long-term prospects include COVID-19 becoming an endemic disease, much like influenza. 
 Therefore, the recovery of the pre-COVID-19 situation could be slow even in the presence of effective vaccines.
 
-Hence, an interesting path to cover is to describe the evolution of the COVID-19 pandemic, e.g. with the SIR model \cite{pizzuti::2020_ItalyCOVIDnetwork}, on different network topologies in order to simulate the different containment policies, i.e. "lock-downs".
-
 %%old for {book}: 
 \mainmatter
-
 \newcommand{\changefont}{%
     \fontsize{12}{12}
 	%\selectfont
 }
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[LE,RO]{\changefont \slshape \nouppercase{\rightmark}} %section
-\fancyhead[RE,LO]{\changefont \slshape \nouppercase{\leftmark}} %chapter
-\fancyfoot[C]{\thepage}
+\lhead{\changefont \slshape \nouppercase{\rightmark}} %section
+\rhead{\changefont \slshape \nouppercase{\leftmark}} %chapter
+\cfoot{\thepage}
 
 \chapter[Introduction]{Introduction}
 %\include{cap_Introduction}
@@ -222,7 +219,7 @@ In the legend, there are reported two important quantities:
 Starting by the 25/02/2020, the range of the (normalized) total cases are the following: 2-15774 (AUT), 453-217185 (ITA), 16-1295396 (USA) \cite{JHUGitHub:2020_TotalCases}. In turn, this means that Austria could track down the COVID-19 since its early stages; while Italy began already with a considerable amount of cases. Furthermore, we reported in the legend the infected at the beginning of the lockdown (for the USA the stay-at-home-order of the California): 1018 (AUT), 12462 (ITA), 13663 (USA). This means that even if Austria temporally started the lockdown restrictions after Italy, it brought forward the Italian policies. Therefore at 08/05/2020, the total infected were smaller than the Italian ones.
 \begin{figure}[tbp]
 	\centering
-	\includegraphics[width = \textwidth]{Introduction/COVID-RealStates_2020-03-25.png}
+	\includegraphics[width = \linewidth]{Introduction/COVID-RealStates_2020-02-25.png}
 	\caption{The number of total cases normalized to their maximum value in the period 25/02/20 - 08/05/20. The dates of the first lockdown are: 16/03 - 14/04/20 (AUT); 11/03 - 04/05/20 (ITA); California: 19/03 - 04/05; Missouri: 6/04 - 04/05. USA states with no-stay-at-home restrictions: Arkansas,	Iowa,Nebraska,North Dakota,	South Dakota}
 	\label{fig:USA-AUT-ITAtotalcasesOWID}
 \end{figure}
@@ -269,8 +266,9 @@ Formally, the labels of the vertexes are the image of any bijective embedding fr
 With the given definitions, it is now clear that roughly everything could be divided in vertexes connected by am arbitrary relation.
 The simplest example, is the \textit{simple graph}, which is an unweighted, undirected graph containing no graph loops, i.e. $(i,i)$ edges, or multiple edges such as multiples-$(i,j)$. It could be represented as the \autoref{fig:basicSN} forcing all the edges to be weightless and undirected.
 \begin{figure}[ht]
-	\includegraphics[width = \linewidth]{SimpleGraph_950.png}
-	\caption{Edges peculiarities. The labels are $1,2,3,4$ assigned anti-clockwise starting from the bottom}
+	\centering
+	\includegraphics[width = .5\linewidth]{Networks/my_nets/loop_graph.jpg}
+	\caption{We labeled the nodes as $1,2,3,4$; while we used the same color for vertexes with the equal numbers of contacts. Node $ 2$ has a loop (black cupola on top).}
 	\label{fig:simple}
 \end{figure}
 
@@ -315,7 +313,7 @@ A =
 \end{bmatrix}
 \]
 
-Thus, in \autoref{fig:basicSN} is report a (simple) weighted and directed graph with 4 nodes connected by a "central"\footnote{The "centrality" measure of the node is another important quantity which is context-dependent. In this case, the "centrality" refers to a degree centrality for which the most central node is the one with the highest number of contacts} node $1$.
+Furthermore, take into consideration a triangular graph with a tail connected to the upper node. The overall shape is the one of an arrow ($-latex$) undirected edges and the v is report a (simple) weighted and directed graph with 4 nodes connected by a "central"\footnote{The "centrality" measure of the node is another important quantity which is context-dependent. In this case, the "centrality" refers to a degree centrality for which the most central node is the one with the highest number of contacts} node $1$.
 In particular,
 \[
 A = 
@@ -350,8 +348,7 @@ where $k_i^{in(out)}$ is the number of in-going (out-going) number of edges.
 
 Therefore, by applying the \autoref{eq:kin_kout}\footnote{A practical check is to count the tails for the out-degree and arrows for the inner-degree. Ultimately, each sum has to equate the number of edges (a undirected edge has to be count doubled)} to \autoref{fig:basicSN}, it is possible to recover the degree distribution of the vertexes as in the \autoref{fig:degreed_basicSN}. Thus, a possibile way to build a graph would be to draw the nodes degrees from a fixed distribution and, then, connecting the nodes according to their degree. In fact, this approach, generating a \textit{Configurational Model Network}, is going to be exploited in the further chapters by using a Poissonian degree distribution and connecting the vertexes only to nearest neighbors via an ad-hoc algorithm \autoref{sec:PSW_network}.
 
-\newpage
-\begin{figure}[h]
+\begin{figure}[htbp]
 	\begin{subfigure}{.5\linewidth}
 		\begin{tikzpicture}
 		\begin{axis}[ybar interval, 
@@ -383,7 +380,7 @@ Therefore, by applying the \autoref{eq:kin_kout}\footnote{A practical check is t
 
 \chapter{The Network Models}
 \label{ch:network-models}
-As it could be perceived, modeling a complex (social) phenomenon\footnote{The "social" nature has been only evoked for concreteness. Nevertheless, this in-depth presentation of models is interdisciplinary as Network Science itself.}, as the epidemic spreading, in a network has two main tasks. The first is the identification of the nodes, which is a fairly simple task. The hard one is to pinpoint the emergent correlations in order to connect the vertexes and reproduce the phenomenon. The latter one is the real challenge in network theory.
+As it could be perceived, modeling a complex (social) phenomenon\footnote{The "social" nature has been only evoked for concreteness. Nevertheless, this in-depth presentation of models is interdisciplinary as Network Science itself.}, as the epidemic spreading on networks, has two main tasks. The first is the identification of the nodes, which is a fairly simple task. The hard one is to pinpoint the emergent correlations in order to connect the vertexes and reproduce the phenomenon. The latter one is the real challenge in network theory.
 
 %Thus, the goal is to artificially reproduce the main topological features of the real networks. 
 Many networks are characterized by strong constraints on the node degree which forces a satisfying regularity to be present, e.g. the radial architecture of a spider net or the map of the main streets of Manhattan.
@@ -399,14 +396,14 @@ A review of these is reported in the following sections; alongside with the newl
 \subsection{Lattice Graph}
 \begin{figure}[ht]
     \begin{subfigure}{\textwidth}
-        \includegraphics[scale = 0.4]{../images/Networks/RegGraphs}
+        \includegraphics[scale = 0.1]{../images/Networks/my_nets/Complete_Graph.png}
         \centering
         \caption{In (a) - fully-connected graph; In (b) - $D = 4$ regular graph \cite{Zelazo:2011_RSensNet_images}}
         \label{fig:RegGraph}
     \end{subfigure}
 \end{figure}
 
-The "Regular Networks" are characterized by a fixed number of neighbors per node $D = \langle k \rangle$. Thus, they are expected as the constituent graphs for the class of systems which constraints $D$ to a certain value, e.g. solids in the physics of matter.
+The "Regular Networks" are characterized by a fixed number of neighbors per node $D := \langle k \rangle$. Thus, they are expected as the constituent graphs for the class of systems which constraints $D$ to a certain value, e.g. solids in the physics of matter.
 Ultimately, by trying to study a new phenomenon, it is fundamental to test its behavior on a controlled environment as the one provided by the regular networks.
 
 In \autoref{sec:WS_Model}, there will be presented the "Watts-Strogatz" model which depending by an inner parameter $p$ can interpolate between a regular graph for $p = 0$ (\autoref{fig:RegGraph}) and a random network ($p=1$).
@@ -414,25 +411,24 @@ In \autoref{sec:WS_Model}, there will be presented the "Watts-Strogatz" model wh
 \subsection{Connected Caveman Graph}
 \begin{figure}[ht]
     \begin{subfigure}{\textwidth}
-        \includegraphics[trim={2cm 3cm 2cm 4cm}, clip, scale = 0.6]{../images/Networks/CavemanMod_Rew}
+        \includegraphics[scale = 0.2]{../images/Networks/my_nets/Caveman_Model.png}
         \centering
-        \caption{Disconnected and Connected with rewiring Caveman Model \cite{Taube:2005_IndianSoftwIndustry}}
+        \caption{Connected Caveman Model with one link among consecutive communities.}
         \label{fig:CavemanMod}
     \end{subfigure}
 \end{figure}
 
 By analogy with the Non-Pharmaceutical-Interventions (NPIs) which accounts only for the household interactions, we considered the "Caveman Model".
 
-The rationale is to consider as if one node, of the previously modeled networks, would be a family composed by a fixed number of people. This idea drives to the "coarse-graining" approach seen in the previous sections.
-In detail, the Caveman model enables to fix both the number of "caves"/families and the number of individual for each family. 
+The rationale is to consider as if one node, of the previously modeled networks, would be a family composed by a fixed number of people. In particular, the Caveman model enables to fix both the number of "caves"/families and the number of individual for each family. This aggregation procedure is similar to the one of the "coarse-graining" approach, which aims at simulating the behaviour of a complex system by means of its coarse-grained representation.
 
-In the present thesis, it is going to be developed an intermediate version among the Caveman models shown in \autoref{fig:CavemanMod}. Indeed, connect the nearest caves of the left figure by creating a new edge on randomly choosing nodes within each cave. Then, introduce a "rewiring parameter" to enable "long-range" connections, resulting in "tunneling cuts" among distant nodes as in the right rewired graph. The ending graph is comparable to a Watts-Strogatz model, whose nodes are substituted with an entire cave.
+In the present thesis, we developed a "locally" connected Caveman model \autoref{fig:CavemanMod}, by connecting the consecutive caves with one edge among randomly choosen nodes. Then, we introduced a "rewiring parameter" $ p$ to enable "long-range" connections, resulting in "tunneling cuts" among distant nodes. Furthermore, we added the distant connections over the existing relationships, in order not to spoil the family structures.
 
-A naive expectation is that the epidemic spread slower and more stochastically, since the nodes are poorly connected with the "outside" rather than in the family.
+A naive expectation is that the epidemic will spread slower and more stochastically, since the nodes are poorly connected with the rest of the netwowrk rather than its inside.
 
 \section{Random Networks}
 Not all the networks are characterized by hubs as WWW or the airports graphs.
-In fact, there could be constraints, such as cost-benefit problem, which limit the maximum degree of the bigger node. In those cases, random networks may be the best (thus, not conclusive) fit, e.g. national highways network, power grid of generators and switches, $\cdots$
+In fact, there could be constraints, such as cost-benefit problem, which limit the maximum degree of the bigger node. In those cases, random networks may be the best fit, e.g. national highways network, power grid of generators and switches, $\cdots$
 
 \subsection{The Erdös-Rényi Model}
 \label{sec:ER_model}
@@ -440,15 +436,14 @@ In fact, there could be constraints, such as cost-benefit problem, which limit t
 
 \begin{figure}[ht]
     \begin{subfigure}{\textwidth}
-        \includegraphics[trim={14cm 0 0 1cm}, clip, scale = 0.6]{../images/Networks/ERmodel}
+        \includegraphics[width = 0.5\linewidth]{../images/Networks/my_nets/Erdoes_Renyi_Graph.png}
         \centering
-        \caption{Erdös-Rényi Model for $p = 0.2$ \cite{Baronchelli:2017_EpidSpreadCompNets}}
+        \caption{Erdös-Rényi Model for $p = 0.1$}
         \label{fig:ERmodel}
     \end{subfigure}
 \end{figure}
 
-The Erdös-Rényi (ER - \autoref{fig:ERmodel}) model was the first attempt to formally describe a random network. 
-In particular, these two mathematicians were the fathers of the random graph theory, obtained by merging graph theory with probability theory.
+The Erdös-Rényi (ER - \autoref{fig:ERmodel}) model was the first attempt to formally describe a random network. In particular, Erdös and Rényi were the fathers of the (random) graph theory, obtained by merging the studies on the networks with Probability subject.
 
 The primitive hypothesis, for a random wiring, is that the nodes are linked together with a probability $p$. Formally,
 
@@ -456,18 +451,17 @@ The primitive hypothesis, for a random wiring, is that the nodes are linked toge
 A random network $G(N,p)$ has N nodes where two nodes are connected with probability $p$.
 \end{definition} 
 
-Due to its random nature, this model may have different realizations even with $N$, $p$ fixed parameters. Therefore, the number of links and the nodes degree distribution (see \autoref{sec:GraphTheory}) becomes vital informations to be considered.
-In particular, a specific realization could exhibit $L$ links with a probability
+Due to its random nature, this model may have different realizations even with $N$, $p$ fixed parameters. Therefore, the number of links and the degree distribution (see \autoref{sec:GraphTheory}) provide a way to differentiate graph with equal $ N,p$ . In particular, a network could exhibit $L$ links with a probability
 \begin{equation}
 	\label{eq:probLrndNet}
 	p_L = p^L \cdot (1-p)^{ \binom{N}{2} - L } \cdot \binom{\binom{N}{2}}{L}.
 \end{equation}
-The \autoref{eq:probLrndNet} is the product of $3$ terms: the probability to have $L$ edges; the probability not to have the remaining ones knowing that the total possible node pairs are \[ \binom{N}{2} = \frac{N(N-1)}{2}; \] the total combinations in the choice of the $L$ edges, since what counts is only to pick a number $L$ of edges and not which ones.
-As expected, $p_L$ could be interpreted as $L$ successful results knowing that an edge is chosen with probability $p$ and the total trials are $\frac{N(N-1)}{2}$ pairs. Thus, a Binomial distribution with the average number of links equal to
-\[ D:= \langle L \rangle = \sum_{L = 0}^{\frac{N(N-1)}{2}} p_L L = p\frac{N(N-1)}{2} \label{eq:meanL} \] and, thus, the average per node contacts \[ \langle k\rangle = \frac{2\langle L \rangle}{N} = p(N-1) \label{eq:meank}. \]
+The \autoref{eq:probLrndNet} is the product of $3$ terms: the probability to have $L$ edges; the probability not to have the remaining ones knowing that the total possible node pairs are \[ \binom{N}{2} = \frac{N(N-1)}{2}; \] the total combinations of the $L$ edges, since one wants to pick $L$ edges independently on the order.
+As expected, $p_L$ could be interpreted as having $L$ successful results knowing that an edge is chosen with probability $p$ and the total trials are $\frac{N(N-1)}{2}$, i.e. the total edges if $ p = 1$. Thus, a Binomial distribution with the average number of links equal to
+\[ \langle L \rangle = \sum_{L = 0}^{\frac{N(N-1)}{2}} p_L L = p\frac{N(N-1)}{2} \label{eq:meanL} \] and the average per node contacts \[ \langle k\rangle = \frac{2\langle L \rangle}{N} = p(N-1) \label{eq:meank}. \]
 
 The two equations above highlight that $\langle L \rangle$ and $ D$  could be obtained by multiplying $p$ by the total number of available links and neighbors resp.\footnote{This is accordance with the formal definition of the "average"}. Alongside, as the network becomes denser, i.e. increasing $p$, also $\langle L \rangle$ and $\langle k\rangle$ would be enhanced.
-Moreover, by multiplying the expression by $q$, it is possible to obtain $\sigma_{\langle x\rangle} = q \, \cdot \langle x\rangle,$ where $x = L \textnormal{ or } k$.
+Moreover, by multiplying the expression by $q:=1-p$, it is possible to obtain $\sigma_{\langle x\rangle}^{2} = q \, \cdot \langle x\rangle,$ where $x = L \textnormal{ or } k$.
 
 Similarly, the probability of having k number of contacts is 
 \begin{equation}
@@ -485,17 +479,17 @@ Real network are sparse. In fact, by defining the "sparsity" of a network as the
 
 Therefore, keeping in mind that the \autoref{eq:sparse_probk} is only valid in the sparse regime,
 \begin{itemize}
-	\item the explicit expressions of $\langle k\rangle \simeq p\cdot N \textnormal{ and } \sigma_k = \langle k\rangle^{1/2}$ assume a simpler form for a Poissonian distribution. Moreover, as the binomial case, $\langle k\rangle \textnormal{ and } \sigma_k$ increases if p increases, since the network is becoming denser and, so, more spread in the node degrees.
-	\item it allows the same description for a pletora of networks with the same $\langle k\rangle$, since the network characteristics does not depend on its size $N$.
+	\item the explicit expressions of $\langle k\rangle \simeq p\cdot N \textnormal{ and } \sigma_k = \langle k\rangle^{1/2}$ assume a simpler form for a Poissonian distribution. Moreover, as the binomial case, $\langle k\rangle \textnormal{ and } \sigma_k$ increases if p increases, since the network is becoming denser and, so, more spread in the node degrees than the for low $ p$.
+	\item it allows the same description for networks with the same $\langle k\rangle$ but different size $ N$, since \autoref{eq:sparse_probk} does not depend on $N$.
 \end{itemize}
 
 \subsection{The "Small-World" Property}
 \label{sec:SWProp}
-A captivating argument, network science allows to study is the "Small-World (SW) phenomenon" or "six degrees of separation". The two quoted names comes, respectively, from a theme developed by the Hungarian writer Fridgyes Karinthy in a play called "Chains" ($1978$) and an empirical experiment injected by the psychologist S. Milgram in $1967$. In fact, the most famous version states that a person, e.g. Kevin Bacon, is linked to a random one, e.g. Andrea Scotti, through only few acquaintances: according to \href{https://oracleofbacon.org/movielinks.php}{Kevin Bacon Number}\footnote{https://oracleofbacon.org/movielinks.php} only by $2$ persons in common. Hence, the distance between two randomly chosen nodes in a graph is small. Random networks account for this phenomenon as we are going to deepen.
+A captivating argument, network science allows to study is the "Small-World (SW) phenomenon" or "six degrees of separation". The two quoted names comes, respectively, from a theme developed by the Hungarian writer Fridgyes Karinthy in a play called "Chains" ($1978$) and an empirical experiment injected by the psychologist S. Milgram in $1967$. Its famous version states that an actor/actress, e.g. Kevin Bacon, is linked to a random actor/actress, e.g. Andrea Scotti, through only few acquaintances: according to \href{https://oracleofbacon.org/movielinks.php}{Kevin Bacon Number}\footnote{https://oracleofbacon.org/movielinks.php} only by $2$ persons in common. By extending this idea to real networks \cite{barabasi::2016networkbook}, it is possible to recover that the distance between two randomly chosen nodes is small. Random networks account for this phenomenon as we will deepen.
 
 On average, the expected number of nodes $N$ at a certain distance $d$ is
 \[N(d) \approx 1+ \langle k \rangle + \cdots + \langle k \rangle^d = \frac{\langle k \rangle^{d+1} -1 }{\langle k \rangle - 1},  \] 
-where we taken advantage of the geometric series, after noting that $``1"$ is the selected nodes, $\langle k \rangle$ are its neighbors, $\langle k \rangle^2 \approx \langle k \rangle (\langle k \rangle - 1)$ the next neighbors and so on.
+where we taken advantage of the geometric series, after noting that $``1"$ is the selected nodes, $\langle k \rangle$ are its neighbors, $\langle k \rangle^2 \approx \langle k \rangle (\langle k \rangle - 1)$ the next-to-next neighbors and so on.
 Thus, by considering that for a real network $\langle k \rangle \ll 1$ and that $N(d_{max}) \sim N$, 
 \[
 	d_{max} \sim \frac{\ln(N)}{\ln(\langle k \rangle)}
@@ -505,51 +499,51 @@ On the other hand, the above equation is more suitable in describing $\langle k 
 	\langle d \rangle \sim \frac{\ln(N)}{\ln(\langle k \rangle)} 
 	\label{eq:SWrandnet}
 \end{equation} 
-is the formulation of the Karinthy's "Small-World phenomenon" obtained by considering that most of the nodes are contained within $\langle d \rangle$.
-Indeed, for a real network, $\ln(N) \ll N$ drives to a "smaller" average path length compared to $N$, which is the typical scaling for a regular lattice\footnote{The common notion of physical distance is based on a regular lattice which do not shows the "Small-World" effect. At first glance, this result could be perceived as an uncomfortable.}
-Moreover, the denominator of the \autoref{eq:SWrandnet} implies that the denser it becomes the network, the closer the nodes aggregate.
+is the formalization of the Karinthy's "Small-World phenomenon" and it is obtained by considering that most of the nodes are contained within $\langle d \rangle$.
+Indeed, for a real network, $\ln(N) \ll N$ drives to a "smaller" average path length compared to $N$, which is the typical scaling for a regular lattice\footnote{The common notion of physical distance is based on a regular lattice which do not shows the "Small-World" effect. At first glance, this result could be perceived as an uncomfortable.}.
+Moreover, the denominator of the \autoref{eq:SWrandnet} implies that the denser the network becomes, the closer the nodes aggregate.
 As a sociological example, the average distance of a random person, in the current century, would be derived by applying the \autoref{eq:SWrandnet} by fixing $N \sim 7\cdot 10^9$ and $\langle k \rangle \sim 10^3$ yielding $\langle k \rangle \sim 3.28$ which is a more reliable results than the "six degrees of separation" \cite{barabasi::2016networkbook}.
 
 \newpage
 \subsection{The Clustering Coefficient}
-As far as a social network is considered, it seems natural to introduce a measure of community membership (\autoref{fig:degree_clustcoefficient_pathlength}) which capture the possibility to join a local community, e.g. an association or a family. More generally, real networks are characterized by the clustering formation, which "simplify" the network by aggregating the nodes, called clusters, which present common characteristics. Proceeding as the "coarse graining" technique of Statistical Mechanics, it becomes appealing to take care of the emergent properties exhibited by the "coarse-grained" network. In the following section, it is introduced the degree of "clusterization" of a network.
+Analyzing a social network, it seems natural to introduce a measure of "community membership" (\autoref{fig:degree_clustcoefficient_pathlength}) which capture the possibility to join a local community, e.g. an association or a family (see \autoref{fig:degree_clustcoefficient_pathlength}). Indeed, the social structures exhibit the phenomenon of clustering formation: nodes with common characteristics are aggregated into \textit{clusters}. The starting point of this study is the definition of the \textit{clustering coefficient}.
 
-More precisely, the local clustering coefficient $C_i$ measures the chance of having a link among the neighbors of the $i-th$ node. To gain a rough intuition of its purpose, it is worthwhile to consider two opposite limits: 
+More precisely, the \textit{local} clustering coefficient $C_i$ measures the chance of having a link among the neighbors of the $i-th$ node. As it could be expected,
 \begin{itemize}
 	\item $C_i = 0$ as there are no links among neighbors of $i$;
 	\item $C_i = 1$ as there are fully connected neighbors of $i$.
 \end{itemize}
 
-Formally,
+In general,
 \begin{equation}
 	C_i := \frac{\textnormal{average links of the i-th neigbors}}{\textnormal{total links among neighbors}} = \frac{\langle L_i \rangle}{\frac{k_i(k_i-1)}{2}} = p = \frac{\langle k \rangle}{N} = \langle C \rangle
 	\label{eq:rnd_clustcoefficient}
 \end{equation}
 
-where $k_i \textnormal{ and } N$ are the amount of neighboring vertexes of $i$ and the total nodes respectively, \[ \langle L_i \rangle = p \cdot \frac{k_i(k_i-1)}{2} \quad \textnormal{ and } \quad \langle C \rangle := \frac{1}{N} \sum_{i = 1}^{N} C_i. \]
+where $ p, k_i \textnormal{ and } N$ are the probability of connecting two nodes, the amount of neighboring vertexes of $i$ and the total nodes respectively, \[ \langle L_i \rangle = p \cdot \frac{k_i(k_i-1)}{2} \quad \textnormal{ and } \quad \langle C \rangle := \frac{1}{N} \sum_{i = 1}^{N} C_i. \]
 
 The presence of a link among the two neighbors closes a triangle with the focal node $i$ ( "triadic closure"). Hence, $C_i$ could also be interpreted as the normalized number of triangles centered in the selected node. In addition, $C_i = \langle C \rangle$ is independent by the $i-th$ node degree and, fixing the average degree of a network, it scales with $1/N$: for real networks $p = \langle k \rangle / N$ is small (real networks are sparse) and drives to a smaller $C$ that the one observed. A model that naturally generates "triangle", would be a good candidate to enhance the clustering coefficient even for small $p$.
 
-\subsection{Problems in Random Networks}
+\subsection{Random Graphs are not Real Graphs}
 
-By looking at a real social network, e.g. at a cocktail party, there is the co-presence of highly connected nodes, called \textit{"hubs"}, alongside with the less interacting ones. The ER graph does not account for the presence of high-degree nodes\cite{barabasi::2016networkbook}, since they are strongly damped by the  factor term $1/k!$ in \autoref{eq:probkrndNet}. Indeed, real networks are sparse but have also strongly heterogeneous degrees, showing a high variance through node degrees.
+By looking at a real social network, e.g. at a cocktail party, there is the co-presence of highly connected nodes, called \textit{"hubs"}, alongside with the less interacting ones. The Erdös-Rényi (ER) graph does not account for the presence of high-degree nodes\cite{barabasi::2016networkbook}, since they are strongly damped by the factor term $1/k!$ in \autoref{eq:probkrndNet}. Indeed, real networks are sparse but have also strongly heterogeneous degrees, showing a high variance through node degrees.
 
-Secondly, by looking at the evolution of the contact network, e.g. the one underlying the previous cocktail party, there could be identified 4 topological regimes starting from isolated individuals for $\langle k \rangle = 0$ and ending with a fully connected graph for $\langle k \rangle = N-1$, where $N$ are the total invited persons. The ER model predicts the co-existence of a giant component, containing loops and cycles, and small components, which forms trees, for $1 < \langle k\rangle < \ln(N)$ - find a better description below. However, this is clearly at odds with reality since, as a concrete example, in a random electric power-grid some consumers should not get electric power \cite{barabasi::2016networkbook}. Many network, as the actor network, are in the connected regime; most are in the supercritical one while still connected.
-In particular, these regimes scan the formation path of a fully connected network, passing trough a rapid emergence of a giant component.
-\newline Schematically,
+Secondly, by looking at the evolution of the contact network there could be identified 4 topological regimes starting from isolated individuals for $\langle k \rangle = 0$ and ending with a fully connected graph for $\langle k \rangle = N-1$, where $N$ are the total invited persons. The ER model predicts the co-existence of a giant component, containing loops and cycles, and small components, which forms trees, for $1 < \langle k\rangle < \ln(N)$ - find a better description below. However, this is clearly at odds with reality since, as a concrete example, in a random electric power-grid some consumers should not get electric power \cite{barabasi::2016networkbook}. Many network, as the actor network, are in the connected regime; most are in the supercritical one while still connected.
+In particular, these regimes characterize the formation of a fully connected network, predicting the emergence of a giant component.
+\newline Schematically, recalling $ p$ as the probability of an edge formation,
 \begin{itemize}[noitemsep]
 	\item Sub-critical Regime for $0 < \langle k \rangle < 1 \quad (p < 1/N)$ 
 	\item Critical point for $\langle k \rangle = 1 \quad (p = 1/N)$
 	\item Supercritical Regime for $\langle k \rangle > 1 \quad (p > 1/N)$: Single giant component formation
 	\item Connected Regime for $\langle k \rangle > \ln(N) \quad (p > \ln(N)/N)$
 \end{itemize}
-This is in an one-to-one relation with a First-Order-Phase Transition treated in Statistical Mechanics. The formation of an ordered giant component could be compared with ice formation: the passage from disordered water molecules to an ordered structure.
+This is in an one-to-one relation with a First-Order-Phase Transition of Statistical Mechanics. The formation of an ordered giant component could be compared with ice formation: the passage from disordered water molecules to an ordered structure.
 
-Thirdly, the real world networks exhibits a "Small-World" phenomenon not in agreement with the \autoref{eq:SWrandnet}. Hence, a new "Small-World" measure has to be proposed.
+Thirdly, the real world networks exhibits a "Small-World" phenomenon in disagreement with the \autoref{eq:SWrandnet}. Hence, a new "Small-World" measure has to be proposed.
 
 Fourthly, fixing $N$, the theoretical expectation is to grasp the independent nature of $C$ with respect to $k$. Nevertheless, the results is unsatisfactory, since $C$ decreases with the increasing of $k$ for a pletora of the real networks.
 %put an image of this
-Furthermore, $C/\langle k \rangle (N)$, for high $N$, is higher that its theoretical expectation. Thus, a refined model is needed, to explain the high $C$ even at small $p$ (or high $N$).
+Furthermore, $C/\langle k \rangle \propto N \quad \textnormal{ if } N >> 1$ and $ C/ \langle k \rangle$  is higher than its theoretical expectation. Thus, a refined model is needed to explain the big \textit{cluster coefficient} for small probability $ p$ (or high $N$).
 
 \subsection{Watts-Strogatz Model}
 \label{sec:WS_Model}
@@ -563,41 +557,31 @@ Furthermore, $C/\langle k \rangle (N)$, for high $N$, is higher that its theoret
     \end{subfigure}
 \end{figure}
 
-To face the problem of the "high $C$ at low edge probability (for now, redefined as $p_{ER}$)", while preserving the "Small-World" property, the mathematicians Duncan Watts and Steven Strogatz proposed in the $1998$ a hybrid model which interpolated between a regular lattice for $p = 0$ to a random network model for $p = 1$. The new borne model is, thus, called "Watts-Strogatz (WS) model".
-Practically, the idea is to start with a grid-like network, where all the nodes have $\langle k \rangle$ neighbors; then, with probability $p$, a link is chosen and one of the endpoints, e.g. the "rightmost", is replaced with a random vertex within the graph. The underlying degree distribution, hence, narrows the nodes degrees since it passes from an one-block histogram centered in $\langle k \rangle$ to a Poissonian distribution. Thus, nodes have barely different neighbors degree and no hubs are allowed.
-A further constraint is that no multiple edges can connect the same pair of vertexes, i.e. no multi-edges. The presence of multiedges gives a correction of $1/N$ for big $N$, negligible in a real modeling scenario with big $N$.
+To face the problem of the "high $C$ at low edge probability $p_{ER}$" (we redefined the old $p$ as $p_{ER}$), while preserving the "Small-World", Duncan Watts and Steven Strogatz proposed a hybrid model which can interpolated between a regular lattice for $p = 0$ to a random network model for $p = 1$. The new borne model is, thus, called "Watts-Strogatz (WS) model".
+Practically, one starts by generating a grid-like network with $\langle k \rangle$ neighbors for each node. Then, one fixes a node and for each edge rewire, with probability $ p$, its \textit{target} node with a random vertex. Lastly, one iterates rewiring procedure over all the exhisting edges.
+Therefore, the \textit{degree distribution} goes from a peaked histogram of the regular lattice to a Poissonian distribution. Meanwhile the mean $ D$ remains roughly the same and no \textit{hubs} are generated.
+A further constraint is that no multiple edges can connect the same pair of vertexes, i.e. no multi-edges. The presence of multiedges gives a correction of $1/N$ for big $N$, negligible for big $N$.
 
-The rationale of ER model is that by a little decrease of clustering (i.e. destroying triangles) corresponds a significant reduction in the average path length $\delta:= \langle d \rangle$. Other way around, by connecting nodes in a "long-range" fashion, the overall "triadic closures" are still relevant. 
+The rationale of WS model is that by a little decrease of clustering (i.e. destroying triangles) corresponds a significant reduction in the average path length $\delta:= \langle d \rangle$. Other way around, by connecting nodes in a "long-range" fashion, the overall "triadic closures" are still relevant. 
 
-It worths to highlight that the present $p$, called in this context the "rewiring parameter", is the "long-range" rewiring probability, while the ER model $p_{ER}$ is the probability of an edge formation either among neighbors ("short range" connection) or among distant nodes ("long range" connection). Thus, the "distant" connected vertexes are, on average, $p\cdot L$ where $L$ is the total number of links.
-In particular, a regular lattice is characterized by a high clustering (neighboring nodes are fully connected) but a high average path length; while a random network, as seen before, exhibits manifestly the "Small-World" property alongside with a low clustering coefficient especially, since triangles are rare for small $p$.
-Therefore, the parameter $p$ is introduce to fine tune the co-presence of the two kind of networks. As reported in \cite{Menczer:2020_1stCoursNetSci}, there is a range of rewiring probabilities $p \in (0.01,0.1)$ in which $\langle d \rangle_p \approx \langle d \rangle_{p=0} \textnormal{ and } C_p \approx C_{p=0}$ encoding the fact that the average path length and clustering coefficient of the WS model are, respectively, near the one of a random network and the one of a lattice.
+It worths to highlight that the \textit{rewiring probability} $p$ accounts only for "long-range" connections, while $p_{ER}$ provides either local edges ("short range") and distant interactions ("long range"). Thus, the \textit{distant} vertexes are, on average, $p\cdot L$ where $L$ is the total number of links.
 
-Anyway, this model doesn't explain the presence of the hubs, since neglected by all the degree distributions, and the (inverse) dependence of $C(k)$ on the average network degree.
+A regular lattice is characterized by a high \textit{clustering coefficient} but an high average path length. In addition, a random network, as seen before, exhibits the "Small-World" property alongside with a low clustering coefficient especially, since triangles are rare for small $p$.
+Therefore, the parameter $p$ is introduced to fine tune the co-presence of the two kind of networks. Numerical simulation for $p \in (0.01,0.1)$ accounts for this fact \cite{Menczer:2020_1stCoursNetSci}.
 
-As a pedagogical spoiler, the (four) previous problems would be faced by modifying the WS model adding the emergent properties of the real networks, such as the "scale-free" property.
-Hence, an useful approach would be to start from the degree distribution rather than on imposing a fixed probability of wiring as for ER and WS models.
+Compared to real networks, this model doesn't explain the presence of the hubs, neglected by the degree distributions, and that $C(k) \propto 1/k$ where $ k$ is the node degree \cite{barabasi::2016networkbook}. In fact, the (four) previous issues will be solved by generating graph with a "scale-free" \textit{degree distribution}. In turn, this implies that \textit{hubs} are naturally present, since $ p \sim k$ as we will report in \autoref{sec:BA_model}.
 
 \section{Configuration Model}
-To face the problems previously exposed, a practical starting point could be to reproduce the degree distribution by taking advantage of the configuration model 
-\cite{Menczer:2020_1stCoursNetSci}. Indeed, it is possible to built a network from an arbitrary degree sequence which either could be drawn by a distribution or by a real network of interest.
+By means of the \textit{configuration model}, a network can be directly realized starting from a \textit{degree sequence} which either could be drawn from a distribution or a real network of interest \cite{Menczer:2020_1stCoursNetSci}.
+
 Precisely,
 \begin{definition}[\textit{"Degree Sequence"}]
-	The degree sequence is a list of $N$ numbers \newline $(k_0, \cdots, k_{N-1})$ where $k_i$ is the degree of node $i$.
+	The degree sequence is a list of $N$ numbers $(k_0, \cdots, k_{N-1})$ where $k_i$ is the degree of node $i$.
 \end{definition}
-A degree sequence, thus, determines uniquely a degree distribution but the reverse is not true, since for a particular degree distribution there are $N!$ possibilities of labeling the nodes: $(1,2,3)$ has the same degree distribution of $(3,2,1)$.
-Additionally, a method to wire the nodes has to be chosen. Especially, the configuration model wires the nodes randomly; thus, building a random network. For these reasons, the generated graph is also called "random network with a pre-defined degree sequence". 
+A degree sequence, thus, determines uniquely a degree distribution but the reverse is not true, since for a particular degree distribution there are $N!$ possibilities of labeling the nodes, e.g. $(1,2,3)$ has the same degree distribution of $(3,2,1)$. Moreover, the sum of the degrees has to be even to build an undirected network. 
+At last, the \textit{configuration model} glues the stubs of different nodes at random until all the degree are saturated. The resulting graph is a "random network with a pre-defined degree sequence". 
 
-As done before, a practical way of constructing a network clarifies many ideas.
-As a first step, consider to have a set of nodes with an assigned degree sequence. Pictorially, this could be depicted as a node with a number of dangling stubs as its degree. Thus, the number of isolated stubs have to be twice the sum of all the degrees. 
-The network is, further, composed by the following iterative steps:
-\begin{itemize}
-	\item A pair of stubs is selected at random;
-	\item An edge is formed, by attaching together the selected stubs. 
-\end{itemize}
-This tying technique is replicated until all the stubs are saturated and it is random by construct. Therefore, this method generates random networks with a fixed degree distribution.
-
-Since the number of stubs equals the node degree, each node ends up having the desired degree. Thus, from the selected distribution, multiple (random) networks could be created; even, showing some peculiar properties, such as loops or multi-edges. Therefore, further constraints has to be imposed to obtain a specific topology, such as a connection only to "short-range" nodes. 
+Since the number of stubs equals the node degree, each node ends up having the desired degree. In addition, multiple (random) networks could be created from the selected distribution, even displaying some peculiar properties, such as loops or multi-edges. Further constraints has to be imposed to obtain a specific topology, e.g. allow only \textit{short-range} interactions. 
 
 The network is characterized by mainly two properties:
 \begin{itemize}
@@ -605,35 +589,34 @@ The network is characterized by mainly two properties:
 		\begin{equation}
 			p_{ij} = \frac{k_ik_j}{2L-1}.
 		\end{equation}
-		In fact, there are $k_i$ stubs (or rays) trying to match the $k_j$ ending of node $j$; while $2L -1$ are the overall rays available for the chosen one which produces the $"-1"$;
-	\item the number of self-loops and multi-links decreases as $N$ increases, since it is less probable to connect with a specific node as $p \sim 1/N$. Typically it is not
-	needed to exclude them \cite{Newman:2010_Net:AnIntro}. More importantly, arbitrarily rejecting self-loops or multi-links would result in a modification of the starting degree distribution, yielding the analytical calculations difficult. 
+		In fact, there are $k_i$ stubs (or rays) trying to match the $k_j$ ending of node $j$; while $2L -1$ are all the rays available diminished by the chosen one ($"-1"$);
+	\item Since $p \sim 1/N$ \cite{Newman:2010_Net:AnIntro}, the number of self-loops and multi-links decreases as $N$ increases. Therefore, it is not	needed to exclude them as the network size is large . Nevertheless, arbitrarily rejecting self-loops or multi-links could modify the starting degree distribution, making the analytical calculations difficult. 
 \end{itemize}
 
-The different realizations of the same degree distribution have a statistically objective. Indeed, let's suppose a certain feature, such as the presence of hubs, is independent on the other network characteristics rather than the degree distribution. By exploiting an ensemble of graphs, it would be possible to obtain an average and a standard deviation of that feature. Thus, by comparison with the real value, evaluate the unique dependence on the degree distribution.
+The purpose of generating an ensemble of networks is to test whether a feature could depend only on the underlying degree distribution $p_k$. Indeed, let's suppose that the presence of the hubs is independent on the other network characteristics rather than $p_k$. By exploiting an ensemble of graphs, it would be possible to obtain an average and a standard deviation of that feature. Thus, by comparison with the real value, evaluate if the presence of the hubs depends only on the $ p_k$ .
 
-Another method to generate a network from a fixed degree distribution is the "hidden parameter ($\eta$) method" which, in addition, do not form multi-edges and loops \cite{barabasi::2016networkbook} and allows to tune the average degree $\langle k \rangle$ modifying $\eta$.
-On the other hand, to recover a randomized version from the degree sequence, such as of a fixed real network, the "degree-preserving randomization" is the best help the theory provides. In this way, by just swapping two endpoint nodes at a time, it is possible to build a networks ensemble with the same degree distribution. Therefore, it allows to check whether a quantity depends only on the degree distribution itself or has a more involved structure.
-In the following sections, only the Configuration Model is going to be used.
+Another method to generate a network \textit{from a fixed degree distribution} is the "hidden parameter ($\eta$) method" which do not form multi-edges and loops \cite{barabasi::2016networkbook} and allows to tune the average degree $\langle k \rangle$ modifying the parameter $\eta$.
+On the other hand, the "degree-preserving randomization" provides a method to randomize the connections of a \textit{fixed real network}. In this way, by iteratevely swapping the extrema of the edges, it is possible to build a ensemble of networks with the original degree distribution.
+In the following sections, we will use only the Configuration Model.
 
 \clearpage
 \subsection{Poissonian Small-World Network}
 \label{sec:PSW_network}
 \begin{figure}[ht]
     \begin{subfigure}{.45\linewidth}
-        \includegraphics[width = \linewidth]{Results/PSW/AdjMat/NNO_Conf_Model_addE_True_AdjMat_1000_14.0_0.0.png}
+        \includegraphics[width = \linewidth]{Networks/my_nets/NNO_Conf_Model_AdjMat_1000_25.0_0.0.png}
         \centering
         \caption{Overlapping PSW degree distribution. }
         \label{fig:netmod_O-PSW}
     \end{subfigure}
 	\hfill
 	\begin{subfigure}{.45\linewidth}
-        \includegraphics[width = \linewidth]{Results/PSW/AdjMat/NN_Conf_Model_AdjMat_1000_13.0_0.0.png}
+        \includegraphics[width = \linewidth]{Networks/my_nets/NN_Conf_Model_AdjMat_1000_21.0_0.0.png}
         \centering
         \caption{Sparse PSW degree distribution}
         \label{fig:netmod_S-PSW}
     \end{subfigure}
-	\caption{Two kind of PSW network for a "Overlapping" and "Sparse" scheme. The case of $p = 0.3$ is not show for conciseness, but could be straightforwardly obtained by the superimposing some long-range links to the current cases as in \autoref{fig:net_RegLat_D500_p0.3}}
+	\caption{Two kind of PSW network account for "Overlapping" and "Sparse" structures. The graph realization (upper left) has $ N = 100$ for a better visualization, we fixed $ N = 1000$ the adjaciency matrix (upper right) and the degree distribution (lower band). We do not report the realizations with $p = 0.3$, since it could be straightforwardly obtained by the superimposing some long-range links to the current cases as in \autoref{fig:net_RegLat_D500_p0.3}.}
 \end{figure}
 Social network are highly non trivial structure, by including a multilevel organization; weak ties between communities; and temporal aspects that suggest a degree of fluidity with stable social cores \cite{Thurner::NetBasedExpl}.
 As seen in the \autoref{sec:ATechIntro}, however, the lockdown measures prevents the formation of highly connected nodes (hubs), expected in an unconstrained (social) scenario. Thus, a possible approach would be to draw a degree sequence from a Poissonian distribution, regardless on the ratio $\langle k \rangle / N$ (differently from \autoref{sec:WS_Model}); and build a graph by connecting the neighboring nodes.
@@ -762,9 +745,9 @@ For a more detailed dissertation, see \autoref{sec:SFD_details}.
 \newpage
 \subsection{Barabási-Albert Model}
 \begin{figure}[ht]
-	\includegraphics[scale = 0.4]{../images/Networks/Barabasi_Albert_Model}
+	\includegraphics[width = .5\linewidth]{Networks/my_nets/Barabasi_Albert_Model.png}
 	\centering
-	\caption{Formation of a scale-free network \cite{Barabasi:2009_SF_DecadeBeyond}}
+	\caption{Formation of a scale-free network. We can clearly see that the righest part of the network has a darker color than the left side. Indeed, we set the first nodes to be on the right rewired the newer ones according to the preferential attacchment, i.e. older nodes are likely to be the hubs of the graph.}
 	\label{fig:LCD_growth}
 \end{figure}
 
@@ -1500,6 +1483,8 @@ The prediction worsens even more when the long-range wiring probability $ p$ is 
 Instead, the maximum value predicted for every mean-field evolution (orange curve) is correct as it was obtained directly from from the ODEs \autoref{eqs:homo_SIR_MF} (see \autoref{ch:Methodology}).
 
 \clearpage
+\newgeometry{top = 2cm, bottom = 1cm, left = 1cm, right = 1cm}
+\thispagestyle{empty}
 \begin{figure}[H]
     \centering
     \begin{subfigure}[t]{0.9\linewidth}
@@ -1527,6 +1512,7 @@ Instead, the maximum value predicted for every mean-field evolution (orange curv
 \end{figure}
 
 \clearpage
+\restoregeometry
 \subsection*{Long-Range Watts-Strogatz model}
 \label{sec:res_RegLat_p0.3}
 As the probability of connecting to distant nodes is increased, i.e. $p = 0.3$, the "Long-Range" Watts-Strogatz model starts to resemble a mean-field network where all the nodes are connected at random (see \autoref{fig:net_RegLat_D500_p0.3}). Therefore, the total cases at the end of the epidemic will grow.
@@ -1536,7 +1522,10 @@ In \autoref{ch:Methodology}, we briefly indicated that $t_{max}$ and the varianc
 
 Since for Long-Range WS the spreading is enhanced, the take home message is that local wiring, and eventually social distancing, is effective. In turn, this could drive to a remarkable suppression of fraction of total cases $ \pi(t)$ if $ D$ is small enough as seen in \autoref{fig:sir_RegLat_D2_p0} or \autoref{fig:sir_RegLat_D6}.
 
-\begin{figure}[htbp]
+\clearpage
+\newgeometry{top = 2cm, bottom = 0cm, left = 2cm, right = 2cm}
+\thispagestyle{empty}
+\begin{figure}[H]
     \centering
 	\begin{subfigure}[t]{\textwidth}
         \centering
@@ -1563,7 +1552,8 @@ Since for Long-Range WS the spreading is enhanced, the take home message is that
 \end{figure}
 
 \clearpage
-\newgeometry{top=4cm, bottom = 0cm}
+\newgeometry{top = 0cm, bottom = 0cm, left = 2cm, right = 2cm}
+\thispagestyle{empty}
 \section{Watts-Strogatz Model}
 \label{sec:res_WS_Model}
 In the following section, we will report the epidemic curves for the COVID-19 epidemic parameters ($ \beta = 0.015, d = 14$); alongside with the evolution of a new pathogen, namely $ \beta = 0.1$ and the COVID-19 treated with pharmaceutical interventions for $ \beta = 0.015, d = 4$. We will pick the same Regular Lattice ($ p = 0.0 $) of the previous section. Then, we will add the fraction of distant nodes via $ p = 0.3$. These curves will be used as a benchmark for the future models.
@@ -1571,25 +1561,25 @@ In the following section, we will report the epidemic curves for the COVID-19 ep
 %From now on, we will consider $ p$ as the fraction of distant individuals which have $ 1$ distant interaction. while we rescaled the probability of the Long-Range Regular Lattice ($ p \cdot D \sim 0.3$) as we need a fixed number of long-range nodes rather that a fraction of long-range edges.
 In the following figures, we will recover that the fraction of total cases $\pi(t)$ will be enhanced as $ D$, the transmissibility $ \beta$ or the fraction of the distant interactions $ p$ increase (\autoref{fig:sir_WS_D8}, \autoref{fig:sir_WS_D4_b0.1}, \autoref{fig:sir_WS_D8_p0.3}). By contrast, we will report that $ \pi(t)$ decreases when the pharmaceutical interventions drives to a faster recovery of the infected, namely $ d = 4$ (\autoref{fig:sir_WS_D24_d4}).
 
-\begin{figure}[hbtp]
+\begin{figure}[H]
     \centering
-	\begin{subfigure}[t]{\textwidth}
+	\begin{subfigure}[t]{.83\linewidth}
         \centering
-        \includegraphics[width=.9\textwidth]{Results/Lasts/WS_Epids/p0.0/WS_Epids_SIR_R0_2_N1000_D8.0_p0.0_beta0.015_d14.0.png} 
+        \includegraphics[width=\linewidth]{Results/Lasts/WS_Epids/p0.0/WS_Epids_SIR_R0_2_N1000_D8.0_p0.0_beta0.015_d14.0.png} 
         \caption{SIR diffusion for $ D = 8$. As expected, the total cases $ \pi(t)$ for $ D = 14$   (\autoref{fig:sir_RegLat_D14}) are higher than the current ones. On the other hand, for $ D < 8$, the epidemic curves shows less contagions while they shares the same shape of this evolution, e.g. \autoref{fig:sir_RegLat_D2_p0}.} 
 		\label{fig:sir_WS_D8}
 	\end{subfigure}
 	\vfill
-    \begin{subfigure}[t]{\textwidth}
+    \begin{subfigure}[t]{.83\linewidth}
         \centering
-        \includegraphics[width=.9\textwidth]{Results/Lasts/WS_Epids/p0.0/Pec_Beh/WS_Epids_SIR_R0_6_N1000_D4.0_p0.0_beta0.1_d14.0.png} 
+        \includegraphics[width=\linewidth]{Results/Lasts/WS_Epids/p0.0/Pec_Beh/WS_Epids_SIR_R0_6_N1000_D4.0_p0.0_beta0.1_d14.0.png} 
         \caption{A new pathogen with a higher transmissibility $ \beta = 0.1$ than COVID-19. Indeed, the final outbreak size $\pi_{max} $ is higher than the COVID-19 one of \autoref{fig:sir_WS_D8} even if the average contacts are halved.} 
 		\label{fig:sir_WS_D4_b0.1}
     \end{subfigure}
 	\vfill
-    \begin{subfigure}[t]{\textwidth}
+    \begin{subfigure}[t]{.83\linewidth}
         \centering
-        \includegraphics[width=.9\textwidth]{Results/Lasts/WS_Epids/p0.0/Pec_Beh/WS_Epids_SIR_R0_1_N1000_D24.0_p0.0_beta0.015_d4.0.png} 
+        \includegraphics[width=\linewidth]{Results/Lasts/WS_Epids/p0.0/Pec_Beh/WS_Epids_SIR_R0_1_N1000_D24.0_p0.0_beta0.015_d4.0.png} 
         \caption{Regular Lattice graph evolution of COVID-19 with pharmaceutical interventions, namely the recovery time is $ d = 4$. We noted a remarkable control on the pathogen, since the total outbreak size remains small even thought $ D = 24$.} 
 		\label{fig:sir_WS_D24_d4}
     \end{subfigure}
@@ -1598,8 +1588,10 @@ In the following figures, we will recover that the fraction of total cases $\pi(
 \end{figure}
 
 \clearpage
+\newgeometry{top = 2cm, bottom = 0cm, left = 2cm, right = 2cm}
+\thispagestyle{empty}
 \subsection{Long-Range Watts Strogatz}
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
 	\begin{subfigure}[t]{\textwidth}
         \centering
@@ -1626,25 +1618,24 @@ In the following figures, we will recover that the fraction of total cases $\pi(
 \end{figure}
 
 \clearpage
-\newgeometry{top=2cm,bottom=2cm,left=2cm,right=2cm}
+\restoregeometry
 \section{Poissonian Small-World Network}
-\thispagestyle{empty}
 \label{sec:res_PSW}
 \begin{figure}[ht]
     \begin{subfigure}{.45\linewidth}
-        \includegraphics[width = \linewidth]{Results/PSW/AdjMat/NNO_Conf_Model_addE_True_AdjMat_1000_14.0_0.0.png}
+        \includegraphics[width = \linewidth]{Networks/my_nets/NNO_Conf_Model_AdjMat_1000_25.0_0.0.png}
         \centering
         \caption{Overlapping PSW degree distribution. }
         \label{fig:net_O-PSW}
     \end{subfigure}
 	\hfill
 	\begin{subfigure}{.45\linewidth}
-        \includegraphics[width = \linewidth]{Results/PSW/AdjMat/NN_Conf_Model_AdjMat_1000_13.0_0.0.png}
+        \includegraphics[width = \linewidth]{Networks/my_nets/NN_Conf_Model_AdjMat_1000_21.0_0.0.png}
         \centering
         \caption{Sparse PSW degree distribution}
         \label{fig:net_S-PSW}
     \end{subfigure}
-	\caption{Two kind of PSW network for a "Overlapping" and "Sparse" scheme. The case of $p = 0.3$ is not shown for conciseness, but could be straightforwardly obtained by superimposing some long-range links to the current cases as in \autoref{fig:net_RegLat_D500_p0.3}}
+	\caption{Two realization of PSW network: "Overlapping" and "Sparse" models. The graph realizations(upper left) have $ N = 100$ for a better visualization, while we fixed $ N = 1000$ the adjaciency matrix (upper right) and the degree distribution (lower band). We do not report the realizations with $p = 0.3$, since it could be straightforwardly obtained by the superimposing some long-range links to the current cases as in \autoref{fig:net_RegLat_D500_p0.3}.}
 \end{figure}
 The NPIs measures have forced the individuals to lower their number of contacts, i.e. $2-5$ contacts \cite{Liu::2021_Review_SContactPattern}, in order to avoid the hubs formation, whose role is to produce a vanishing epidemic threshold (see \autoref{ch:sir-models}).
 Therefore, to capture the absence of hubs while retaining the heterogeneity on the number of contacts, we introduced a Poissonian small-world (PSW) network.
@@ -1674,18 +1665,18 @@ In \autoref{fig:sir_O-PSW_D24_d4}, we will display the evolution of a pathogen f
 %Lastly, as introduced in \autoref{ch:Methodology}, the maximum duration $t_{max}$ of an epidemic and its variance over the mean $\sigma_{max}$ are higher as the pathogen diffuses neither too weak nor too strong (see \autoref{fig:sir_O-PSW_COVID}). Moreover, fixing $D$ while increasing $ \beta$, the outbreak time increases (cf. \autoref{fig:sir_O-PSW_D4_d14_b0.1}). The same phenomenon is recovered by changing $ p$ or $ \mu$  (cf. \autoref{fig:sir_O-PSW_D24_d4_p0.3}, \autoref{fig:sir_O-PSW_D24_d4}). 
 %On the other hand, the epidemic lasts less if the pathogen is too strong since it reaches the population in a smaller time (see \autoref{sec:res_OPSW}).
 
-\begin{figure}[p]
+\begin{figure}[htbp]
 	\centering
-    \begin{subfigure}[t]{\linewidth}
-        \includegraphics[width = .90\linewidth]{Results/Lasts/OPSW/p0.0/NNO_Conf_Model_SIR_R0_2_N1000_D8.0_p0.0_beta0.015_d14.0.png}
+    \begin{subfigure}[t]{0.95\linewidth}
+        \includegraphics[width = \linewidth]{Results/Lasts/OPSW/p0.0/NNO_Conf_Model_SIR_R0_2_N1000_D8.0_p0.0_beta0.015_d14.0.png}
 		\centering
         \caption{SIR spreading for $D = 8$ with COVID-19 parameters. Note that $R_0 > R_{c-net}$ showing that the pathogen is naturally spreading. Moreover, there is no exponential growth, even at early times, where there is a big pool of susceptible. The $\pi_{max} $ is higher than the one obtained for the Watts-Strogatz graph in \autoref{fig:sir_WS_D8} as a sign that $\lambda_{c-OPSW} < \lambda_{c-WS}$.}
         \label{fig:sir_O-PSW_D8}
-    \end{subfigure}As
+    \end{subfigure}
 	\vfill
-	\begin{subfigure}[b]{\linewidth}
+	\begin{subfigure}[b]{0.95\linewidth}
 		\centering
-        \includegraphics[width = .90\linewidth]{Results/Lasts/OPSW/p0.0/NNO_Conf_Model_SIR_R0_3_N1000_D14.0_p0.0_beta0.015_d14.0.png}
+        \includegraphics[width = \linewidth]{Results/Lasts/OPSW/p0.0/NNO_Conf_Model_SIR_R0_3_N1000_D14.0_p0.0_beta0.015_d14.0.png}
         \caption{SIR spreading for $D = 14$. The current topology ease the diffusion of the pathogen with respect to the regular Watts-Strogatz graph (cf. \autoref{fig:sir_RegLat_D14}). By zooming into the onset of the outbreak, it could be seen an exponential increase of the total cases of the network curve (green curve). For $D > 14$, the epidemic curves on network develop a more defined exponential growth and start to resemble the mean-field ones.}
         \label{fig:sir_O-PSW_D14_p0}
     \end{subfigure}
@@ -1693,25 +1684,28 @@ In \autoref{fig:sir_O-PSW_D24_d4}, we will display the evolution of a pathogen f
 	\label{fig:sir_O-PSW_COVID}
 \end{figure}
 
-\begin{figure}[htbp]
+\clearpage
+\thispagestyle{headings}
+\newgeometry{left = 2cm, bottom = 0cm, top = 3cm, right = 2cm}
+\begin{figure}[H]
 	\centering
-	\begin{subfigure}{\linewidth}
+	\begin{subfigure}{.9\linewidth}
 		\centering
-		\includegraphics[width = .90\linewidth]{Results/Lasts/OPSW/p0.0/Pec_Beh/NNO_Conf_Model_SIR_R0_6_N1000_D4.0_p0.0_beta0.1_d14.0.png}
+		\includegraphics[width = \linewidth]{Results/Lasts/OPSW/p0.0/Pec_Beh/NNO_Conf_Model_SIR_R0_6_N1000_D4.0_p0.0_beta0.1_d14.0.png}
 		\caption{A pathogen with more transmissibility than COVID-19 and the other parameters drawn from \autoref{fig:sir_O-PSW_D8}. As before, $\pi_{max}$ rises than the $ \beta = 0.1$ case even if $ D$ is halved (cf. \autoref{fig:sir_O-PSW_D8}).}
 		\label{fig:sir_O-PSW_D4_d14_b0.1}
 	\end{subfigure}
 	\vfill
-	\begin{subfigure}[t]{\linewidth}
+	\begin{subfigure}{.9\linewidth}
 		\centering
-		\includegraphics[width = .90\linewidth]{Results/Lasts/OPSW/p0.0/Pec_Beh/NNO_Conf_Model_SIR_R0_1_N1000_D24.0_p0.0_beta0.015_d4.0.png}
+		\includegraphics[width = \linewidth]{Results/Lasts/OPSW/p0.0/Pec_Beh/NNO_Conf_Model_SIR_R0_1_N1000_D24.0_p0.0_beta0.015_d4.0.png}
 		\caption{The evolution for COVID-19 faced with pharmaceutical interventions (PIs). They plays a relevant role since for $ D = 8, d = 14$ (\autoref{fig:sir_O-PSW_D8}) the final outbreak size overtakes the $40 \% $ of the population while, here, the final fraction of total cases $\pi(t_{max})\sim 13\%$ as $D \sim 23, d = 4$.}
 		\label{fig:sir_O-PSW_D24_d4}
 	\end{subfigure}
 	\vfill
-	\begin{subfigure}{\linewidth}
+	\begin{subfigure}{.9\linewidth}
 		\centering
-		\includegraphics[width = .90\linewidth]{Results/Lasts/OPSW/p0.3/Pec_Beh/NNO_Conf_Model_SIR_R0_1_N1000_D24.0_p0.3_beta0.015_d4.0.png}
+		\includegraphics[width = \linewidth]{Results/Lasts/OPSW/p0.3/Pec_Beh/NNO_Conf_Model_SIR_R0_1_N1000_D24.0_p0.3_beta0.015_d4.0.png}
 		\caption{The sub-exponential growth for a $D$ slightly above $D_c$ of \autoref{fig:Ordp_OPSW_highmu_p0.3} and $p = 0.3.$ It has been reported here for a direct comparison with the $p = 0$ case. Indeed, the $ \pi_{max} $ is greater than the one reported for $ p= 0$ as the long-range nodes are present. For $ D < 24$, the curves show trajectories which decay fast and are not smooth. \autoref{fig:sir_O-PSW_D8} shows how a pathogen could behave on the same network without Pharmaceutical Interventions.}
 		\label{fig:sir_O-PSW_D24_d4_p0.3}
 	\end{subfigure}
@@ -1720,10 +1714,11 @@ In \autoref{fig:sir_O-PSW_D24_d4}, we will display the evolution of a pathogen f
 \end{figure}
 
 \clearpage
+\thispagestyle{empty}
 \subsubsection*{SIR on Long-Range O-PSW}
 The diffusion of the pathogen for $p = 0.3$ shares the overall shape with the $p = 0$ case, but with an enhancement due to the possibility to jump into new pools of susceptible. In this way, an infected node may have more susceptible around and could spread easily.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 	\centering
 	\begin{subfigure}[t]{\linewidth}
 		\centering
@@ -1737,17 +1732,17 @@ The diffusion of the pathogen for $p = 0.3$ shares the overall shape with the $p
 		\caption{SIR spreading for $ D = 14$ showing an enhancement in $ \pi_{max} $ with respect the Watts-Strogatz one in \autoref{fig:RegLat_D14_p0.3}.}
 		\label{fig:sir_O-PSW_D14_p0.3}
 	\end{subfigure}
+	\begin{subfigure}[t]{\linewidth}
+		\centering
+		\includegraphics[width = .90\linewidth]{Results/Lasts/OPSW/p0.3/Pec_Beh/NNO_Conf_Model_SIR_R0_6_N1000_D4.0_p0.3_beta0.1_d14.0.png}
+		\caption{SIR diffusion for $ D = 4$ but with higher $\beta$. As expected from the presence of long-range connections, $\pi(t_{max})$ reach $\sim 4$ times the total infected of the $ p=0$ case. As in the previous cases, the WS model accounts for a lower enhancement as displayed in \autoref{fig:sir_WS_D4_b0.1}.}
+		\label{fig:sir_O-PSW_D8_b0.1}
+	\end{subfigure}
 	\caption{Overlapping PSW spread for COVID-19 parameters with $p = 0.3$ }
 \end{figure}
 
-\begin{figure}[H]
-	\centering
-	\includegraphics[width = .90\linewidth]{Results/Lasts/OPSW/p0.3/Pec_Beh/NNO_Conf_Model_SIR_R0_6_N1000_D4.0_p0.3_beta0.1_d14.0.png}
-	\caption{SIR diffusion for $ D = 4$ but with higher $\beta$. As expected from the presence of long-range connections, $\pi(t_{max})$ reach $\sim 4$ times the total infected of the $ p=0$ case. As in the previous cases, the WS model accounts for a lower enhancement as displayed in \autoref{fig:sir_WS_D4_b0.1}.}
-	\label{fig:sir_O-PSW_D8_b0.1}
-\end{figure}
-
 \clearpage
+\restoregeometry
 \subsubsection*{Order Parameters}
 \begin{figure}[t]
 	\begin{subfigure}[t]{0.48\linewidth}
@@ -1797,13 +1792,12 @@ Switching on the long-range interactions ($ p = 0.3$), the shape of $ SD(C)$ are
 In the \autoref{fig:Ordp_OPSW_highmu_p0.3}, we displayed the same scenario of \autoref{fig:Ordp_OPSW_highmu_p0.3} but also the long-range interactions. The best estimate of $ D_c$ is provided by the Erdös-Rényi approximation. Nevertheless, as one finds in the legend, the fuse estimation is diminished since we actively considered the distant node $ D_{c-fuse \, model}$ as susceptible individuals in the analytical derivation (see \autoref{ch:Methodology}).
 As seen before, the epidemic curves are enhanced as we introduced the long-range interactions. Nevertheless, the order parameter does not display a perceiving reduction of $ D_c$ for $ p = 0.3$.
 
-\clearpage
 \section{Caveman Model}
 \label{sec:res_CM}
 \begin{figure}[t]
 	\centering
-	\includegraphics[width = 0.8\linewidth]{Results/Caveman_Model/AdjMat/Caveman_Model_AdjMat_999_3.2_0.3.png}
-	\caption{The visualization of a Caveman model properties: the graphical representation (upper right), where the colored dots represent a family; the adjacency matrix (upper right) and the degree distribution (lower figure). In particular, this realization is composed by 333 families arrange on a circle. We connected each clique on the (two) nearest neighboring caves through $1$ edge each. Then, we introduce a $p = 0.3$ fraction of distant nodes. Thus, the \autoref{eq:CavemanMod_D} yields $D \sim 3.2$.}
+	\includegraphics[width = 0.8\linewidth]{Results/Lasts/Caveman_Model/AdjMat/Caveman_Model_AdjMat_999_3.2_0.3.png}
+	\caption{The visualization of a Caveman model properties: the graphical representation (upper right), where the colored dots represent a family; the adjacency matrix (upper right) and the degree distribution (lower figure). In particular, this realization is composed by 990 families of 22 components each and arranged on a circle. We connected each clique on the (two) nearest neighboring caves through $1$ edge each. Then, we introduce a $p = 0.3$ fraction of distant nodes. Thus, the \autoref{eq:CavemanMod_D} yields $D \sim 27.3$.}
 	\label{fig:CM_AdjMat_p0.3}
 \end{figure}
 The most sensible lock-down measure was the household restriction. By limiting the individuals to have contacts only within families (or small communities), the pathogen was enclosed into small pools of susceptible and, hopefully, suppressed via the recovering of the nodes, e.g. \autoref{fig:sir_CM_D4}. As previously seen, forcing the nodes into overlapping neighborhoods with a sufficiently low $ D$, diminishes the final outbreak size $ \pi_{max}$. Therefore, we will arrange the individuals in cliques; while fewer connections will be left to wire to the other families either locally or distantly. As expected, this network will reduce the fraction of total cases $\pi(t)$ with respect to the previous ones and, in particular, the Watts-Strogatz model.
@@ -1812,7 +1806,7 @@ Concretely, we used a "Caveman Model" (see \autoref{sec:RLN-Caveman_Description}
 
 Moreover, we introduced the wiring probability $p$ to the distant nodes to account for the leisure activities as expected for a light lockdown. Instead of rewire the existing links as done before, in the current model we added all the long-range edges to the previously existing connections not to destroy the family structures. Therefore, we calculated the average number of contacts $D$ by using 
 \begin{equation}
-	D \sim \frac{2L_{tot}}{N_{tot}} = \frac{2}{N_{tot}} \left(N_{cl}\frac{N_{cl}-1}{2}\cdot K + L_{nx}(K-1) + p\right)
+	D \sim \frac{2L_{tot}}{N_{tot}} = \frac{2}{N_{tot}} \left((1+p)\frac{N_{cl}(N_{cl}-1)}{2}\cdot K + L_{nx}(K-1)\right)
 	\label{eq:CavemanMod_D}
 \end{equation} 
 where $N_{cl}, L_{nx}, K$ are, respectively, the number of nodes composing a community, the number of links we used to reach the next community, the total number of cliques, namely \\ $K = int(1000/N_{cl})$.
@@ -1822,31 +1816,37 @@ As a brief outline, we will treat firstly the COVID-19 scenario ($\beta = 0.015 
 
 Lastly, we will obtain that the evolution of the Watts-Strogatz model will exhibit in every scenario an outbreak final size greater than the current topology. Thus, a Caveman Model enables to control more a diffusion of a pathogen. On the other hand, we will show that for a disease with high transmissibility $ \beta = 0.1$ another network should be considered \autoref{fig:sir_CM_D4_d14_b0.1}.
 
-\clearpage
 \subsection*{SIR with Local Interactions}
 In this part, we will report the spreading of COVID-19 on a Caveman Model with $1$ on ring link and $p = 0.0$\footnote{In truth, we simulated the epidemic for both $1 \textnormal{ and 3}$ on-ring-links, but we review only the $OnRing = 1$ case since $OnRing = 3$ have the same behavior but reaching a higher fraction of population.}. As seen previously, by fixing the epidemic parameters ($ \beta, \mu$), the epidemic grows faster as $D$ increases. 
 
-In \autoref{fig:sir_CM_D8}, the final outbreak size $\pi_{max}$ is smaller than the one of a Watt-Strogatz (WS) model for $ D = 2$ \autoref{fig:sir_RegLat_D2_p0}. Moreover, the average contacts for the caveman model are $ D \sim 3.5$, higher than the one for the WS graph. Thus, the current topology shows a better control on the pathogen.\\
+In \autoref{fig:sir_CM_D8}, the final outbreak size $\pi_{max}$ is smaller than the one of a Watt-Strogatz (WS) model for $ D = 2$ \autoref{fig:sir_RegLat_D2_p0}. Moreover, the average contacts for the caveman model are $ D \sim 3.5$, bigger than the ones for the WS graph. Thus, the current topology shows a better control on the pathogen.\\
 In \autoref{fig:sir_CM_D4_d14_b0.1}, we report a scenario for which the pathogen invade a considerable fraction of the population. This drives to the insight that with an higher transmission rate, namely $ \beta = 0.1$, only drastic restrictions can limit the disease, e.g. forced quarantines. \\
 In \autoref{fig:sir_RegLat_D2_p0} we showed a regular Watts-Strogatz model with the nodes disposed on a circle. In \autoref{fig:sir_CM_D4}, instead, we will display a similar structure: families (four individuals) are connected only locally on a ring. The latter structure will slow down the spreading as compared to the former one.
 
 Ultimately, this topology is the best suited network in constraining a disease.
 
-\begin{figure}[htbp]
+\clearpage
+\newgeometry{left = 2cm, right = 2cm, bottom = 0cm, top = 3cm}
+\thispagestyle{empty}
+\begin{figure}[H]
 	\centering
 	\begin{subfigure}{\linewidth}
-		\includegraphics[width = 0.8\linewidth]{Results/Lasts/Caveman_Model/p0.0/Caveman_Model_SIR_R0_1_N1000_D4.0_p0.0_beta0.015_d14.0.png}
+		\centering
+		\includegraphics[width = 0.9\linewidth]{Results/Lasts/Caveman_Model/p0.0/Caveman_Model_SIR_R0_1_N1000_D4.0_p0.0_beta0.015_d14.0.png}
 		\caption{A pathogen spreading on a Caveman Model with $D \sim 3.5$. Each clique/family is composed by four individuals and we wired each clique to the next one with $ 1$ edge. In the Watts-Strogatz case $ \pi_{max} \sim 4.3\%$ for $ D = 2$. Therefore, this topology exhibits more control in limiting the pathogen, since $ \pi_{max} \sim 2\%$ . Note that $ D = 3.5$ is comparable to household European size (\cite{Householdsize:2020}) or the USA one (\cite{HouseholdsizeUSA:2020}).}
 		\label{fig:sir_CM_D4}
 	\end{subfigure}
-	\centering
+	\par\medskip
 	\begin{subfigure}{\linewidth}
-		\includegraphics[width = 0.8\linewidth]{Results/Lasts/Caveman_Model/p0.0/Caveman_Model_SIR_R0_2_N999_D8.0_p0.0_beta0.015_d14.0.png}
+		\centering
+		\includegraphics[width = 0.9\linewidth]{Results/Lasts/Caveman_Model/p0.0/Caveman_Model_SIR_R0_2_N999_D8.0_p0.0_beta0.015_d14.0.png}
 		\caption{A pathogen spreading on a Caveman Model with $D \sim 8.22$. Compared with \autoref{fig:sir_O-PSW_D8}, the caveman model diminishes the final total cases $ \pi_{max} $.}
 		\label{fig:sir_CM_D8}
 	\end{subfigure}
-	\begin{subfigure}{\linewidth}
-		\includegraphics[width = 0.8\linewidth]{Results/Lasts/Caveman_Model/p0.0/Caveman_Model_SIR_R0_3_N990_D14.0_p0.0_beta0.015_d14.0.png}
+	\par\medskip
+	\begin{subfigure}{\linewidth}	
+		\centering
+		\includegraphics[width = 0.9\linewidth]{Results/Lasts/Caveman_Model/p0.0/Caveman_Model_SIR_R0_3_N990_D14.0_p0.0_beta0.015_d14.0.png}
 		\caption{A pathogen spreading on a Caveman Model with $D = 14$}
 		\label{fig:sir_CM_D14}
 	\end{subfigure}
@@ -1855,22 +1855,23 @@ Ultimately, this topology is the best suited network in constraining a disease.
 \end{figure}
 
 \clearpage
+\restoregeometry
 \subsection*{Exploring SIR parameter on Caveman Model}
 The first figure of the next panel shows an epidemic curve with a transmission rate $\beta = 0.1$ (\autoref{fig:sir_CM_D4_d14_b0.1}) while the other parameters are drawn from \autoref{fig:sir_CM_D4}, e.g. a new COVID-19 variant immune to the available vaccines. Nevertheless, since the network allows for a localized spread, the overall fraction of total cases stays small even if the pathogen has roughly $7$ times the transmissibility of the COVID-19.
 
 The second figure \autoref{fig:sir_CM_D24_d4} is characterized by a recovery rate of $ \mu = 1/4$ while other parameter are in accordance with the \autoref{fig:sir_CM_D14}. This is a paradigmatic situation where pharmaceutical interventions are at work and the mean $ d = 4$ accounts for vaccinated and not-vaccinated individuals. Therefore, it is reported a reduction in the overall infected nodes.
-
+\par\medskip
 \begin{figure}[htbp]
 	\centering
-	\begin{subfigure}{0.8\linewidth}
-		\includegraphics[width = \linewidth, height = 0.2\textheight]{Results/Lasts/Caveman_Model/p0.0/Pec_Beh/Caveman_Model_SIR_R0_5_N1000_D4.0_p0.0_beta0.1_d14.0.png}
+	\begin{subfigure}{0.9\linewidth}
+		\includegraphics[width = \linewidth]{Results/Lasts/Caveman_Model/p0.0/Pec_Beh/Caveman_Model_SIR_R0_5_N1000_D4.0_p0.0_beta0.1_d14.0.png}
 		\caption{A pathogen stronger than COVID-19 keeping fixed the time to recover, e.g. a new variant immune to a vaccine for a different type of COVID-19. The current structure drives to $ \pi_{max} \sim 13\%$; while for a WS model we reported a greater fraction $ \pi_{max} \sim 44\%$ in \autoref{fig:sir_WS_D4_b0.1}.}
 		\label{fig:sir_CM_D4_d14_b0.1}
 	\end{subfigure}
 	\par\bigskip
 	\centering
-	\begin{subfigure}{0.8\linewidth}
-		\includegraphics[width = \linewidth, height = 0.2\textheight]{Results/Lasts/Caveman_Model/p0.0/Pec_Beh/Caveman_Model_SIR_R0_1_N1000_D24.0_p0.0_beta0.015_d4.0.png}
+	\begin{subfigure}{0.9\linewidth}
+		\includegraphics[width = \linewidth]{Results/Lasts/Caveman_Model/p0.0/Pec_Beh/Caveman_Model_SIR_R0_1_N1000_D24.0_p0.0_beta0.015_d4.0.png}
 		\caption{Fixed the transmissibility coefficient to COVID-19, while decreasing the recovery to $d = 4$, the pathogen diffuses less than in a WS graph with the same parameters (cf. \autoref{fig:sir_WS_D24_d4}). This is also recovered by looking at the bump in the infected (azure dots) which is more contained than in the quoted figure.}
 		\label{fig:sir_CM_D24_d4}
 	\end{subfigure}
@@ -1884,6 +1885,7 @@ The second figure \autoref{fig:sir_CM_D24_d4} is characterized by a recovery rat
 
 In this section, we will analyzed the epidemic curves of a Caveman Model with both local ("On Ring Links") and long-range interactions by switching on the wiring probability $p = 0.3$. By contrast with the other models, we will add the distant interactions on top of the pre-exiting structures, e.g. families. Thus, the network has communities arranged on a circle, but also distant links due, for example, to work or leisure activities.
 As recovered in the previous cases, for $ p \neq 0$, on finds an increase of the outbreak final size $ \pi_{max} $. Nevertheless,the fraction of total cases $\pi(t)$ will be smaller than the other models, namely the Overlapping Poissonian Small-World (O-PSW) and Watts-Strogatz (WS) graphs, even if we added distant interactions on top of the pre-existing families.
+\par\medskip
 \begin{figure}[htbp]
 	\centering
 	\begin{subfigure}{0.9\linewidth}
@@ -1891,7 +1893,7 @@ As recovered in the previous cases, for $ p \neq 0$, on finds an increase of the
 		\caption{A pathogen spreading in a Caveman Model with $D = 8, p = 0.3$. Final outbreak size is smaller than the WS model and the OPSW models \autoref{fig:sir_WS_D8_p0.3}, \autoref{fig:sir_O-PSW_D8}. In \autoref{fig:sir_O-PSW_D8} the overall value of $ \pi_{max}$ is nearly $3$ times the present one. Hence, a "regular" Caveman Model constrains the most an epidemic.}
 		\label{fig:sir_CM_D8_p0.3}
 	\end{subfigure}
-	\par\smallskip
+	\par\bigskip
 	\begin{subfigure}{0.9\linewidth}
 		\includegraphics[width = \linewidth]{Results/Lasts/Caveman_Model/p0.3/Caveman_Model_SIR_R0_3_N990_D13.0_p0.3_beta0.015_d14.0.png}
 		\caption{A pathogen spreading in a Caveman model with $D = 14, p = 0.3$. The discussion is the same as the $ D = 8$ one.}
@@ -1945,20 +1947,26 @@ In \autoref{fig:sir_BA_D6_b0.1}, we plotted the evolution of a "stronger" pathog
 Compared with \autoref{fig:sir_O-PSW_D4_d14_b0.1}, the $ \pi_{max} $ reaches a larger fraction of the population, nearly $ 2$ times the OPSW one.
 Moreover, in \autoref{fig:sir_BA_d4D22}, despite the fast healing of nodes and especially of the hubs, the total fraction of infected remains high. This drives to the idea that only a vaccination campaign targeting the hubs (e.g. doctors, nurses,$\cdots$) could limit a pathogen. Another effective procedure could be to close the "infrastructural hubs" such as airports, stores, gyms,$ \cdots $.
 
-\begin{figure}[p]
-	\begin{subfigure}{.9\linewidth}
+\clearpage
+\newgeometry{top = 2cm, bottom = 0cm, left = 2cm, right = 2cm}
+\thispagestyle{empty}
+\begin{figure}[H]
+	\begin{subfigure}{\linewidth}
+		\centering
 		\includegraphics[width = \linewidth]{Results/BA_Model/p0.0/BA_Model_SIR_R0_0_N1000_D2.0_p0.0_beta0.015_d14.0.png}
 		\caption{A pathogen spreading in a BA model with $D = 2$. Note that for $ R_0 < R_{c-net} $, the number of infected $ i(t)$ (azure dots) is always decreasing. For $ R_0 < R_{c-net} $, we displayed the typical increase of $ i(t)$.}
 		\label{fig:sir_BA_D2}
 	\end{subfigure}
 	\vspace{.5cm}
-	\begin{subfigure}{.9\linewidth}
+	\begin{subfigure}{\linewidth}
+		\centering
 		\includegraphics[width = \linewidth]{Results/BA_Model/p0.0/BA_Model_SIR_R0_1_N1000_D6.0_p0.0_beta0.015_d14.0.png}
 		\caption{A pathogen spreading in a BA model with $D = 6$. The final outbreak size is far higher that the previous models (see \autoref{fig:sir_O-PSW_D8})}
 		\label{fig:sir_BA_D6}
 	\end{subfigure}
 	\vfill
-	\begin{subfigure}{.9\linewidth}
+	\begin{subfigure}{\linewidth}
+		\centering
 		\includegraphics[width = \linewidth]{Results/BA_Model/p0.0/BA_Model_SIR_R0_2_N1000_D10.0_p0.0_beta0.015_d14.0.png}
 		\caption{A pathogen spreading in a BA model with $D = 10$. The Barabási-Albert model has retaken the lead over the mean-field represented by the Annealed-Mean-Field Network. The overall fraction of cases is enhanced \autoref{fig:sir_O-PSW_D14_p0} even though the quoted figure has $ D = 14$.}
 		\label{fig:sir_BA_D10}
@@ -1968,19 +1976,20 @@ Moreover, in \autoref{fig:sir_BA_d4D22}, despite the fast healing of nodes and e
 \end{figure}
 
 \clearpage
+\restoregeometry
 \subsubsection{Changing epidemic parameters}
 Here, we report the most peculiar curve obtained by increasing the transmission rate $ \beta = 0.1$ and the days to recover $ d = 4$. 
 \begin{figure}[H]
 	\begin{subfigure}{\linewidth}
 		\centering
-		\includegraphics[scale = 0.15]{Results/BA_Model/p0.0/Pec_Beh/BA_Model_SIR_R0_8_N1000_D6.0_p0.0_beta0.1_d14.0.png}
+		\includegraphics[width = \linewidth]{Results/BA_Model/p0.0/Pec_Beh/BA_Model_SIR_R0_8_N1000_D6.0_p0.0_beta0.1_d14.0.png}
 		\caption{Diffusion on a BA model with $\beta = 0.1$. A direct comparison with the \autoref{fig:sir_O-PSW_D24_d4_p0.3} shows how the BA model enhances the final outbreak size $\pi_{max}$.}
 		\label{fig:sir_BA_D6_b0.1}
 	\end{subfigure}
 	\par\bigskip
 	\begin{subfigure}{\linewidth}
 		\centering
-		\includegraphics[scale = 0.15]{Results/BA_Model/p0.0/Pec_Beh/BA_Model_SIR_R0_1_N1000_D22.0_p0.0_beta0.015_d4.0.png}
+		\includegraphics[width = \linewidth]{Results/BA_Model/p0.0/Pec_Beh/BA_Model_SIR_R0_1_N1000_D22.0_p0.0_beta0.015_d4.0.png}
 		\caption{Despite the fast healing of the infected individuals, the network enables a diffusion on a larger fraction of population than "free" previous spreading. Only a vaccination campaign addressed to the hubs could produce a relevant drop in the number of cases.}
 		\label{fig:sir_BA_d4D22}
 	\end{subfigure}
