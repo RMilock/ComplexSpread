@@ -1583,7 +1583,7 @@ In the following figures, we will recover that the fraction of total cases $\pi(
         \caption{Regular Lattice graph evolution of COVID-19 with pharmaceutical interventions, namely the recovery time is $ d = 4$. We noted a remarkable control on the pathogen, since the total outbreak size remains small even thought $ D = 24$.} 
 		\label{fig:sir_WS_D24_d4}
     \end{subfigure}
-    \caption{Regular Watts-Strogatz model spreading curves for $D = 8, 24$ while, once at a time, $ \beta = 0.1, d = 4$. The $ D = 14$ case was reported in \autoref{fig:sir_RegLat_D14}.}
+    \caption{Regular Watts-Strogatz model spreading curves for $D = 4, 8, 24$ while, once at a time, $ \beta = 0.1, d = 4$. The $ D = 14$ case was reported in \autoref{fig:sir_RegLat_D14}.}
 	\label{fig:sir_WS_D5D5b0.1_D24d4}
 \end{figure}
 
@@ -1614,7 +1614,7 @@ In the following figures, we will recover that the fraction of total cases $\pi(
         \caption{Regular Lattice graph evolution of COVID-19 with pharmaceutical interventions.} 
 		\label{fig:sir_WS_D24_d4_p0.3}
     \end{subfigure}
-    \caption{Long-Range Watts-Strogatz model with $ p = 0.3$. We reported the spreading curves for $D = 8, 4, 24$ while, once at a time, $ \beta = 0.015, 0.1$ and $ d = 14,4$. The case where $ D = 14$ was reported in \autoref{fig:RegLat_D14_p0.3}}
+    \caption{Long-Range Watts-Strogatz model with $ p = 0.3$. We reported the spreading curves for $D = 8, 4, 24$ while, once at a time, $ \beta = 0.015, 0.1$ and $ d = 14,4$. The case where $ D = 14$ was reported in \autoref{fig:RegLat_D14_p0.3}. By means of \autoref{eq:picrit_network}, the estimated maximum of $ i(t)$ (green star) is overestimated; while the maximum for a mean-field is correct (yellow star). In addition, the former worsens as $ p = 0.3$.}
 	\label{fig:sir_WS_D5D5b0.1_D24d4_p0.3}
 \end{figure}
 
@@ -1707,7 +1707,7 @@ In \autoref{fig:sir_O-PSW_D24_d4}, we will display the evolution of a pathogen f
 	\begin{subfigure}{.9\linewidth}
 		\centering
 		\includegraphics[width = \linewidth]{Results/Lasts/OPSW/p0.3/Pec_Beh/NNO_Conf_Model_SIR_R0_1_N1000_D24.0_p0.3_beta0.015_d4.0.png}
-		\caption{The sub-exponential growth for a $D$ slightly above $D_c$ of \autoref{fig:Ordp_OPSW_highmu_p0.3} and $p = 0.3.$ It has been reported here for a direct comparison with the $p = 0$ case. Indeed, the $ \pi_{max} $ is greater than the one reported for $ p= 0$ as the long-range nodes are present. For $ D < 24$, the curves show trajectories which decay fast and are not smooth. \autoref{fig:sir_O-PSW_D8} shows how a pathogen could behave on the same network without Pharmaceutical Interventions.}
+		\caption{The sub-exponential growth for a $D$ slightly above $D_c$ of \autoref{fig:Ordp_OPSW_highmu_p0.3} and $p = 0.3.$ It has been reported here for a direct comparison with the $p = 0$ case. Indeed, the $ \pi_{max} $ is greater than the one reported for $ p= 0$ as the long-range nodes are present. For $ D < 24$, the curves show trajectories which decay fast and are not smooth. \autoref{fig:sir_O-PSW_D8} shows how a pathogen could behave on the same network without Pharmaceutical Interventions. Lastly, by means of \autoref{eq:picrit_network}, the estimated maximum of $ i(t)$ (green star) is overestimated; while the maximum for a mean-field is correct (yellow star). In addition, the former worsens as $ p = 0.3$.}
 		\label{fig:sir_O-PSW_D24_d4_p0.3}
 	\end{subfigure}
 	\caption{Spread for different epidemic parameters}
@@ -1984,7 +1984,8 @@ Here, we report the most peculiar curve obtained by increasing the transmission 
 	\begin{subfigure}{\linewidth}
 		\centering
 		\includegraphics[width = \linewidth]{Results/Lasts/BA_Model/p0.0/Pec_Beh/BA_Model_SIR_R0_8_N1000_D6.0_p0.0_beta0.1_d14.0.png}
-		\caption{Diffusion on a BA model with $\beta = 0.1$. A direct comparison with the \autoref{fig:sir_O-PSW_D24_d4_p0.3} shows how the BA model enhances the final outbreak size $\pi_{max}$.}
+		\caption{Diffusion on a BA model with $\beta = 0.1$. A direct comparison with the \autoref{fig:sir_O-PSW_D24_d4_p0.3} shows how the BA model enhances the final outbreak size $\pi_{max}$.
+		The estimated maximum of $ i(t)$ (green star) is \textit{slightly} overestimated, since the pathogen is "strong" enough to resemble a mean-field. The maximum for a mean-field is correct (yellow star).}
 		\label{fig:sir_BA_D6_b0.1}
 	\end{subfigure}
 	\par\bigskip
