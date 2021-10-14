@@ -1,0 +1,662 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Beamer Presentation
+% LaTeX Template
+% Version 1.0 (10/11/12)
+%
+% This template has been downloaded from:
+% http://www.LaTeX%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Beamer Presentation
+% LaTeX Template
+% Version 1.0 (10/11/12)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND THEMES
+%----------------------------------------------------------------------------------------
+
+\documentclass{beamer}
+
+\mode<presentation> {
+
+% The Beamer class comes with a number of default slide themes
+% which change the colors and layouts of slides. Below this is a list
+% of all the themes, uncomment each in turn to see what they look like.
+
+%\usetheme{default}
+%\usetheme{AnnArbor}
+%\usetheme{Antibes}
+%\usetheme{Bergen}
+%\usetheme{Berkeley}
+%\usetheme{Berlin}
+%\usetheme{Boadilla}
+%\usetheme{CambridgeUS}
+%\usetheme{Copenhagen}
+%\usetheme{Darmstadt}
+%\usetheme{Dresden}
+%\usetheme{Frankfurt}
+%\usetheme{Goettingen}
+%\usetheme{Hannover}
+%\usetheme{Ilmenau}
+%\usetheme{JuanLesPins}
+%\usetheme{Luebeck}
+\usetheme{Madrid}
+%\usetheme{Malmoe}
+%\usetheme{Marburg}
+%\usetheme{Montpellier}
+%\usetheme{PaloAlto}
+%\usetheme{Pittsburgh}
+%\usetheme{Rochester}
+%\usetheme{Singapore}
+%\usetheme{Szeged}
+%\usetheme{Warsaw}
+
+% As well as themes, the Beamer class has a number of color themes
+% for any slide theme. Uncomment each of these in turn to see how it
+% changes the colors of your current slide theme.
+
+%\usecolortheme{albatross}
+\usecolortheme{beaver}
+%\usecolortheme{beetle}
+%\usecolortheme{crane}
+%\usecolortheme{dolphin}
+%\usecolortheme{dove}
+%\usecolortheme{fly}
+%\usecolortheme{lily}
+%\usecolortheme{orchid}
+%\usecolortheme{rose}
+%\usecolortheme{seagull}
+%\usecolortheme{seahorse}
+%\usecolortheme{whale}
+%\usecolortheme{wolverine}
+
+%\setbeamertemplate{footline} % To remove the footer line in all slides uncomment this line
+%\setbeamertemplate{footline}[page number] % To replace the footer line in all slides with a simple slide count uncomment this line
+
+%\setbeamertemplate{navigation symbols}{} % To remove the navigation symbols from the bottom of all slides uncomment this line
+}
+
+\usepackage{graphicx} % Allows including images
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage{animate}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{ subcaption}
+%\usepackage{subfig}
+%\captionsetup[subfloat]{captionskip=1pt}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%paths:
+\graphicspath{
+%{"./Plots/2_WS_Epids_zip(beta,mu)/p0.0/SIR/R0s/gif/"}
+%{"./Plots/2_WS_Epids_zip(beta,mu)/p0.1/SIR/R0s/gif/"}
+%{"./Plots/Fixed_Plots/"}
+%{"./Plots/3.1_NNR_Conf_Model/AdjMat/"}
+%{"./Plots/3.1_NNR_Conf_Model/SIR/"}
+%{"./Plots/3.1_NNR_Conf_Model/SIR/R0_1-2/R0_flow/"}
+%{"./Plots/3.1_NNR_Conf_Model/SIR/R0_2-3/"}
+%{"./Plots/3.2_Overlapping_Rew_Add_True_13.5_done/p0.0/AdjMat/"}
+%{"./Plots/3.2_Overlapping_Rew_Add_True_13.5_done/p0.0/SIR/"}
+%{"./Plots/3.2_Overlapping_Rew_Add_True_13.5_done/p0.1/AdjMat/"}
+%{"./Plots/3.2_Overlapping_Rew_Add_True_13.5_done/p0.1/SIR/"}
+%{"./Plots/3.2_Overlapping_Rew_Add_True_13.5_done/p0.0/SIR/R0_0-2/"}
+%{"./Plots/3.2_Overlapping_Rew_Add_True_13.5_done/p0.0/SIR/R0_2-3/"}
+%{"./Plots/3.2_Overlapping_Rew_Add_True_13.5_done/p0.0/SIR/R0_3-5/"}
+{"./Plots/"}
+}
+
+%----------------------------------------------------------------------------------------
+%	TITLE PAGE
+%----------------------------------------------------------------------------------------
+
+\title[Network Covid-19]{Modeling COVID-19 spreading in a network} % The short title appears at the bottom of every slide, the full title is only on the title page
+
+\author{Riccardo Milocco} % Your name
+\institute[UniPD] % Your institution as it will appear on the bottom of every slide, may be shorthand to save space
+{
+University of Padova \\ % Your institution for the title page
+\medskip
+\textit{} % Your email address
+}
+\date{\today} % Date, can be changed to a custom date
+
+\begin{document}
+
+\begin{frame}
+\titlepage % Print the title page as the first slide
+\end{frame}
+
+\begin{frame}
+\frametitle{Overview} % Table of contents slide, comment this block out to remove it
+\tableofcontents % Throughout your presentation, if you choose to use \section{} and \subsection{} commands, these will automatically be printed on this slide as an overview of your presentation
+\end{frame}
+
+%----------------------------------------------------------------------------------------
+%	PRESENTATION SLIDES
+%----------------------------------------------------------------------------------------
+\section{Motivations}
+\begin{frame}{Motivations}
+	\begin{figure}[h]
+		\centering
+		\includegraphics[width = \linewidth]{NewPlots/Motivations/COVID-RealStates_2020-02-25.png}
+	\end{figure}
+\end{frame}
+
+\section{Curvature}
+\begin{frame}{Thesis point}
+	\begin{figure}
+		\includegraphics[width = \linewidth]{BPres_30.09/Curvatura_Issue.png}
+	\end{figure}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Curvature}
+	\begin{block}{Empirical Definition}
+		The discrete graph curvature measures how the neighborhoods of a pair of nodes are structurally related. The curvature of an edge $(x, y)$ defines the distance taken to travel from neighbors of x to neighbors of y, compared with the length of edge $(x, y)$.
+	\end{block}
+	\begin{figure}
+		\includegraphics[width = \linewidth]{Plots/BPres_30.09/Curvature_graph_network pdf.png}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{Appendix point}
+	\begin{figure}
+		\includegraphics[width = .4\linewidth]{BPres_30.09/FrontWave}
+	\end{figure}
+	\vspace{-.3cm}
+	\begin{figure}
+		\includegraphics[width = \linewidth]{BPres_30.09/AppendixThurner}
+	\end{figure} \vfill
+	\begin{equation*}
+		\frac{1-\nu(t)}{\nu(t)} = \frac{v(t+\tau)}{vt} = 1+\frac{\tau}{t} = 1+v \tau \mathcal{K}, \quad \, \mathcal{K} = r^{-1} = (vt)^{-1}
+	\end{equation*}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Work Around}
+	Averaging the initial and the final fraction of susceptible, 
+	\begin{equation}
+		\nu(t_{max}) \sim 1-\frac{vt_{max}+0}{2} = 1/2
+	\end{equation}
+	where $1 = N$ is the (normalized) total population; $ t_{max}:= N/v = 1/v$ is the maximum time of the infection; $v$ the velocity of propagation of the epidemic front.  
+\end{frame}
+
+\section{Epidemiology on Networks Background}
+\begin{frame}{SIR Models}
+\vspace{-1mm}
+\begin{block}{Homogeneous (Mean-Field) Model}
+	\begin{equation}
+		\begin{cases}
+			\frac{ds}{dt} = -\beta \langle k \rangle s i \\ \\ 
+			\frac{di}{dt} = \beta \langle k \rangle s i - \mu i = \beta \langle k \rangle \, (1-i-r) \, i -\mu i = \mu( R_0 s - 1) i  \label{eq:SIR_MF}	\\ \\
+			\frac{dr}{dt} = +\mu i
+		\end{cases}
+	\end{equation} 
+\end{block}
+\begin{block}{Degree-Based Mean-Field Model}
+	\begin{equation}
+		\begin{cases}
+			\frac{ds_k}{dt} = -\beta  k  s_k \Theta_k \\ \\ 
+			\frac{di_k}{dt} = \beta  k  s_k \Theta_k - \mu i_k = \beta  k  \, (1-i_k-r_k) \, \Theta_k -\mu i_k \label{eqs:SIR_degree-based} \\ \\
+			\frac{dr_k}{dt} = +\mu i_k
+		\end{cases}	
+	\end{equation}
+\end{block}
+\end{frame}
+
+\begin{frame}{SIR Models}
+	\vspace{-1mm}
+	\begin{block}{Homogeneous (MF) Model}
+		\begin{equation}
+				\frac{di}{dt} = \mu( R_0 s(t) - 1) i(t) \leq 0  \implies R_0s(t) \leq 1
+		\end{equation} 
+	\end{block}
+	\begin{block}{Degree-Based MF: $t \approx 0 \implies s,i \approx 1,i_0$ and $k\sim D$ for random net}
+		\begin{equation}
+			\begin{cases}
+				\frac{di_k}{dt} = \mu \left(\frac{\beta k}{\mu} i_0 \frac{ D - 1}{D} e^{t/\tau}  s_k(t) - i_k(t) \right) \leq 0 \implies  R(t):=R_0s(t) \leq \frac{D}{D-1}\\ \\
+				\Theta_k(t) = \frac{\sum_{k'} (k'-1)p_{k'}i_{k'}(t)}{\langle k \rangle} =
+				i_0 \frac{D - 1}{D} e^{t/\tau}= \Theta \textnormal{ at } t \approx 0 \\ \\
+				\tau := \frac{D}{\beta(\langle k^2 \rangle -D)-D \mu} < 0 \Rightarrow 
+						R_0 := \frac{\beta D}{\mu} < \frac{D^{2}}{\langle k^2 \rangle - D} \textnormal{ at } t \approx 0
+			\end{cases}	
+		\end{equation}
+	\end{block}
+\end{frame}
+
+\subsection*{Estimate critical number of susceptible Sc}
+\begin{frame}
+	\frametitle{$R_t$ Recap}
+	\begin{itemize}
+		\item Homogeneous SIR:
+		\begin{equation}
+			R(t):= D s(t) \lambda \stackrel{!}{=} 1 \Rightarrow  \pi(t_c) = 1 - \frac{\lambda^{-1}}{D}, \quad \lambda:= \frac{\beta}{\mu};
+		\end{equation}
+		\item Heterogeneous SIR:	
+		\begin{equation}
+			\begin{cases}
+				R_0 < R_{c-net} := \frac{D^{2}}{ \langle k^2 \rangle - D} \\ \\
+				R(t):=(D-n(t))\lambda \qquad \forall \, t \\ \\
+				n(t) \sim 1+(D-1)(1-p)\pi(t)
+			\end{cases}
+			\Rightarrow \pi(t_{c}) = \frac{1}{1-p} 
+			\left[1- \frac{R_{c-net} \lambda^{-1}}{D-1} \right]
+		\end{equation}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Example}
+	\includegraphics[width=\linewidth]{BPres_30.09/WS_Pruned_SIR_R0_3_N1000_D30.0_p0.0_beta0.007_d14.0}
+\end{frame}
+
+\begin{frame}{First Order Phase Transition}
+	\vspace*{-2mm}
+	\begin{block}{\textit{Methodology}}
+		\begin{itemize}
+			\item $\mathbb{O}:=SD(C(t))$ where $C(t)$ are the new daily infected (blue curve);
+			\item plot it as a function of $D$.
+		\end{itemize} 
+	\end{block}
+	\vspace{-2mm}
+	\begin{block}{$D_c$ for different topologies}
+		\begin{itemize}
+			\item \textit{Homogenous MF}: $\frac{\beta D_c}{\mu} \stackrel{!}{=} 1 \implies D_{c-homog} = \frac{\mu}{\beta} = \lambda^{-1}$
+			\item \textit{ER DegreeBased MF}: 
+			\begin{equation}
+				\begin{cases}
+					n(t) \sim 1, \quad s(t\approx0) \sim 1 \\
+					R(t):= (D-n(t))\lambda \stackrel{!}{=} R_{c-net} \sim 1
+				\end{cases}
+				 \Rightarrow D_{c-ER} = 1+\lambda^{-1}
+			\end{equation}
+			\item \textit{Fuse-Model}: $n(t) \sim 1+(D-1)(1-p)/2$	
+			\begin{equation}
+				D_{c-FM} = 1+ \frac{2\lambda^{-1}}{1+p}
+			\end{equation}
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Examples of Order Parameters}
+
+	\begin{figure}[t]
+		\begin{subfigure}[t]{0.6\linewidth}
+			\vspace{-.5cm}
+			\centering
+			\includegraphics[width=\linewidth, keepaspectratio]{BPres_30.09/NNO_Conf_Model_addE_True_ordp_p0.0_beta0.015_mu0.07.png} 
+			%\caption{Order Parameter with $D_c \sim 10$ as shown by the small exponential phase at the early times of \autoref{fig:sir_O-PSW_COVID}. The $ D_{c-fuse\, model}$ coming from the fuse model is a proper estimate for the real degree threshold.}
+			\label{fig:Ordp_OPSW_COVID19_D14}
+		\end{subfigure}
+		\begin{subfigure}[t]{0.6\linewidth}
+			\vspace{-0.5cm}
+			\centering
+			\includegraphics[width=\linewidth, keepaspectratio]{BPres_30.09/NNO_Conf_Model_addE_True_ordp_p0.0_beta0.015_mu0.25.png}
+			%\caption{Order Parameter with higher $D_c$ since recovery rate is enhanced. $D_c \sim 20$.
+			%The fuse model deeply overestimates $ D_c$ as the poissonian structure prevents the growth of the standard deviation, i.e. the daily new cases, more than a fuse one. The transition is better described by the ER $ D_c$ .}
+			\label{fig:Ordp_OPSW_highmu_COVID19}
+		\end{subfigure}
+		%\caption{Order Parameter for Regular OPSW with different recovery rates at $p = 0$. }
+		\label{fig:Ordp_OPSW_COVID19_panel}
+	\end{figure}
+
+\end{frame}
+
+\begin{frame}{Caveman Model $\pi_{max} \sim 1.6 \%$  }
+	\begin{figure}
+		\includegraphics[width = \linewidth]{Plots/BPres_30.09/NNO_1inf/Caveman_Model_SIR_R0_1_N999_D3.0_p0.0_beta0.015_d14.0.png} %trim = {0 24.9cm 0 6cm}
+	%\caption{Title for both}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{Overlapping poissonian Small-World (O-PSW) Network}
+	\begin{figure}
+			\includegraphics[width = \linewidth]{Plots/BPres_30.09/NNO_1inf/NNO_Conf_Model_SIR_R0_6_N1000_D27.0_p0.0_beta0.015_d14.0.png}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{OPSW $p = 0.3$  Network}
+	\begin{figure}
+		\includegraphics[width = \linewidth]{Plots/BPres_30.09/NNO_1inf/NNO_Conf_Model_SIR_R0_2_N1000_D8.0_p0.3_beta0.015_d14.0.png} %trim = {0 24.9cm 0 6cm}
+	\end{figure}
+\end{frame}
+
+\section{Goals of the research}
+\begin{frame}{Goals of the research}
+\centering
+Study a SIR model on networks with its Mean-Field approximation:
+\begin{itemize}
+	\item Apply a DBMF on Watts-Strogatz, Poissonian-SW, Caveman, Barabási-Albert Models;
+	\item Introduce an \textit{Order Parameter}:=SD(C(t)) to look for a phase transition among regimes;
+	\item Estimate the critical number of social contacts ($D_c$):
+	\begin{itemize}
+		\item \underline{for $D<D_c$, linear growth, i.e. low infection prevalence, occurs};
+		\vspace{2mm }
+		\item for $D>D_c$, MF exponential growth as predicted by the SIR model.
+	\end{itemize}
+	\item Obtain a critical number of susceptible $s_c$  s.t. the epidemic decreases.
+\end{itemize}
+\end{frame}
+
+\section{Results}
+\subsection{Watts-Strogatz Model} % Sections can be created in order to organize your presentation into discrete blocks, all sections and subsections are automatically printed in the table of contents as an overview of the talk
+%------------------------------------------------
+\begin{frame}{The Watts-Strogatz Network}
+\begin{figure}
+	\begin{subfigure}{.4\linewidth}
+		\includegraphics[width = \linewidth, trim = {3cm 1cm 2cm 1cm}, clip]{.png}
+	\end{subfigure}
+	\vspace{3mm}
+	\begin{subfigure}{.6\linewidth}
+		\includegraphics[width = \linewidth, trim = {0 0 0 5cm}, height = 6.5cm, clip]{NewPlots/WS_Pruned/AdjMat/WS_Pruned_AdjMat_1000_30.0_0.1.png} %trim = {0 24.9cm 0 6cm}
+	\end{subfigure}%New_Plots/WS_Pruned/AdjMat/WS_Pruned_AdjMat_1000_30.0_0.1.png}}
+%\caption{Title for both}
+\end{figure}
+\end{frame}
+
+\end{document}
+
+
+\subsection{Pruning by zipping D and beta} 
+%A subsection can be created just before a set of slides with a common theme to further break down your presentation into chunks
+
+\begin{frame}{\textit{Pruning} Watts-Strogatz SW Network (p = 0.0)}
+	\vspace{-2mm}
+	\begin{block}{Parameter Selection $\beta, \mu, D, p$ }
+		\begin{itemize}
+		\item $\beta_{init} \in [0.5 \cdot 10^{-3}]$ and $d = \mu^{-1} = [14,9,6,4,1]$ days fixed
+		\item $D \in [1000,500,250,124,62,36,18,8,4,2], p = [0,0.3]$
+		\end{itemize} 
+	\end{block}
+	\begin{figure}[h]
+		\centering
+		\animategraphics[label = taylor, width=\linewidth,loop,controls]{1}{NewPlots/WS_Pruned/Gifs/WS_Pruned/WS_Pruned_}{1}{3}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{Adjacency Matrix WS(p = 0.3)}
+	\centering
+	\includegraphics[width = .8\linewidth, height = \textheight]{NewPlots/WS_Pruned/AdjMat/WS_Pruned_AdjMat_1000_500.0_0.3.png}
+\end{frame}
+
+\begin{frame}{WS-SIR Model (p = 0.3)}
+	\begin{figure}[h]
+		\centering
+		\animategraphics[width=\linewidth,loop,controls]{1}{NewPlots/WS_Pruned/Gifs/WS_Pruned_p0.3/WS_Pruned_p0.3_}{1}{3}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{Watt-Strogatz enhancement for $\beta = \mu \simeq 1.0 \textnormal{ and } p = 0.1$ }
+	\centering
+	\animategraphics[width=0.7\linewidth, height = 7cm,loop,controls]{1}{/2_WS_Epids_zip(beta,mu)/p0.0/SIR/WS_Enhanc_SIR_p0-1_}{1}{8}
+\end{frame}
+
+\subsection{Poissonian SW Network}
+\begin{frame}
+	\frametitle{Poissonian SW Network}
+	\begin{block}{Method}
+		\begin{enumerate}
+			\item Impose a Poissonian degree sequence on all nodes ("Configuration Model");
+			\item Nodes are then linked to their closest neighboring nodes on the circle ("Poissonian SW Network");
+			\item With probability $p$ we re-link the links of every node $i$ to a new, randomly chosen target node $j$. This allows for super-spreaders and $D \sim \lambda$;
+			\item conventional small-world network with a fixed degree. When results are compared with the Poissonian small-world network, only marginal differences are observed.
+		\end{enumerate}
+	\end{block}
+\end{frame}
+
+\subsection{Network Model Overview}
+\begin{frame}{Network Model Overview}
+	\begin{figure}[t]
+		\vspace*{-.5cm}	
+		%: Configurational, Nearest Neighbors (NN) "sparse" Overlap, NN narrow Overlap
+		\subfloat["Sparse PSW"]{\includegraphics[width=0.5\linewidth, height = 0.8 \textheight]{NewPlots/PoissSW/SPSW/NN_Conf_Model_AdjMat_1000_49.0_0.0.png}}
+		\hfill
+		\subfloat["Overlapping PSW"]{\includegraphics[width=0.5\linewidth, height = 0.8 \textheight]{NewPlots/PoissSW/OPSW/NNO_Conf_Model_addE_True_AdjMat_1000_50.0_0.0.png}}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{SPSW-SIR model (p = 0.0, 0.3)}
+	\begin{figure}[h]
+		\centering
+		\animategraphics[width=\linewidth,height = .75 \textheight, loop,controls]{1}{NewPlots/PoissSW/SPSW/Gifs/SPSW-}{1}{6}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{OPSW-SIR model (p = 0.0, 0.3)}
+	\begin{figure}[h]
+		\centering
+		\animategraphics[width=\linewidth,height = .75 \textheight, loop,controls]{1}{NewPlots/PoissSW/OPSW/Gifs/OPSW-}{1}{4}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{Order Parameters - Sparse-Overlapped (p = 0.0, 0.3)}
+	\begin{figure}[h]
+		\centering
+		\animategraphics[width=\linewidth,height = .75 \textheight, loop,controls]{1}{NewPlots/PoissSW/OrdP/OParameter-}{1}{4}
+	\end{figure}
+\end{frame}
+
+\subsection{Caveman Model}
+\begin{frame}{Adjacency Matrix Caveman Model (p = 0.0, 0.3)}
+	\begin{figure}[h]
+		\centering
+		\animategraphics[width = .8 \linewidth, height = .8\textheight, loop, controls]{1}{NewPlots/CavemanModel/AdjMat/CMMod_AdjMat-}{1}{2}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{SIR Caveman Model (p = 0.0, 0.3)}
+	\begin{figure}[h]
+		\centering
+		\animategraphics[width = \linewidth, height = .8\textheight, loop, controls]{1}{NewPlots/CavemanModel/Gifs/CMod_SIR-}{1}{6}
+	\end{figure}
+\end{frame}
+
+\subsection{Barabási-Albert Model}
+
+\begin{frame}{Adjacency Matrix Barabási-Albert Model (p = 0.0)}
+	\begin{figure}[h]
+		\centering
+		\animategraphics[width = .8 \linewidth, height = .8\textheight, loop, controls]{1}{NewPlots/BA_Model/AdjMat/BA_AdjMat-}{1}{2}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{SIR Barabási-Albert Model (p = 0.0)}
+	\begin{figure}[h]
+		\centering
+		\animategraphics[width = \linewidth, height = .8\textheight, loop, controls]{1}{NewPlots/BA_Model/Gifs/BA_SIR-}{1}{3}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{Order Parameter Barabási-Albert Model (p = 0.0)}
+	\begin{figure}[h]
+		\centering
+		\animategraphics[width = \linewidth, height = .8\textheight, loop, controls]{1}{NewPlots/BA_Model/Ordp/BA_Ordp-}{1}{2}
+	\end{figure}
+\end{frame}
+
+\end{document}
+
+
+
+
+\subsection{Network Model Overview}
+\begin{frame}{The models at p = 0.0, 0.1, 0.2}
+\centering
+\animategraphics[label = taylor, trim ={0 2cm  0 1cm}, width=0.7\linewidth, height = 7cm,loop,controls]{1}{/1.1_WS_Pruned/AdjMat_Pres/WS_Pruned_AdjMat_p_}{1}{3}
+\end{frame}
+
+
+\begin{frame}{Halving $WS(p = 0.0)$}
+	\centering
+	\animategraphics[width=0.7\linewidth, height = 7cm,loop,controls]{1}{/1.1_WS_Pruned/p0.0/WS_Pruned_SIR_p0_}{11}{14}
+\end{frame}
+
+\begin{frame}{Halving $WS(p = 0.1)$}
+	\centering
+	\animategraphics[width=0.7\linewidth, height = 7cm,loop,controls]{1}{/1.1_WS_Pruned/p0.1/WS_Pruned_SIR_p0.1_}{9}{14}
+\end{frame}	
+
+\begin{frame}{Halving $WS(p = 0.2)$}
+	\centering
+	\animategraphics[width=0.7\linewidth, totalheight =0.8\textheight,loop,controls]{1}{/1.1_WS_Pruned/p0.2/WS_Pruned_SIR_p0.2_}{8}{9}
+\end{frame}
+
+\subsection[Epidemic Scan]{Epidemic Scan} % A subsection can be created just before a set of slides with a common theme to further break down your presentation into chunks
+
+\begin{frame}{\textit{Epidemic Scan} Watts-Strogatz SW Network}
+\begin{block}{ \textit{Epidemic Scan} Watts-Strogatz SW Network}
+\begin{itemize}
+	\item $\beta = [0.01, 1, len = 5]$ and $\mu = [0.01, 1, len = 5]$ fixed
+	\item $\beta \textnormal{ and } \mu$ runs independently
+	\item $D_{prog} \in [2,4,6,8,10,12,14], p = [0.001] \cup [0.01,0.1, len = 5]$
+	\item mean over 200 spreads of the network sir parameters, \newline e.g. $\beta = 0.25, \mu=0.75, D = 12$
+	\item retain $R_0 \in [0,6]$ and group by $R_0$
+\end{itemize} 
+\end{block}
+\end{frame}
+
+
+\begin{frame}{Watt-Strogatz enhancement for $\beta = \mu \simeq 1.0 \textnormal{ and } p = 0.0$ }
+	\centering
+	\animategraphics[width=0.7\linewidth, height = 7cm,loop,controls]{1}{/2_WS_Epids_zip(beta,mu)/p0.0/AdjMat/WS_PruneEnhanch_Adj_}{1}{4}
+\end{frame}
+
+
+\begin{frame}{Watt-Strogatz enhancement for $\beta = \mu \simeq 1.0 \textnormal{ and } p = 0.1$ }
+	\centering
+	\animategraphics[width=0.7\linewidth, height = 7cm,loop,controls]{1}{/2_WS_Epids_zip(beta,mu)/p0.0/SIR/WS_Enhanc_SIR_p0-1_}{1}{8}
+\end{frame}
+
+\begin{frame}{Nearest Neighbor Parameters}
+	\begin{block}{\textit{The Epidemic Parameters}}
+		\begin{itemize}
+			\item $\beta = [0.01, 1, len = 15]$ and $\mu = [0.01, 1, len = 15]$ fixed
+			\item $D_{prog} \in [2,32, len = 16], p = 0$
+			\item mean over 200 spreads of the network sir parameters, \newline e.g. $\beta = 0.086, \mu=0.16, D = 12$
+			\item retain $R_0 \in [0,6]$ and group by $R_0$
+		\end{itemize} 
+	\end{block}
+\end{frame}
+
+\subsection{NN "sparse" Configurational Model}
+\begin{frame}{NN "sparse" CM -- Network}
+	\centering
+	\animategraphics[trim ={0 2cm  0 0}, width=0.7\linewidth, height = 7cm,loop,controls]{1}{NNR_AdjMat_D2-12-24-32_p0.0_}{1}{4}
+\end{frame}
+\begin{frame}{NN "sparse" CM}
+	\centering
+	\animategraphics[trim ={0 2cm  0 0}, width=0.7\linewidth, height = 7cm,loop,controls]{1}{/3.1_NNR_Conf_Model/SIR/NNR_R0_p0_}{1}{8}
+\end{frame}
+
+\subsection{NN "narrow" Configurational Model}
+\begin{frame}{NN "narrow" CM -- Network with $p = 0.0$}
+\begin{figure}[t]
+	\vspace*{-.5cm}	
+	%: Configurational, Nearest Neighbors (NN) "sparse" Overlap, NN narrow Overlap
+	\subfloat{\includegraphics[trim = {0 -1.3cm 0 0}, width=0.5\linewidth, height = 5.5cm]{"Overlapping_Rew_Add_True_AdjMat_N1000_D18.0_p0.0.png"}}
+	\hfill
+	\subfloat{\includegraphics[trim = {0 -1.3cm 0 0}, width=0.5\linewidth, height = 5.5cm]{"Overlapping_Rew_Add_True_AdjMat_N1000_D123.0_p0.0.png"}}
+\end{figure}
+\end{frame}
+
+\begin{frame}{NN "narrow" CM -- Network with $p = 0.1$}
+	\begin{figure}[t]
+		\vspace*{-.5cm}	
+		%: Configurational, Nearest Neighbors (NN) "sparse" Overlap, NN narrow Overlap
+		\subfloat{\includegraphics[trim = {0 -1.3cm 0 0}, width=0.5\linewidth, totalheight = .8\textheight]{"/3.2_Overlapping_Rew_Add_True_13.5_done/p0.1/AdjMat/Overlapping_Rew_Add_True_AdjMat_N1000_D3.0_p0.1"}}
+		\hfill
+		\subfloat{\includegraphics[trim = {0 -1.3cm 0 0}, width=0.5\linewidth, totalheight = .8\textheight]{"/3.2_Overlapping_Rew_Add_True_13.5_done/p0.1/AdjMat/Overlapping_Rew_Add_True_AdjMat_N1000_D18.0_p0.1"}}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{NN "narrow" CM -- SIR with $p = 0.1$}
+	\centering
+	\animategraphics[trim ={0 2cm  0 0}, width=0.7\linewidth, totalheight = 0.8\textheight,loop,controls]{1}{/home/hal21/MEGAsync/Tour_Physics2.0/Thesis/NetSciThesis/LateX/Presentations/Pres_16.6/Plots/3.2_Overlapping_Rew_Add_True_13.5_done/p0.1/SIR/OON_p0.1_}{1}{8}
+\end{frame}
+
+\begin{frame}
+	\centering
+	\animategraphics[trim ={0 2cm  0 0}, width=0.7\linewidth, totalheight = 0.85\textheight,loop,controls]{1}{/3.2_Overlapping_Rew_Add_True_13.5_done/Sel_ordp/NNO_ordp_}{1}{9}
+\end{frame}
+
+\section{Caveman Model}
+\subsection{Network Model Overview}
+\begin{frame}{Caveman Model Network with $p = 0.0$}
+	\begin{figure}[t]
+		\vspace*{-.5cm}	
+		%: Configurational, Nearest Neighbors (NN) "sparse" Overlap, NN narrow Overlap
+		\subfloat{\includegraphics[trim = {0 -1.3cm 0 0}, width=0.5\linewidth, height = 7cm]{"/4_Caveman_Model_15.5_done/p0/AdjMat/Caveman_Model_AdjMat_N999_D8.0_p0"}}
+		\hfill
+		\subfloat{\includegraphics[trim = {0 -1.3cm 0 0}, width=0.5\linewidth, height = 7cm]{"/4_Caveman_Model_15.5_done/p0.1/AdjMat/Caveman_Model_AdjMat_N999_D8.0_p0.1"}}
+	\end{figure}
+\end{frame}
+
+\begin{frame}
+	\begin{block}{\textit{The Epidemic Parameters}}
+		\begin{itemize}
+			\item $\beta = [0.001, 1, len = 7]$ and $\mu = [0.001, 1, len = 7]$ fixed
+			\item $D_{prog} \in [1,9,len=5], p = 0 \textnormal{ or } 0.1$
+			\item mean over 200 spreads of the network sir parameters, \newline e.g. $\beta = 0.001, \mu=0.17, D = 3$
+			\item retain $R_0 \in [0,6]$ and group by $R_0$
+		\end{itemize} 
+	\end{block}
+\end{frame}
+
+
+\begin{frame}{Caveman Model -- SIR with $p = 0.1$}
+	\centering
+	\animategraphics[trim ={0 2cm  0 0}, width=0.7\linewidth, totalheight = 0.8\textheight,loop,controls]{1}{/4_Caveman_Model_15.5_done/p0.1/SIR/Cmodp01_}{1}{8}
+\end{frame}
+
+\section{Barabási-Albert Model}
+\subsection{Network Model Overview} 
+\begin{frame}{ Network with hub-like spreaders and $p = 0.0$}
+	\begin{figure}[t]
+		\vspace*{-.5cm}	
+		%: Configurational, Nearest Neighbors (NN) "sparse" Overlap, NN narrow Overlap
+		\subfloat{\includegraphics[trim = {0 -1.3cm 0 0}, width=0.5\linewidth, totalheight = 0.85\textheight]{"/5_B-A_Model_16.5_done/p0.0/AdjMat/B-A_Model_AdjMat_N1000_D4.0_p0.0_m2_N0_2"}}
+		\hfill
+		\subfloat{\includegraphics[trim = {0 -1.3cm 0 0}, width=0.5\linewidth, totalheight = 0.85\textheight]{"/5_B-A_Model_16.5_done/p0.0/AdjMat/B-A_Model_AdjMat_N1000_D31.0_p0.0_m16_N0_16"}}
+	\end{figure}
+\end{frame}
+
+\begin{frame}
+	\begin{block}{\textit{The Epidemic Parameters}}
+		\begin{itemize}
+			\item $N = 1000, D_{prog} \in [2,16,len=8], p = 0$
+			\item $\beta = [0.001, 1, len = 15]$ and $\mu = [0.01, 1, len = 13]$ fixed
+			
+			\item mean over 200 spreads of the network sir parameters, \newline e.g. $\beta = 0.001, \mu=0.17, D = 3$
+			\item retain $R_0 \in [0,6]$ and group by $R_0$
+		\end{itemize} 
+	\end{block}
+\end{frame}
+
+\begin{frame}{Barabasi-Albert Model -- $R_0 \in [0,4)\textnormal{ and } p = 0.0$}
+	\centering
+	\animategraphics[trim ={0 2cm  0 0}, width=0.7\linewidth, height = 7cm,loop,controls]{1}{/5_B-A_Model_16.5_done/p0.0/SIR/BAmodp0_}{1}{3}
+\end{frame}
+
+
+\begin{frame}
+	\Huge{\centering{The End}}
+\end{frame}
+
+\end{document}
+
+\begin{frame}{The model at $p = [0.001] \cup [0.01,0.1, len = 5]$}
+	\centering
+	\animategraphics[trim ={0 2cm  0 0}, width=0.7\linewidth, height = 7cm,loop,controls]{1}{1.2_WS_Epids_19.5/Sel_AdjMat/WS_Epids_AdjMat_N1000_}{1}{6}
+\end{frame}
+	
+\begin{frame}{}
+	\animategraphics[trim ={0 2cm  0 0}, width=0.7\linewidth, height = 7cm,loop,controls]{1}{/1.2_WS_Epids_19.5/Sel_SIR/WS_Epids_pvar_}{1}{6}
+\end{frame}
+
