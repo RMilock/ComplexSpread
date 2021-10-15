@@ -21,7 +21,7 @@
 %	PACKAGES AND THEMES
 %----------------------------------------------------------------------------------------
 
-\documentclass{beamer}
+\documentclass[xcolor={dvipsnames}]{beamer}
 
 \mode<presentation> {
 
@@ -86,8 +86,8 @@
 \usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
 \usepackage{animate}
 \usepackage{listings}
+\usepackage{subcaption}
 \usepackage{xcolor}
-\usepackage{ subcaption}
 %\usepackage{subfig}
 %\captionsetup[subfloat]{captionskip=1pt}
 
@@ -141,90 +141,69 @@ University of Padova \\ % Your institution for the title page
 %	PRESENTATION SLIDES
 %----------------------------------------------------------------------------------------
 \section{Motivations}
-\begin{frame}{Motivations}
+\begin{frame}{Motivations from COVID-19 Data}
 	\begin{figure}[h]
 		\centering
 		\includegraphics[width = \linewidth]{NewPlots/Motivations/COVID-RealStates_2020-02-25.png}
 	\end{figure}
 \end{frame}
 
-\section{Curvature}
-\begin{frame}{Thesis point}
-	\begin{figure}
-		\includegraphics[width = \linewidth]{BPres_30.09/Curvatura_Issue.png}
-	\end{figure}
+\section{Goals of the research}
+\begin{frame}{Goal: Study a SIR model on networks}
+\centering
+\begin{itemize}
+	\item \underline{Order} the Social Network model (Watts-Strogatz, Caveman, Poissonian-SW, Barabási-Albert) for controlling COVID-19; \vfill
+	\item Obtain a \underline{critical} number of the total cases s.t. the epidemic naturally suppresses; \vfill
+	\item Propose the \underline{\textit{epidemic severity}} to capture the final total cases; \vfill
+	\item Introduce an \textit{Order Parameter}:=SD(C) to look for a \underline{phase-like transition} among regimes; \vfill
+	\item Estimate the \underline{critical average of social contacts} ($D_c$):
+	\begin{itemize}
+		\item for $D<D_c$, linear growth, i.e. low infection prevalence, occurs;
+		\vspace{2mm }
+		\item for $D>D_c$, MF exponential growth as predicted by the SIR model.
+	\end{itemize}
+\end{itemize}
 \end{frame}
 
-\begin{frame}
-	\frametitle{Curvature}
-	\begin{block}{Empirical Definition}
-		The discrete graph curvature measures how the neighborhoods of a pair of nodes are structurally related. The curvature of an edge $(x, y)$ defines the distance taken to travel from neighbors of x to neighbors of y, compared with the length of edge $(x, y)$.
-	\end{block}
-	\begin{figure}
-		\includegraphics[width = \linewidth]{Plots/BPres_30.09/Curvature_graph_network pdf.png}
-	\end{figure}
-\end{frame}
-
-\begin{frame}{Appendix point}
-	\begin{figure}
-		\includegraphics[width = .4\linewidth]{BPres_30.09/FrontWave}
-	\end{figure}
-	\vspace{-.3cm}
-	\begin{figure}
-		\includegraphics[width = \linewidth]{BPres_30.09/AppendixThurner}
-	\end{figure} \vfill
-	\begin{equation*}
-		\frac{1-\nu(t)}{\nu(t)} = \frac{v(t+\tau)}{vt} = 1+\frac{\tau}{t} = 1+v \tau \mathcal{K}, \quad \, \mathcal{K} = r^{-1} = (vt)^{-1}
-	\end{equation*}
-\end{frame}
-
-\begin{frame}
-	\frametitle{Work Around}
-	Averaging the initial and the final fraction of susceptible, 
-	\begin{equation}
-		\nu(t_{max}) \sim 1-\frac{vt_{max}+0}{2} = 1/2
-	\end{equation}
-	where $1 = N$ is the (normalized) total population; $ t_{max}:= N/v = 1/v$ is the maximum time of the infection; $v$ the velocity of propagation of the epidemic front.  
-\end{frame}
-
-\section{Epidemiology on Networks Background}
+\section{Models}
+\subsection{Epidemiology Background}
 \begin{frame}{SIR Models}
-\vspace{-1mm}
-\begin{block}{Homogeneous (Mean-Field) Model}
+\vspace{-4mm}
+\begin{block}{No Network Structure $\to$ Homogeneous Mean-Field (MF) Model}
 	\begin{equation}
 		\begin{cases}
+			s+r+i = 1 \quad \textnormal{HP: ``closed population"}\\ \\
 			\frac{ds}{dt} = -\beta \langle k \rangle s i \\ \\ 
-			\frac{di}{dt} = \beta \langle k \rangle s i - \mu i = \beta \langle k \rangle \, (1-i-r) \, i -\mu i = \mu( R_0 s - 1) i  \label{eq:SIR_MF}	\\ \\
+			\frac{di}{dt} = \beta \langle k \rangle s i - \mu i = \mu( R_0 s - 1) i, \quad R_0:= \frac{\beta D}{ \mu}  \label{eq:SIR_MF}	\\ \\
 			\frac{dr}{dt} = +\mu i
 		\end{cases}
 	\end{equation} 
 \end{block}
-\begin{block}{Degree-Based Mean-Field Model}
+\begin{block}{Network Structures $\to$ Degree-Based Mean-Field Model}
 	\begin{equation}
 		\begin{cases}
 			\frac{ds_k}{dt} = -\beta  k  s_k \Theta_k \\ \\ 
-			\frac{di_k}{dt} = \beta  k  s_k \Theta_k - \mu i_k = \beta  k  \, (1-i_k-r_k) \, \Theta_k -\mu i_k \label{eqs:SIR_degree-based} \\ \\
-			\frac{dr_k}{dt} = +\mu i_k
+			\frac{di_k}{dt} = \beta  k  s_k \Theta_k - \mu i_k = \beta  k  \, (1-i_k-r_k) \, \Theta_k -\mu i_k \label{eqs:SIR_degree-based}
 		\end{cases}	
 	\end{equation}
 \end{block}
 \end{frame}
 
-\begin{frame}{SIR Models}
+\begin{frame}{Pathogen Natural Suppression}
 	\vspace{-1mm}
-	\begin{block}{Homogeneous (MF) Model}
+	\begin{block}{Homogeneous MF Model}
 		\begin{equation}
-				\frac{di}{dt} = \mu( R_0 s(t) - 1) i(t) \leq 0  \implies R_0s(t) \leq 1
+				\frac{di}{dt} = \mu( R_0 s(t) - 1) i(t) < 0 \Leftrightarrow R_0s(t) < 1
 		\end{equation} 
 	\end{block}
-	\begin{block}{Degree-Based MF: $t \approx 0 \implies s,i \approx 1,i_0$ and $k\sim D$ for random net}
+	\begin{block}{Degree-Based MF: $t \approx 0 \Rightarrow s,i \approx 1,i_0$ and $k\sim D$ for random net}
 		\begin{equation}
 			\begin{cases}
-				\frac{di_k}{dt} = \mu \left(\frac{\beta k}{\mu} i_0 \frac{ D - 1}{D} e^{t/\tau}  s_k(t) - i_k(t) \right) \leq 0 \implies  R(t):=R_0s(t) \leq \frac{D}{D-1}\\ \\
+				\frac{di_k}{dt} = \mu \left[\frac{\beta k}{\mu} \textcolor{red}{i_0 \frac{ D - 1}{D} e^{t/\tau}}  s_k(t) - i_k(t) \right] < 0 \Leftrightarrow R(t):=R_0s(t) < \frac{D}{D-1}\\ \\
 				\Theta_k(t) = \frac{\sum_{k'} (k'-1)p_{k'}i_{k'}(t)}{\langle k \rangle} =
-				i_0 \frac{D - 1}{D} e^{t/\tau}= \Theta \textnormal{ at } t \approx 0 \\ \\
-				\tau := \frac{D}{\beta(\langle k^2 \rangle -D)-D \mu} < 0 \Rightarrow 
-						R_0 := \frac{\beta D}{\mu} < \frac{D^{2}}{\langle k^2 \rangle - D} \textnormal{ at } t \approx 0
+				\textcolor{red}{i_0 \frac{ D - 1}{D} e^{t/\tau}} = \Theta \quad \textnormal{ at } t \approx 0 \\ \\
+				\tau := \left[\frac{\beta(\langle k^2 \rangle -D)-D \mu}{D}\right]^{-1} < 0 	\Leftrightarrow 
+						R_0 := \frac{\beta D}{\mu} < \frac{D^{2}}{\langle k^2 \rangle - D} \quad \textnormal{at } t \approx 0
 			\end{cases}	
 		\end{equation}
 	\end{block}
@@ -232,23 +211,40 @@ University of Padova \\ % Your institution for the title page
 
 \subsection*{Estimate critical number of susceptible Sc}
 \begin{frame}
-	\frametitle{$R_t$ Recap}
+	\frametitle{$R_t$ critical -- Summary}
 	\begin{itemize}
-		\item Homogeneous SIR:
+		\item Pathogen vanishing Homogeneous SIR:
 		\begin{equation}
-			R(t):= D s(t) \lambda \stackrel{!}{=} 1 \Rightarrow  \pi(t_c) = 1 - \frac{\lambda^{-1}}{D}, \quad \lambda:= \frac{\beta}{\mu};
+			R(t):= D s(t) \lambda < 1 \Leftrightarrow  \pi(t_c) = 1 - \frac{1}{R_0}, \quad R_0 := \frac{\beta D}{\mu}
 		\end{equation}
-		\item Heterogeneous SIR:	
+		\item Pathogen suppression Heterogenous SIR (at $t \approx 0$):	
 		\begin{equation}
 			\begin{cases}
-				R_0 < R_{c-net} := \frac{D^{2}}{ \langle k^2 \rangle - D} \\ \\
+				R_0 < R_{c-net} := \frac{D^{2}}{ \langle k^2 \rangle - D}\\ \\
 				R(t):=(D-n(t))\lambda \qquad \forall \, t \\ \\
 				n(t) \sim 1+(D-1)(1-p)\pi(t)
 			\end{cases}
-			\Rightarrow \pi(t_{c}) = \frac{1}{1-p} 
-			\left[1- \frac{R_{c-net} \lambda^{-1}}{D-1} \right]
+			\Leftrightarrow \pi(t_{c}) = \frac{1}{1-p} 
+			\left[1- \frac{R_{c-net}}{R_0-\lambda} \right]
 		\end{equation}
 	\end{itemize}
+\end{frame}
+
+\begin{frame}{Epidemic Severity (ES)}
+	\begin{block}{Basic Reproduction Number $ R_0$ }
+		\begin{equation}
+			R_0:= \frac{\beta D}{ \mu}
+		\end{equation}
+	\end{block}
+	\begin{block}{Definition of ES}
+		\begin{equation}
+			\Delta R_0 (\delta):= \frac{R_0 - R_{c-net}}{\delta}
+		\end{equation}
+		where $\delta:=\langle l \rangle $ is the average path length, e.g. from $1 \leftrightarrow 10$.
+		
+		\vspace{0.5cm}
+		$ \delta$ increases as the network is less ``weaved togheter''. 
+	\end{block}
 \end{frame}
 
 \begin{frame}
@@ -256,29 +252,29 @@ University of Padova \\ % Your institution for the title page
 	\includegraphics[width=\linewidth]{BPres_30.09/WS_Pruned_SIR_R0_3_N1000_D30.0_p0.0_beta0.007_d14.0}
 \end{frame}
 
-\begin{frame}{First Order Phase Transition}
+\begin{frame}{First Order-like Phase Transition}
 	\vspace*{-2mm}
-	\begin{block}{\textit{Methodology}}
+	\begin{block}{\textit{Order Parameter}}
 		\begin{itemize}
-			\item $\mathbb{O}:=SD(C(t))$ where $C(t)$ are the new daily infected (blue curve);
-			\item plot it as a function of $D$.
+			\item $\mathbb{O}:=SD(C)$ where $C(t)$ are the new daily infected;
 		\end{itemize} 
 	\end{block}
 	\vspace{-2mm}
 	\begin{block}{$D_c$ for different topologies}
 		\begin{itemize}
-			\item \textit{Homogenous MF}: $\frac{\beta D_c}{\mu} \stackrel{!}{=} 1 \implies D_{c-homog} = \frac{\mu}{\beta} = \lambda^{-1}$
-			\item \textit{ER DegreeBased MF}: 
+			\item \textit{Homogenous MF}: $\frac{\beta D_c}{\mu} \stackrel{!}{=} 1 \Leftrightarrow 
+			\textcolor{BrickRed}{D_{c-homog} = \frac{\mu}{\beta} = \lambda^{-1}}$
+			\item \textit{Erdös-Rényi Degree-Based MF}: 
 			\begin{equation}
 				\begin{cases}
 					n(t) \sim 1, \quad s(t\approx0) \sim 1 \\
 					R(t):= (D-n(t))\lambda \stackrel{!}{=} R_{c-net} \sim 1
 				\end{cases}
-				 \Rightarrow D_{c-ER} = 1+\lambda^{-1}
+				\Leftrightarrow \textcolor{BrickRed}{D_{c-ER} = 1+\lambda^{-1}}
 			\end{equation}
-			\item \textit{Fuse-Model}: $n(t) \sim 1+(D-1)(1-p)/2$	
+			\item \textit{Fuse-Model Degree-Based MF}:	
 			\begin{equation}
-				D_{c-FM} = 1+ \frac{2\lambda^{-1}}{1+p}
+				n(t) \sim 1+(D-1)(1-p)/2 \quad \Leftrightarrow \quad \textcolor{BrickRed}{D_{c-FM} = 1+ \frac{2\lambda^{-1}}{1+p}}
 			\end{equation}
 		\end{itemize}
 	\end{block}
@@ -286,7 +282,6 @@ University of Padova \\ % Your institution for the title page
 
 \begin{frame}
 	\frametitle{Examples of Order Parameters}
-
 	\begin{figure}[t]
 		\begin{subfigure}[t]{0.6\linewidth}
 			\vspace{-.5cm}
@@ -306,44 +301,15 @@ University of Padova \\ % Your institution for the title page
 		%\caption{Order Parameter for Regular OPSW with different recovery rates at $p = 0$. }
 		\label{fig:Ordp_OPSW_COVID19_panel}
 	\end{figure}
-
 \end{frame}
 
-\begin{frame}{Caveman Model $\pi_{max} \sim 1.6 \%$  }
-	\begin{figure}
-		\includegraphics[width = \linewidth]{Plots/BPres_30.09/NNO_1inf/Caveman_Model_SIR_R0_1_N999_D3.0_p0.0_beta0.015_d14.0.png} %trim = {0 24.9cm 0 6cm}
-	%\caption{Title for both}
-	\end{figure}
+\subsection{Social Networks}
+\begin{frame}{Social Networks: Regular Lattice}
+	\includegraphics{}
 \end{frame}
 
-\begin{frame}{Overlapping poissonian Small-World (O-PSW) Network}
-	\begin{figure}
-			\includegraphics[width = \linewidth]{Plots/BPres_30.09/NNO_1inf/NNO_Conf_Model_SIR_R0_6_N1000_D27.0_p0.0_beta0.015_d14.0.png}
-	\end{figure}
-\end{frame}
 
-\begin{frame}{OPSW $p = 0.3$  Network}
-	\begin{figure}
-		\includegraphics[width = \linewidth]{Plots/BPres_30.09/NNO_1inf/NNO_Conf_Model_SIR_R0_2_N1000_D8.0_p0.3_beta0.015_d14.0.png} %trim = {0 24.9cm 0 6cm}
-	\end{figure}
-\end{frame}
-
-\section{Goals of the research}
-\begin{frame}{Goals of the research}
-\centering
-Study a SIR model on networks with its Mean-Field approximation:
-\begin{itemize}
-	\item Apply a DBMF on Watts-Strogatz, Poissonian-SW, Caveman, Barabási-Albert Models;
-	\item Introduce an \textit{Order Parameter}:=SD(C(t)) to look for a phase transition among regimes;
-	\item Estimate the critical number of social contacts ($D_c$):
-	\begin{itemize}
-		\item \underline{for $D<D_c$, linear growth, i.e. low infection prevalence, occurs};
-		\vspace{2mm }
-		\item for $D>D_c$, MF exponential growth as predicted by the SIR model.
-	\end{itemize}
-	\item Obtain a critical number of susceptible $s_c$  s.t. the epidemic decreases.
-\end{itemize}
-\end{frame}
+\end{document}
 
 \section{Results}
 \subsection{Watts-Strogatz Model} % Sections can be created in order to organize your presentation into discrete blocks, all sections and subsections are automatically printed in the table of contents as an overview of the talk
@@ -660,3 +626,53 @@ Study a SIR model on networks with its Mean-Field approximation:
 	\animategraphics[trim ={0 2cm  0 0}, width=0.7\linewidth, height = 7cm,loop,controls]{1}{/1.2_WS_Epids_19.5/Sel_SIR/WS_Epids_pvar_}{1}{6}
 \end{frame}
 
+\begin{frame}{Overlapping poissonian Small-World (O-PSW) Network}
+	\begin{figure}
+			\includegraphics[width = \linewidth]{Plots/BPres_30.09/NNO_1inf/NNO_Conf_Model_SIR_R0_6_N1000_D27.0_p0.0_beta0.015_d14.0.png}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{OPSW $p = 0.3$  Network}
+	\begin{figure}
+		\includegraphics[width = \linewidth]{Plots/BPres_30.09/NNO_1inf/NNO_Conf_Model_SIR_R0_2_N1000_D8.0_p0.3_beta0.015_d14.0.png} %trim = {0 24.9cm 0 6cm}
+	\end{figure}
+\end{frame}
+
+\section{Curvature}
+\begin{frame}{Thesis point}
+	\begin{figure}
+		\includegraphics[width = \linewidth]{BPres_30.09/Curvatura_Issue.png}
+	\end{figure}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Curvature}
+	\begin{block}{Empirical Definition}
+		The discrete graph curvature measures how the neighborhoods of a pair of nodes are structurally related. The curvature of an edge $(x, y)$ defines the distance taken to travel from neighbors of x to neighbors of y, compared with the length of edge $(x, y)$.
+	\end{block}
+	\begin{figure}
+		\includegraphics[width = \linewidth]{Plots/BPres_30.09/Curvature_graph_network pdf.png}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{Appendix point}
+	\begin{figure}
+		\includegraphics[width = .4\linewidth]{BPres_30.09/FrontWave}
+	\end{figure}
+	\vspace{-.3cm}
+	\begin{figure}
+		\includegraphics[width = \linewidth]{BPres_30.09/AppendixThurner}
+	\end{figure} \vfill
+	\begin{equation*}
+		\frac{1-\nu(t)}{\nu(t)} = \frac{v(t+\tau)}{vt} = 1+\frac{\tau}{t} = 1+v \tau \mathcal{K}, \quad \, \mathcal{K} = r^{-1} = (vt)^{-1}
+	\end{equation*}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Work Around}
+	Averaging the initial and the final fraction of susceptible, 
+	\begin{equation}
+		\nu(t_{max}) \sim 1-\frac{vt_{max}+0}{2} = 1/2
+	\end{equation}
+	where $1 = N$ is the (normalized) total population; $ t_{max}:= N/v = 1/v$ is the maximum time of the infection; $v$ the velocity of propagation of the epidemic front.  
+\end{frame}
