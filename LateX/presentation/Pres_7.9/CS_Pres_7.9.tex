@@ -1,26 +1,3 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Beamer Presentation
-% LaTeX Template
-% Version 1.0 (10/11/12)
-%
-% This template has been downloaded from:
-% http://www.LaTeX%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Beamer Presentation
-% LaTeX Template
-% Version 1.0 (10/11/12)
-%
-% This template has been downloaded from:
-% http://www.LaTeXTemplates.com
-%
-% License:
-% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
-%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%----------------------------------------------------------------------------------------
-%	PACKAGES AND THEMES
-%----------------------------------------------------------------------------------------
-
 \documentclass[xcolor={dvipsnames}]{beamer}
 
 \setbeamertemplate{frametitle}[default][center]
@@ -83,13 +60,13 @@
 
 %\setbeamertemplate{navigation symbols}{} % To remove the navigation symbols from the bottom of all slides uncomment this line
 }
-
+\usepackage{graphicx} % Allows including images
 \usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
 \usepackage{animate}
 \usepackage{listings}
 \usepackage{subcaption}
 \usepackage{xcolor}
-\usepackage{graphicx} % Allows including images
+\usepackage{tikz}
 %\usepackage{subfig}
 %\captionsetup[subfloat]{captionskip=1pt}
 
@@ -113,22 +90,40 @@
 {"./Plots/"}
 }
 
+\newcommand\Wider[2][3em]{%
+\makebox[\linewidth][c]{%
+  \begin{minipage}{\dimexpr\textwidth+#1\relax}
+  \raggedright#2
+  \end{minipage}%
+  }%
+}
+
 %----------------------------------------------------------------------------------------
 %	TITLE PAGE
 %----------------------------------------------------------------------------------------
 
-\title[Network Covid-19]{Modeling COVID-19 spreading in a network} % The short title appears at the bottom of every slide, the full title is only on the title page
+\title[Network Covid-19]{Modeling COVID-19 Spreading In A Network} % The short title appears at the bottom of every slide, the full title is only on the title page
 
 \author{Riccardo Milocco} % Your name
-\institute[UniPD] % Your institution as it will appear on the bottom of every slide, may be shorthand to save space
+\institute[DFA - UniPD] % Your institution as it will appear on the bottom of every slide, may be shorthand to save space
 {
-University of Padova \\ % Your institution for the title page
+{\normalsize Prof./Dr. Marco Baiesi} \\
+\vspace{1cm}
+{\normalsize Università Degli Studi di Padova} \\ % Your institution for the title page
 \medskip
-\textit{} % Your email address
+{\normalsize Dipartimento di Fisica e Astronomia G. Galilei} % Your email address
 }
-\date{\today} % Date, can be changed to a custom date
+\logo{
+	\begin{tikzpicture}[overlay,remember picture]
+		\node[left = 0cm] at (current page.330){
+			\includegraphics[width=1cm, trim = {0 0 10cm 0}, clip]{unipd_logo}
+		};
+		\end{tikzpicture}
+}
+\date{25.10.2021} % Date, can be changed to a custom date
 
 \begin{document}
+
 
 \begin{frame}
 \titlepage % Print the title page as the first slide
@@ -155,8 +150,8 @@ University of Padova \\ % Your institution for the title page
 \centering
 \begin{itemize}
 	\item \underline{Order} the Social Network models (Watts-Strogatz, Caveman, Poissonian-SW, Barabási-Albert) for controlling COVID-19; \vfill
-	\item Obtain a \underline{critical} number of the total cases s.t. the epidemic naturally suppresses; \vfill
-	\item Propose the \underline{\textit{epidemic severity}} to capture the final total cases; \vfill
+	\item Estimate the time $t_c$ of the \underline{peak of the infected} after which the pathogen regresses; \vfill
+	\item Propose the \underline{\textit{epidemic severity}} to capture the final fraction of the total cases; \vfill
 	\item Introduce an \textit{Order Parameter}:=SD(C) to look for a \underline{phase-like transition} among regimes; \vfill
 	\item Estimate the \underline{critical average of social contacts} ($D_c$):
 	\begin{itemize}
@@ -173,9 +168,9 @@ University of Padova \\ % Your institution for the title page
 \begin{block}{No Network Structure $\to$ Homogeneous Mean-Field (MF) Model}
 	\begin{equation}
 		\begin{cases}
-			s+r+i = 1 \quad \textnormal{HP: ``closed population"}\\ \\
-			\frac{ds}{dt} = -\beta \langle k \rangle s i \\ \\ 
-			\frac{di}{dt} = \beta \langle k \rangle s i - \mu i = \mu( R_0 s - 1) i, \quad R_0:= \frac{\beta D}{ \mu}  \label{eq:SIR_MF}	\\ \\
+			s+r+i = 1 \quad \textnormal{HP: ``closed + \textit{well-mixed} population"}\\ \\
+			\frac{ds}{dt} = -\beta D s i, \qquad D:= \langle k \rangle\\ \\ 
+			\frac{di}{dt} = \beta D s i - \mu i = \mu( R_0 s - 1) i, \quad R_0:= \frac{\beta D}{ \mu} \equiv D \lambda  \label{eq:SIR_MF}	\\ \\
 			\frac{dr}{dt} = +\mu i
 		\end{cases}
 	\end{equation} 
@@ -190,7 +185,7 @@ University of Padova \\ % Your institution for the title page
 \end{block}
 \end{frame}
 
-\begin{frame}{Pathogen Natural Suppression}
+\begin{frame}{Thresholds for Regression}
 	\vspace{-1mm}
 	\begin{block}{Homogeneous MF Model}
 		\begin{equation}
@@ -204,21 +199,21 @@ University of Padova \\ % Your institution for the title page
 				\Theta_k(t) = \frac{\sum_{k'} (k'-1)p_{k'}i_{k'}(t)}{\langle k \rangle} =
 				\textcolor{black}{i_0 \frac{ D - 1}{D} e^{t/\tau}} = \Theta \quad \textnormal{ at } t \approx 0 \\ \\
 				\tau := \left[\frac{\beta(\langle k^2 \rangle -D)-D \mu}{D}\right]^{-1} < 0 	\Leftrightarrow 
-						R_0 := \frac{\beta D}{\mu} < \frac{D^{2}}{\langle k^2 \rangle - D} \quad \textnormal{at } t \approx 0
+						R_0 := D \frac{\beta}{ \mu} < \frac{D^{2}}{\langle k^2 \rangle - D} \quad \textnormal{at } t \approx 0
 			\end{cases}	
-		\end{equation}
+		\end{equation}Decay
 	\end{block}
 \end{frame}
 
-\subsection*{Estimate critical number of susceptible Sc}
+\subsection*{Estimate fraction of total cases}
 \begin{frame}
-	\frametitle{$R_t$ critical -- Summary}
+	\frametitle{Critical fraction of total cases $\pi(t_c)$}
 	\begin{itemize}
-		\item Pathogen vanishing Homogeneous SIR:
+		\item Pathogen regression in Homogeneous SIR:
 		\begin{equation}
 			R(t):= D s(t) \lambda < 1 \Leftrightarrow  \pi(t_c) = 1 - \frac{1}{R_0}, \quad R_0 := \frac{\beta D}{\mu}
 		\end{equation}
-		\item Pathogen suppression Heterogenous SIR (at $t \approx 0$):	
+		\item Pathogen decaying in Heterogenous SIR (at $t \approx 0$):	
 		\begin{equation}
 			\begin{cases}
 				R_0 < R_{c-net} := \frac{D^{2}}{ \langle k^2 \rangle - D}\\ \\
@@ -270,27 +265,27 @@ University of Padova \\ % Your institution for the title page
 
 \begin{frame}{First Order-like Phase Transition}
 	\vspace*{-2mm}
-	\begin{block}{\textit{Order Parameter}}
+	\begin{block}{\textit{Order Parameter}: standard deviation (SD) of the daily new cases $C$ }
 		\begin{itemize}
 			\item $\mathbb{O}:=SD(C)$ where $C(t)$ are the new daily infected;
 		\end{itemize} 
 	\end{block}
 	\vspace{-2mm}
-	\begin{block}{Critical ASC ($D_c$) for different topologies}
+	\begin{block}{Critical average degree $D_c$ for different topologies}
 		\begin{itemize}
 			\item \textit{Homogenous MF}: $\frac{\beta D_c}{\mu} \stackrel{!}{=} 1 \Leftrightarrow 
-			\textcolor{BrickRed}{D_{c-homog} = \frac{\mu}{\beta} = \lambda^{-1}}$
+			\textcolor{BrickRed}{D_{c-homog} = \frac{\mu}{\beta}}$
 			\item \textit{Erdös-Rényi Degree-Based MF}: 
 			\begin{equation}
 				\begin{cases}
 					n(t) \sim 1, \quad s(t\approx0) \sim 1 \\
 					R(t):= (D-n(t))\lambda \stackrel{!}{=} R_{c-net} \sim 1
 				\end{cases}
-				\Leftrightarrow \textcolor{BrickRed}{D_{c-ER} = 1+\lambda^{-1}}
+				\Leftrightarrow \textcolor{BrickRed}{D_{c-ER} = 1+ \frac{ \mu}{\beta}}
 			\end{equation}
 			\item \textit{Fuse-Model Degree-Based MF}:	
 			\begin{equation}
-				n(t) \sim 1+(D-1)(1-p)/2 \quad \Leftrightarrow \quad \textcolor{BrickRed}{D_{c-FM} = 1+ \frac{2\lambda^{-1}}{1+p}}
+				n(t) \sim 1+(D-1)(1-p)/2 \quad \Leftrightarrow \quad \textcolor{BrickRed}{D_{c-FM} = 1+ \frac{2 \frac{ \mu}{\beta}}{1+p}}
 			\end{equation}
 		\end{itemize}
 	\end{block}
@@ -299,34 +294,63 @@ University of Padova \\ % Your institution for the title page
 \begin{frame}
 	\frametitle{Examples of Order Parameters}
 	\begin{figure}[t]
-		\begin{subfigure}[t]{0.6\linewidth}
+		\begin{subfigure}[t]{0.54\linewidth}
 			\vspace{-.5cm}
 			\centering
-			\includegraphics[width=\linewidth, keepaspectratio]{BPres_30.09/NNO_Conf_Model_addE_True_ordp_p0.0_beta0.015_mu0.07.png} 
+			\includegraphics[width=\linewidth, keepaspectratio]{NewPlots/PoissSW/OrdP/NNO_Conf_Model_ordp_p0.0_beta0.015_d14.0.png} 
 			%\caption{Order Parameter with $D_c \sim 10$ as shown by the small exponential phase at the early times of \autoref{fig:sir_O-PSW_COVID}. The $ D_{c-fuse\, model}$ coming from the fuse model is a proper estimate for the real degree threshold.}
 			\label{fig:Ordp_OPSW_COVID19_D14}
 		\end{subfigure}
-		\begin{subfigure}[t]{0.6\linewidth}
+		\begin{subfigure}[t]{0.54\linewidth}
 			\vspace{-0.5cm}
 			\centering
-			\includegraphics[width=\linewidth, keepaspectratio]{BPres_30.09/NNO_Conf_Model_addE_True_ordp_p0.0_beta0.015_mu0.25.png}
+			\includegraphics[width=\linewidth, keepaspectratio]{NewPlots/PoissSW/OrdP/NNO_Conf_Model_ordp_p0.3_beta0.015_d14.0.png}
 			%\caption{Order Parameter with higher $D_c$ since recovery rate is enhanced. $D_c \sim 20$.
 			%The fuse model deeply overestimates $ D_c$ as the poissonian structure prevents the growth of the standard deviation, i.e. the daily new cases, more than a fuse one. The transition is better described by the ER $ D_c$ .}
 			\label{fig:Ordp_OPSW_highmu_COVID19}
 		\end{subfigure}
-		\caption{Order Parameter for Regular OPSW with different recovery rates at $p = 0$. }
+		%\caption{Order Parameter for Regular OPSW with different recovery rates at $p = 0$. }
 		\label{fig:Ordp_OPSW_COVID19_panel}
 	\end{figure}
 \end{frame}
 
 \section{Social Networks \& Results}
 \begin{frame}{Social Networks \& Results}
-	\vspace{-3mm}
-	\begin{figure}
+	\vspace{-1mm}
+	\Wider[2em]
+	{
+	\begin{figure}[t]
+		\begin{subfigure}[t]{0.48\linewidth}
+			\centering
+			\includegraphics[trim = {3cm, 3cm, 3cm, 3cm}, clip, width = .65\linewidth]{NewPlots/NetworksExhibition/Regular Lattice}
+			%\caption{Order Parameter dependence as in the upper plot, but $ p = 0.3$. The fuse model approximation yields a proper estimate of $ D_c \sim 8.3$. The introduction of distant node ease the exponential growth. Hence, $ D_c$ is lower than the one obtained in the $ p = 0$ case.}
+		\end{subfigure}
+		\hfill
 		\centering
-		\includegraphics[trim = {1cm 1cm 1cm 6cm}, clip, height = \textheight]{NewPlots/CavemanModel/AdjMat/Caveman_Model}
+		\begin{subfigure}[t]{0.48\linewidth}
+			\centering
+			\includegraphics[height = .48\textheight]{NewPlots/NetworksExhibition/Overlapping_PSW_new.png}
+			%\caption{Order Parameter for Regular OPSW with different recovery rates at $p = 0.3$.
+			%The critical degree of a fuse-model is corrected with the rewiring probability $ p$. Thus, the estimates is more similar to the real change of regime.}
+		\end{subfigure}
+		%\caption{Order Parameter ($ AVG(SD(Cases)) $) for Long-Range OPSW of different pathogens and recovery rates. We plotted both the order parameter and $D$ with errorbars.}
 	\end{figure}
+	\vspace{-.8cm}
+	\begin{figure}[t]
+		\begin{subfigure}[t]{0.48\linewidth}
+			\centering
+			\includegraphics[trim = {1cm 1cm 1cm 3cm}, clip, height = .48\textheight]{NewPlots/NetworksExhibition/Caveman_Model}
+		\end{subfigure}
+		\hfill
+		\begin{subfigure}[t]{0.48\linewidth}
+			\centering
+			\includegraphics[height = .48\textheight, trim = {0 0 2cm 0}, clip,]{NewPlots/NetworksExhibition/Barabasi_Albert_Model_new.png}
+		\end{subfigure}
+	\end{figure}
+	\vspace{-1cm}
+	}
 \end{frame}
+
 
 \begin{frame}{Watts-Strogatz model}
 	\begin{figure}
@@ -334,27 +358,33 @@ University of Padova \\ % Your institution for the title page
 			\includegraphics[width = \linewidth, trim = {3cm 1cm 2cm 1cm}, clip]{NewPlots/WS_Pruned/AdjMat/WS_Pruned_AdjMat_1000_500.0_0.0.png}
 		\end{subfigure}
 		\hspace{1mm}
-		\begin{subfigure}{.45\linewidth}
+		\begin{subfigure}{.48\linewidth}
 			\includegraphics[width = \linewidth, trim = {3cm 1cm 2cm 1cm}, clip]{NewPlots/WS_Pruned/AdjMat/WS_Pruned_AdjMat_1000_500.0_0.3.png} %trim = {0 24.9cm 0 6cm}
 		\end{subfigure}%New_Plots/WS_Pruned/AdjMat/WS_Pruned_AdjMat_1000_30.0_0.1.png}}
 	%\caption{Title for both}
-	\caption{Regular lattice (RL) $ p=0$ and RL with long-range interactions $ p = 0.3$.\\
-	From top left: Graph Realization, Adjacency Matrix, Degree Distribution. }
+	\caption{Regular lattice and extension with long-range interactions $ p = 0.3$.\\
+			From top left: Graph Realization, Adjacency Matrix, Degree Distribution. }
 	\end{figure}
 \end{frame}
 
-\begin{frame}{\textit{Pruning} Watts-Strogatz SW Network (p = 0.0)}
+\begin{frame}{\textit{Fixed $R_0$} SIR + Regular Lattice}
 	\vspace{-2mm}
-	\begin{block}{Choosing parameters}
-		\begin{itemize}
-		\item $\beta_{init} = 0.5 \cdot 10^{-3}$ and $d = \mu^{-1} = [14,9,6,4,1]$ days fixed
-		\item $D \in [1000,500,250,124,62,36,18,8,4,2], p = [0,0.3]$
-		\end{itemize} 
-	\end{block}
+	\Wider[3em]{
 	\begin{figure}[h]
 		\centering
-		\animategraphics[label = taylor, width=\linewidth,loop,controls]{1}{NewPlots/WS_Pruned/Gifs/WS_Pruned/WS_Pruned_p0_}{1}{3}
+		\animategraphics[label = taylor, width=\linewidth, loop, height = 0.7\textheight, controls]{1}{NewPlots/WS_Pruned/Gifs/WS_Pruned/WS_Pruned_p0_}{1}{3}
 	\end{figure}
+	}
+\end{frame}
+
+\begin{frame}{COVID-19 SIR + Regular Watts-Strogatz model}
+	\vspace{-2mm}
+	\Wider[2em]{
+	\begin{figure}[h]
+		\centering
+		\animategraphics[width=\linewidth, loop, height = 0.7\textheight, controls]{1}{NewPlots/WS_Epids/WS_Epids_}{2}{5}
+	\end{figure}
+	}
 \end{frame}
 
 \begin{frame}{Poissonian Small-World Networks}
@@ -369,6 +399,180 @@ University of Padova \\ % Your institution for the title page
 	\caption{``Overlapping" PSW and ``Sparse" PSW.}
 	\end{figure}
 \end{frame}
+
+\begin{frame}{COVID-19 SIR + Overlapping PSW}
+	\vspace{-2mm}
+	\Wider[2em]{
+	\begin{figure}[h]
+		\centering
+		\animategraphics[width=\linewidth, loop, height = 0.7\textheight, controls]{1}{NewPlots/PoissSW/OPSW/Gifs/OPSW_}{1}{6}
+	\end{figure}
+	}
+\end{frame}
+
+\begin{frame}{Order Parameter $ := SD(C)$ }
+	\vspace{-2mm}
+	\Wider[2em]
+	{
+	\begin{figure}[t]
+		\begin{subfigure}[t]{0.48\linewidth}
+			\centering
+			\includegraphics[width=\linewidth, height = .45\textheight]{NewPlots/PoissSW/OrdP/NNO_Conf_Model_ordp_p0.0_beta0.015_d14.0.png} 
+			%\label{fig:Ordp_OPSW_COVID19_D14}
+		\end{subfigure}
+		\hfill
+		\begin{subfigure}[t]{0.48\linewidth}
+			\centering
+			\includegraphics[width=\linewidth, height = .45\textheight]{NewPlots/PoissSW/OrdP/NNO_Conf_Model_ordp_p0.0_beta0.015_d4.0.png}
+			%\label{fig:Ordp_OPSW_highmu_COVID19}
+		\end{subfigure}
+		%\label{fig:Ordp_OPSW_COVID19_panel}
+	\end{figure}
+	\vspace{-1cm}
+	\begin{figure}[t]
+		\begin{subfigure}[t]{0.48\linewidth}
+			\includegraphics[width=\linewidth, height = .45\textheight]{NewPlots/PoissSW/OrdP/NNO_Conf_Model_ordp_p0.3_beta0.015_d14.0.png}
+			%\caption{Order Parameter dependence as in the upper plot, but $ p = 0.3$. The fuse model approximation yields a proper estimate of $ D_c \sim 8.3$. The introduction of distant node ease the exponential growth. Hence, $ D_c$ is lower than the one obtained in the $ p = 0$ case.}
+			\label{fig:Ordp_OPSW_Dc8.3_p0.3}
+		\end{subfigure}
+		\hfill
+		\begin{subfigure}[t]{0.48\linewidth}
+			\includegraphics[width=\linewidth, height = .45\textheight]{NewPlots/PoissSW/OrdP/NNO_Conf_Model_ordp_p0.3_beta0.015_d4.0.png}
+			%\caption{Order Parameter for Regular OPSW with different recovery rates at $p = 0.3$.
+			%The critical degree of a fuse-model is corrected with the rewiring probability $ p$. Thus, the estimates is more similar to the real change of regime.}
+			\label{fig:Ordp_OPSW_highmu_p0.3}
+		\end{subfigure}
+		%\caption{Order Parameter ($ AVG(SD(Cases)) $) for Long-Range OPSW of different pathogens and recovery rates. We plotted both the order parameter and $D$ with errorbars.}
+		\label{fig:Ordp_OPSW_COVID19_p0.3_panel}
+	\end{figure}
+	}
+\end{frame}
+
+\begin{frame}{Caveman Model}
+	\vspace{-3mm}
+	\begin{figure}
+		\centering
+		\animategraphics[trim = {1cm 1cm 1cm 1cm}, height = .8\textheight, controls]{1}{NewPlots/CavemanModel/AdjMat/CM_AdjMat_}{1}{2}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{COVID-19 SIR + Caveman Model}
+	\vspace{-2mm}
+	\begin{figure}[h]
+		\centering
+		\animategraphics[width=\linewidth, loop, height = 0.7\textheight, controls]{1}{NewPlots/CavemanModel/Gifs/CM_}{1}{4}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{(Regular) Barabási-Albert Model}
+	\vspace{-3mm}
+	\begin{figure}
+		\centering
+		\includegraphics[trim = {1cm 1cm 1cm 0cm}, clip, height = .9\textheight]{NewPlots/BA_Model/AdjMat/BA_Model_AdjMat_1000_28.0_0.0_14_14.png}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{COVID-19 SIR + Barabási-Albert Model}
+	\vspace{-2mm}
+	\Wider[2em]{
+	\begin{figure}[h]
+		\centering
+		\animategraphics[width=\linewidth, loop, height = 0.7\textheight, controls]{1}{NewPlots/BA_Model/Gifs/BA_}{2}{3}
+	\end{figure}
+	}
+\end{frame}
+
+\begin{frame}{Order Parameter $:= SD(C)$ }
+	\Wider[1em]{
+	\begin{figure}
+		\begin{subfigure}[t]{.48\linewidth}
+			\includegraphics[width = \linewidth]{NewPlots/BA_Model/Ordp/BA_Ordp_1}
+		\end{subfigure}
+		\hspace{1mm}
+		\begin{subfigure}[t]{.48\linewidth}
+			\includegraphics[width = \linewidth]{NewPlots/BA_Model/Ordp/BA_Ordp_2.png} %trim = {0 24.9cm 0 6cm}
+		\end{subfigure}%New_Plots/WS_Pruned/AdjMat/WS_Pruned_AdjMat_1000_30.0_0.1.png}}
+	%\caption{Ord}
+	\end{figure}
+	}
+\end{frame}
+
+\logo{}
+\definecolor{darkgreen}{RGB}{0,100,0}
+\newcommand{\tabitem}{~~\llap{\textbullet}~~}
+\begin{frame}
+	\Wider[4em]
+	{		
+	\begin{center}
+		\begin{tabular}{||c|c|c|c||}
+			\hline
+			\multicolumn{3}{|c|}{Final Outbreak Size} & \multicolumn{1}{c|}{Degree Distribution} \\  
+			\hline
+			\multicolumn{1}{|c|}{Networks} & \multicolumn{1}{c|}{$ D = 6 $}
+			& \multicolumn{1}{c|}{$ D = 8 $} &  \\
+			\hline
+			\begin{minipage}[c][.22\textheight]{.21\textwidth}
+				\centering
+				\includegraphics[trim = {1cm 7cm 1cm 4cm}, clip, height = .21\textheight]{NewPlots/NetworksExhibition/Caveman_Model}
+			\end{minipage}
+			& -- & $\textcolor{darkgreen}{(4.3\pm 1.4 )\%}$ 
+			& 
+			\begin{tabular}{@{}l@{}}\tabitem Low Heterogeneity \\ \tabitem Clustered Net\end{tabular}
+			\\
+			\hline
+			\begin{minipage}[c][.22\textheight]{.21\textwidth}
+				\centering
+				\includegraphics[trim = {3cm, 7cm, 3cm, 3.1cm}, clip, height = .21\textheight]{NewPlots/NetworksExhibition/Regular Lattice} 
+			\end{minipage}
+			& -- & $(6 \pm 2.3 )\%$ & Peaked \\
+			\hline
+			\begin{minipage}[c][.22\textheight]{.21\textwidth}
+				\centering
+				\includegraphics[trim = {3cm, 7cm, 3cm, 3.1cm}, clip, height = .21\textheight]{NewPlots/NetworksExhibition/Overlapping_PSW_new.png} 
+			\end{minipage}
+			& -- & $(7.4 \pm 2.5 )\%$ & \begin{tabular}{@{}c@{}}Mid Heterogeneity \\ (No Hubs)\end{tabular} \\
+			\hline
+			\begin{minipage}[c][.22\textheight]{.21\textwidth}
+				\centering
+				\includegraphics[trim = {3cm, 7cm, 3cm, 3.4cm}, clip, height = .21\textheight]{NewPlots/NetworksExhibition/Barabasi_Albert_Model_new.png} 
+			\end{minipage}
+			& $\textcolor{Red}{(36 \pm 8.9 )\%}$  & -- & \begin{tabular}{@{}c@{}}Highly Heterogeneity \\ (Hubs)\end{tabular}  \\
+			\hline
+		\end{tabular}
+	\end{center}
+	}
+\end{frame}
+
+
+\logo{
+	\begin{tikzpicture}[overlay,remember picture]
+		\node[left = 0cm] at (current page.330){
+			\includegraphics[width=1cm, trim = {0 0 10cm 0}, clip]{unipd_logo}
+		};
+		\end{tikzpicture}
+}
+\section{Summary and Conclusions}
+\begin{frame}{Summary and Conclusions}
+\centering
+\begin{enumerate}
+	\item Used a Watts-Strogatz model to test the \textit{epidemic severity} VS $ R_0$; 
+	\item The \underline{peak} of the infected is well estimated \underline{only} for mean-field approximation (yellow star); 
+	%\item Introduced a Overlapping PSW $ \Rightarrow$ high final outbreak size;
+	%\item \textit{local} Caveman Model with the lowest final outbreak size;
+	%\item Barabási-Albert model with the highest final outbreak size due to \textbf{hubs};
+	\item \underline{Order} the Social Network models for controlling COVID-19: \textit{local} Caveman,Watts-Strogatz, Poissonian-SW, Barabási-Albert; \\
+	\item For Overlapping PSW, $ D_c$ is well estimated by the \textit{Fuse model} \underline{only} for $\beta = 0.015$ and $ d = 14$;
+	\item For Barabási-Albert model, estimates of $ D_c$ comes from \textit{homogeneous mean-field};
+\end{enumerate}
+\end{frame}
+
+\begin{frame}
+	\frametitle{}
+	\centering
+	{\Huge Thank You For Your Attention}
+\end{frame}
+
+\end{document}
 
 \end{document}
 

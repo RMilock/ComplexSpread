@@ -324,13 +324,15 @@ def itermean_sir(G, p = 0, mf = False, numb_iter = 200, beta = 1e-2, mu = 0.05, 
         print(f'std_avgk2: {std_avgk2}',)
         Rc_net = D**2/(avgk2-D) 
         lmd = beta/mu
-        if D == 1: 
-          print(f'R0 - lmd: {R0 - lmd}',)
-          p_c = 0
-        else:
-          RcR0 = Rc_net / (R0 - lmd)
-          'This is a new definition of p_c, i.e. p_c = (1 - Rc_net / (R0(1-p)) )'
-          p_c = (1 - RcR0) / (1-p)
+        #if D == 1: 
+        #  print(f'R0 - lmd: {R0 - lmd}',)
+        #  p_c = 0
+        #else:
+        RcR0 = Rc_net / (R0 - lmd)
+        'This is a new definition of p_c, i.e. p_c = (1 - Rc_net / (R0(1-p)) )'
+        p_c = 1 - Rc_net / R0
+        #p_c = (1 - RcR0) / (1-p)
+
       if mf and int(D)>1:
         D = int(D)
         Rc_net = 1/(1-D**(-1))
@@ -925,9 +927,9 @@ def suptitle_AdjMat(G, folder, D, std_D, p, numb_onring_links, avg_pl, std_avg_p
 
     return str_suptitle
 
-def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = False, partition = None, pos = None, numb_onring_links = 0, avg_pl = -1, std_avg_pl = -1, clique_size = ""):
+def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = False, partition = None, pos = None, numb_onring_links = 0, avg_pl = -1, std_avg_pl = -1, clique_size = "", node_color = "maroon"):
   import os.path
-  from definitions import my_dir, func_file_name, N_D_std_D, rhu, plot_params
+  from definitions import my_dir, func_file_name, N_D_std_D, rhu, plot_params, NNOverl_pois_net, NN_pois_net
   from functools import reduce
   import networkx as nx
   from scipy.stats import poisson
@@ -959,9 +961,9 @@ def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = Fals
   plot_params()
 
   'plot G, adj_mat, degree distribution'
-  _, ax = plt.subplots(figsize = (22,22), ) #20,20
+  plt.figure(figsize = (22,22), ) #20,20
 
-  #ax = plt.subplot(221)  
+  ax = plt.subplot(221)  
   'start with degree distribution'
   'set edges width according to how many "long_range_edges'
   width = 0.8
@@ -975,11 +977,12 @@ def save_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = Fals
   width = min(3,.5*width*N/max(1,len(long_range_edges)))
   if folder== "Caveman_Model":
     nx.draw(G, pos, node_color=list(partition.values()), node_size = 5, width = width, with_labels = False)
-  else: nx.draw_circular(G, ax=ax, with_labels=False, font_size=20, node_size=25, width=width)
+  else: 
+    H = G
+    if folder == "NN_Conf_Model": H = NN_pois_net(100, D, p)
+    if folder == "NNO_Conf_Model": H = NNOverl_pois_net(100, D, p)
+    nx.draw_circular(H, ax=ax, with_labels=False, font_size=20, node_size=150, width=1, node_color = node_color)
 
-  my_dir = "/home/hal21/MEGAsync/Tour_Physics2.0/Thesis/NetSciThesis/Project/ComplexSpread/LateX/images/Networks/my_nets/"
-  plt.savefig(my_dir+folder)
-  plt.close()
   
   #ax.text(0,1,transform=ax.transAxes, s = "D:%s" % D)
 
@@ -1333,35 +1336,54 @@ def pois_pos_degrees(N, D):
 
   'Draw N degrees from a Poissonian sequence with lambda = D and length L'
   def remove_zeros(array):
-    #print("array", array, "degarray", np.sum(array))
     its = 0
-    while True:
-      its += 1
-      mask = np.where(array == 0)
-      if not mask[0].size: 
-        #print(f"Replacing non-0 degrees in {its} iterations")
-        return array
-      
-      'the sum of the degrees must be even'
-      psum = np.sum(array)
-      #print("psum", psum)
-      if not psum % 2: #psum is even return even cover
-        while True:
-          its += 1
-          cover = np.random.poisson(lam = D, size = len(array[mask]))
-          #print("even cover?", cover)
-          if not np.sum(cover) % 2: break
-      else:
-        while True: #psum is odd return odd cover
-          its += 1
-          cover = np.random.poisson(lam = D, size = len(array[mask]))
-          if np.sum(cover) % 2: break
-      #print("cover final", cover)
-      array[mask] = cover
+    mask = np.where(array == 0)
+    print(f'mask[0].size: {mask[0].size}',)
+    if not mask[0].size: 
+      #print(f"The zeros are not present, since len {len(mask)}. I will exit.")
+      return array
+    
+    'the sum of the degrees must be even. Choose a non-zero value to start with'
+    psum = np.sum(array)
+    cover = []
+    #while True:
+    #  add = np.random.poisson(lam = D)
+    #  if add != 0:
+    #    cover = [add]
+    #    break
+    #print("psum", psum)
+    if not psum % 2: #if psum is even -> even cover
+      while True:
+        its += 1
+        add = np.random.poisson(lam = D)
+        #print(f'even (np.sum(cover)+add): {(np.sum(cover)+add)}',)
+        if not (np.sum(cover)+add)%2 and add != 0: 
+          cover.append(add)
+          #print(f'Adding add:', f'cover: {cover}', f'add: {add}', "np.sum(cover)", np.sum(cover))
+          #print(f'len(cover): {len(cover)} vs', f'mask[0].size: {mask[0].size}',)
+          if len(cover) == mask[0].size: break
+      if np.sum(cover) % 2: raise Exception("No even degree!")
+
+    else:
+      while True: #i psum is odd -> return odd cover
+        its += 1
+        add = np.random.poisson(lam = D)
+        #print(f'odd (np.sum(cover)+add): {(np.sum(cover)+add)}',)
+        if (np.sum(cover)+add)%2 and add != 0: 
+          cover.append(add)
+          #print(f'Adding add:', f'cover: {cover}', f'add: {add}', "np.sum(cover)", np.sum(cover))
+          #print(f'len(cover): {len(cover)} vs', f'mask[0].size: {mask[0].size}',)
+          if len(cover) == mask[0].size: break
+    #print("cover final", cover, "lencover == mask", len(cover) == mask[0].size)
+    array[mask] = cover
+    #print(f'array: {array}', f'np.sum(array): {np.sum(array)}',)
+    #print(f'np.sum(node degrees): {np.sum(array)}',)
+    if np.sum(array) % 2: raise Exception("No even degree!")
 
   pos_degrees = np.random.poisson(lam = D, size = N)
   pos_degrees = remove_zeros(pos_degrees)
-  #print(pos_degrees)
+  #print(f'pos_degrees: {pos_degrees}',)
+  
   return pos_degrees
 
 def dic_nodes_degrees(N, degrees):
@@ -1442,19 +1464,22 @@ def edges_nearest_node(dic_nodes):
         ##print('After all the rewiring, left nodes', nodes, "sorted_nodes", sorted_nodes, "edges", edges)
     return edges
 
-def NN_pois_net(N, folder, ext_D, p = 0):
+def NN_pois_net(N, ext_D, p = 0):
     from definitions import check_loops_parallel_edges, infos_sorted_nodes, \
         replace_lredges, connect_net, N_D_std_D
 
+    print("Im sampling degrees")
     D = ext_D
     degrees = pois_pos_degrees(N, D)
     dic_nodes = dic_nodes_degrees(N, degrees)
 
+    print("Im edges_nearest_node degrees")
     edges = edges_nearest_node(dic_nodes)
     G = nx.Graph()
     G.add_nodes_from(np.arange(N))
     G.add_edges_from(edges)
 
+    print("Im check_loops_parallel edges")
     check_loops_parallel_edges(G)
     infos_sorted_nodes(G, num_sorted_nodes=False)
 
@@ -1479,7 +1504,6 @@ def NNOverl_pois_net(N, ext_D, p, conn_flag = False, return_dic_nodes = False):
     import random
     import networkx as nx
 
-
     def edges_node(x):
         return [(i,j) for i,j in all_edges if i == x]
 
@@ -1487,6 +1511,7 @@ def NNOverl_pois_net(N, ext_D, p, conn_flag = False, return_dic_nodes = False):
     G = nx.Graph()
     G.add_nodes_from(np.arange(N))
     degrees = pois_pos_degrees(N,D)
+    print("Im before pois_pos")
     dic_nodes = dic_nodes_degrees(N, degrees)
 
     deg_mean = np.mean(degrees)   
@@ -1910,7 +1935,7 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
             conn_flag = False
           else: conn_flag = True'''
           conn_flag = False
-          G = NN_pois_net(N = N, folder = folder, ext_D = regD, p = p)
+          G = NN_pois_net(N = N, ext_D = regD, p = p)
           print("connected components", len(list(nx.connected_components(G))))
           if len(list(nx.connected_components(G))) != 1 and conn_flag:
             raise Exception("Error: it should be connected")
@@ -1976,10 +2001,10 @@ def main(folder, N, k_prog, p_prog, beta_prog, mu_prog,
         print("\nThe end-time of 1 generation of one AdjMat plot is", dt.datetime.now()-start_time)
 
         start_time = dt.datetime.now()       
-        '''save_nes(G, m = m, N0 = N0,
+        save_nes(G, m = m, N0 = N0,
                  p = p, folder = folder, adj_or_sir="SIR", R0_max = R0_max, beta = beta, mu = mu, 
                  ordp_pmbD_dic = ordp_pmbD_dic, done_iterations=done_iterations, 
-                 numb_onring_links = numb_onring_links, avg_pl = avg_pl, std_avg_pl = std_avg_pl, start_inf = start_inf)'''
+                 numb_onring_links = numb_onring_links, avg_pl = avg_pl, std_avg_pl = std_avg_pl, start_inf = start_inf)
         print("\nThe end-time of the generation of one SIR plot is", dt.datetime.now()-start_time)
 
 def parameters_net_and_sir(folder = None):

@@ -438,7 +438,7 @@ In fact, there could be constraints, such as \textit{cost-benefit problem}, whic
     \begin{subfigure}{\textwidth}
         \includegraphics[width = 0.5\linewidth]{../images/Networks/my_nets/Erdoes_Renyi_Graph.png}
         \centering
-        \caption{Erdös-Rényi Model for $p = 0.1$}
+        \caption{Erdös-Rényi Model for $N = 22, p = 0.1$}
         \label{fig:ERmodel}
     \end{subfigure}
 \end{figure}
@@ -1177,7 +1177,7 @@ In this manner, $D_c^{ER}$ increases as $\nu(t)$ drops: more contacts are needed
 	%scale = 0.27, trim = {10cm 0 1cm 0}
 	\includegraphics[trim = {2cm 0 1cm 0}, width=.8\textwidth]{../images/Results/Lasts/OPSW/OrdParam/p0.3/NNO_Conf_Model_ordp_p0.3_beta0.015_d14.0.png}
 	\centering
-	\caption{In the figure, it is reported the order parameter defined in \autoref{eq:def_OrdP}. More specifically, it is the average over the simulated $50$ trajectories of the standard deviations of the daily new cases. It displays a transition from linear to exponential regimes of a Poissonian-SW Network. Using \autoref{eq:prelim_Dc_fusemodel}, $D_c \sim 8.3$ is a fair estimate of the average number of contacts for which a burdening outbreak, barely infecting half of the population.}
+	\caption{In the figure, it is reported the order parameter defined in \autoref{eq:def_OrdP} as a function of the average number of contacts. More specifically, it is the average over the simulated $50$ trajectories of the standard deviations of the daily new cases. It displays a transition from linear to exponential regimes of a Poissonian-SW Network. Using \autoref{eq:prelim_Dc_fusemodel}, $D_c \sim 8.3$ is a fair estimate of the average number of contacts for which a burdening outbreak, barely infecting half of the population. We plotted both the order parameter and $D$ with errorbars.}
 	\label{fig:SD_Threshold_Fuse_Model}
 \end{figure}
 A "fuse-model" is a one-dimensional chain of individuals with $D$ neighbors per node.
@@ -1324,9 +1324,13 @@ Finally, since \autoref{eqs:SIR_degree-based} are not linear, there is a strong 
 \textbf{Relevant Quantities on Adjacency Matrix Plots} 
 In \autoref{fig:Method_RegLatAdjMatrix}, we show the panel devoted to the network properties. Specifically, in the title one finds the number of nodes ($ N $), the average degree $ D$, the fraction of distant nodes $ p$, the "outsider" nodes $ N_{3-out}$ whose degree $ k > 3 D$ and the small-world coefficient defined as
 \begin{equation}
-	SW_c := \frac{\delta}{\ln(\ln(N))}
+	SW_c := \frac{\delta}{\ln(N)}
 \end{equation}
-where the $ \delta = \langle l \rangle$ is the average path length and the $ C$ stands for the fact that the network is connected.
+where the $ \delta = \langle l \rangle$ is the average path length and the $ C$ stands for the fact that the network is connected. 
+For a Barabási-Albert model, we will dispaly the "Ultra Small-World" coefficient:
+\begin{equation}
+	USW_c := \frac{\delta}{\ln(\ln(N))}
+\end{equation}
 Moreover, we reported a visual representation of the graph (upper left), the contact matrix (upper right) and the degree distribution (lower band). In particular, we will generate it for every studied graph (see \autoref{ch:Results}).
 
 %\label{sec:res_RegLat}
@@ -1409,7 +1413,7 @@ Ultimately, we will compare the different evolutions of the pathogens, in order 
 The main result will be that the Caveman model is the best suited topology in constraining the diffusion among the studied graphs. By contrast, for a pathogen with more transmissibility ($ \beta = 0.1$) a large fraction of the population will still be infected. Thus, only major restrictions could be effective, e.g. forced quarantines.
 The other networks have less control on the disease since they are not made of clusters. More precisely, we organized the nodes on a circle and we wire them with a defined scheme. In turn, the latter procedure generate a $ \vee$  structure which strongly overlaps as $D$ increases and, thus, enanches the epidemic severity. In addition, we will order the networks based on the final outbreak size $ \pi_{max}$ at $ p = 0$: regular Watts-Strogatz (\autoref{sec:res_RegLat}), Overlapping Poissonian Small-World (O-PSW) model (\autoref{sec:res_OPSW}) and a Barabási-Albert model (\autoref{sec:res_BA}). For $ p = 0.3$, the result remains the same. 
 
-For a practical implementation, we generated the networks with $N = 1000$ nodes and $10$ starting infected individuals. Then, we performed the simulation over the Google Colab CPUs of \cite{GoogleColab}.
+For a practical implementation, we generated the networks with $N = 1000$ nodes, $10$ starting infected individuals ($i(t=0) = 10$) while zero daily new infected ($ C(t = 0) = 0$). Then, we performed the simulation over the Google Colab CPUs of \cite{GoogleColab}.
 Lastly, before facing the following parts, we suggest to firstly dive into \autoref{ch:Methodology} for a more general discussion on the introduced quantities and behaviors.
 %Moreover, since we are interested in the "sub-exponential" regime, we will report the last (quasi-)linear behavior but not the first exponential one as done in the second and third figures of \autoref{fig:sir_O-PSW_COVID}.
 
@@ -1453,7 +1457,7 @@ Finally, since the transmissibility $\beta \textnormal{ and the average number o
 
 \subsection*{SIR spreading over a Regular Lattice Graph}
 \begin{figure}[ht]
-	\includegraphics[width = \linewidth]{Results/WS_Pruned/p0.0/WS_Pruned_SIR_R0_3_N1000_D2.0_p0.0_beta0.105_d14.0.png} %../images/
+	\includegraphics[width = \linewidth]{Results/Lasts/WS_Pruned/p0.0/WS_Pruned_SIR_R0_3_N1000_D2.0_p0.0_beta0.105_d14.0.png} %../images/
 	\centering
 	\caption{Network SIR model (green) benchmarked with the Annealed-Mean-Field Network (orange). Since $R_0 > R_{c-net}$ (\autoref{eq:RcRnet_network}) the pathogen could increase the fraction of infected $ i(t)$ (azure dots). On the other hand, since the network is weakly connected, the total cases $ \pi(t)$ remains limited.}
 	\label{fig:sir_RegLat_D2_p0}
@@ -1487,23 +1491,23 @@ Instead, the maximum value predicted for every mean-field evolution (orange curv
 \thispagestyle{empty}
 \begin{figure}[H]
     \centering
-    \begin{subfigure}[t]{0.9\linewidth}
+    \begin{subfigure}[t]{0.88\linewidth}
         \centering
-        \includegraphics[width=0.97\linewidth]{Results/WS_Pruned/p0.0/WS_Pruned_SIR_R0_3_N1000_D6.0_p0.0_beta0.035_d14.0.png} 
+        \includegraphics[width=0.97\linewidth]{Results/Lasts/WS_Pruned/p0.0/WS_Pruned_SIR_R0_3_N1000_D6.0_p0.0_beta0.035_d14.0.png} 
         \caption{Regular Lattice with $D = 6 \textnormal{ and } \beta = 0.036$. This evolution displays a remarkable (pseudo-)linearity in the total cases $ \pi(t)$ (green curve) and a total outbreak size nearly $3$ times higher that the one reported in \autoref{fig:sir_RegLat_D2_p0}. Ultimately, $ D = 6$, \cite{Householdsize:2020}, could represent the evolution of a small village with light stay-at-home orders.} 
 		\label{fig:sir_RegLat_D6}
     \end{subfigure}
 	\vfill
-    \begin{subfigure}[t]{0.9\linewidth}
+    \begin{subfigure}[t]{0.88\linewidth}
         \centering
-        \includegraphics[width=.97\linewidth]{Results/WS_Pruned/p0.0/WS_Pruned_SIR_R0_3_N1000_D14.0_p0.0_beta0.015_d14.0.png} 
+        \includegraphics[width=.97\linewidth]{Results/Lasts/WS_Pruned/p0.0/WS_Pruned_SIR_R0_3_N1000_D14.0_p0.0_beta0.015_d14.0.png} 
         \caption{Regular Lattice with $D = 14$. Linearity is lost. $\Delta R_0(\delta)$ increases while $R_0$ remains the same. The introduction of $1/\delta$ enforces that for a network with low average path length the pathogen can sperad more easily than in graph with higher path length.} 
 		\label{fig:sir_RegLat_D14}
     \end{subfigure}
     \vfill
-    \begin{subfigure}[t]{0.9\linewidth}
+    \begin{subfigure}[t]{0.88\linewidth}
         \centering
-        \includegraphics[width=.97\linewidth]{Results/WS_Pruned/p0.0/WS_Pruned_SIR_R0_3_N1000_D30.0_p0.0_beta0.007_d14.0.png} 
+        \includegraphics[width=.97\linewidth]{Results/Lasts/WS_Pruned/p0.0/WS_Pruned_SIR_R0_3_N1000_D30.0_p0.0_beta0.007_d14.0.png} 
         \caption{Regular Lattice with $D = 30$. The estimated maximum of $ i(t)$ (green star) is overestimated; while the maximum for a mean-field is correct (yellow star).} 
 		\label{fig:sir_RegLat_D30}
     \end{subfigure}
@@ -1529,21 +1533,21 @@ Since for Long-Range WS the spreading is enhanced, the take home message is that
     \centering
 	\begin{subfigure}[t]{\textwidth}
         \centering
-        \includegraphics[width=.9\textwidth]{Results/WS_Pruned/p0.3/WS_Pruned_SIR_R0_3_N1000_D2.0_p0.3_beta0.105_d14.0.png} 
-        \caption{Remarkably linear regime over barely the entire evolution. As the network accounts for small $ D$ and low rewiring $ p$, the epidemic is flatten similarly to the $ p=0$ case: \autoref{fig:sir_RegLat_D2_p0}} 
+        \includegraphics[width=.9\textwidth]{Results/Lasts/WS_Pruned/p0.3/WS_Pruned_SIR_R0_3_N1000_D2.0_p0.3_beta0.105_d14.0.png} 
+        \caption{Remarkably linear regime over barely the entire evolution. As the network accounts for small $ D = 2$ and low rewiring $ p$, the epidemic is flatten similarly to the $ p=0$ case: \autoref{fig:sir_RegLat_D2_p0}} 
 		\label{fig:sir_RegLat_D2_p0.3}
     \end{subfigure}
 	\vfill
     \begin{subfigure}[t]{\textwidth}
         \centering
-        \includegraphics[width=.9\textwidth]{Results/WS_Pruned/p0.3/WS_Pruned_SIR_R0_3_N1000_D6.0_p0.3_beta0.035_d14.0.png} 
+        \includegraphics[width=.9\textwidth]{Results/Lasts/WS_Pruned/p0.3/WS_Pruned_SIR_R0_3_N1000_D6.0_p0.3_beta0.035_d14.0.png} 
         \caption{The (quasi-)linearity is lost and the exponential growth is recovered. By contrast to the $ D=2$ case, here the enhancement with respect to \autoref{fig:sir_RegLat_D6} is more pronounced: the total cases are barely $ 6$ times the "regular" ones. As quoted before, the estimated maximum (green star) worsens as $ p \neq 0$. Moreover, only $\Delta R_0(\delta)$ grasps the epidemic severity with respect \autoref{fig:sir_RegLat_D6}. Indeed, the two $R_0$'s are equals; while the differences $ R_0 - R_{c-net} $ could suggest that the $ p = 0$ case would be stronger that the current case. Nevertheless, it is the opposite as captured by $\Delta R_0(\delta)$. Finally, $t_{max}$ and $ \sigma(t_{max})$ are higher than the $ D = 2$ and $ D = 14$ scenarios.} 
 		\label{fig:sir_RegLat_D6_p0.3}
     \end{subfigure}
 	\vfill
     \begin{subfigure}[t]{\textwidth}
         \centering
-        \includegraphics[width=.9\textwidth]{Results/WS_Pruned/p0.3/WS_Pruned_SIR_R0_3_N1000_D14.0_p0.3_beta0.015_d14.0.png} 
+        \includegraphics[width=.9\textwidth]{Results/Lasts/WS_Pruned/p0.3/WS_Pruned_SIR_R0_3_N1000_D14.0_p0.3_beta0.015_d14.0.png} 
         \caption{Watts-Strogatz model for $D = 14 \textnormal{ and } p = 0.3$. As quoted before, the estimated maximum (green star) from \autoref{eq:picrit_network} worsens as $ p = 0.3$.} 
 		\label{fig:RegLat_D14_p0.3}
     \end{subfigure}
@@ -1552,7 +1556,7 @@ Since for Long-Range WS the spreading is enhanced, the take home message is that
 \end{figure}
 
 \clearpage
-\newgeometry{top = 0cm, bottom = 0cm, left = 2cm, right = 2cm}
+\newgeometry{top = 0.3cm, bottom = 0cm, left = 2cm, right = 2cm}
 \thispagestyle{empty}
 \section{Watts-Strogatz Model}
 \label{sec:res_WS_Model}
@@ -1760,7 +1764,7 @@ The diffusion of the pathogen for $p = 0.3$ shares the overall shape with the $p
 		The fuse model deeply overestimates $ D_c$ as the Poissonian structure facilitates a faster growth of the standard deviation, i.e. the daily new cases, more than a fuse one. The transition is better described by the Erdös-Rényi $ D_c$ .}
 		\label{fig:Ordp_OPSW_highmu_COVID19}
 	\end{subfigure}
-	\caption{Order Parameter for Regular OPSW with different recovery rates at $p = 0$. Formally, the order parameter is an average of the standard deviations for each trajectory. Thus, the y-label "Avg(SD(C))".}
+	\caption{Order Parameter for Regular OPSW with different recovery rates at $p = 0$. Formally, the order parameter is an average of the standard deviations for each trajectory. Thus, the y-label "Avg(SD(C))". We plotted both the order parameter and $D$ with errorbars.}
 	\label{fig:Ordp_OPSW_COVID19_panel}
 \end{figure}
 
@@ -1777,7 +1781,7 @@ The diffusion of the pathogen for $p = 0.3$ shares the overall shape with the $p
 		The critical degree of a fuse-model is corrected with the rewiring probability $ p$. Thus, the estimates is more similar to the real change of regime.}
 		\label{fig:Ordp_OPSW_highmu_p0.3}
 	\end{subfigure}
-	\caption{Order Parameter ($ AVG(SD(Cases)) $) for Long-Range OPSW of different pathogens and recovery rates.}
+	\caption{Order Parameter ($ AVG(SD(Cases)) $) for Long-Range OPSW of different pathogens and recovery rates. We plotted both the order parameter and $D$ with errorbars.}
 	\label{fig:Ordp_OPSW_COVID19_p0.3_panel}
 \end{figure}
 
@@ -2015,7 +2019,7 @@ As the network enhances the possibility of a pathogen to diffuse, for the COVID-
 		\caption{Order Parameter for a fast recovery rate $ d = 4$. The better estimate of the $ D_c$ comes from the homogeneous mean-field $ D_c \sim 16.667$.}
 		\label{fig:Ordp_BA_COVID_d1}
 	\end{subfigure}
-	\caption{Order Parameter (Avg(SD(Cases))) as a function of the average number of contacts $ D$ for Barabási-Albert Model}
+	\caption{Order Parameter (Avg(SD(Cases))) as a function of the average number of contacts $ D$ for the Barabási-Albert Model. We plotted both the order parameter and $D$ with errorbars.}
 	\label{fig:Ordp_BA_COVID}
 \end{figure}
 

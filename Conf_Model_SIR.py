@@ -9,10 +9,13 @@ import os; import json
 '''Configurational Model with poissonian degree:
 Look for multi // and loops edges. Are affecting G.neighbors(i)? If so, remove them!
 '''
-N = int(1e2); folder = "NN_Conf_Model"
+N = int(1e3); folder = "NN_Conf_Model"
 rmv_folder(folder, True)
 
-k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max \
+k_prog, p_prog, beta_prog, mu_prog, R0_min, R0_max, start_inf \
   = parameters_net_and_sir(folder)
+
+k_prog = [22]
+
 main(folder = folder, N = N, k_prog = k_prog, p_prog = p_prog, \
-  beta_prog = beta_prog, mu_prog = mu_prog, R0_min = R0_min, R0_max = R0_max)
+  beta_prog = beta_prog, mu_prog = mu_prog, R0_min = R0_min, R0_max = R0_max, start_inf = start_inf)

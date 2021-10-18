@@ -1,7 +1,7 @@
 from definitions import parameters_net_and_sir, main, rmv_folder
 from numba import config
 
-N = int(1e3)
+N = int(1e2)
 #print("Number of cpus used", config.NUMBA_DEFAULT_NUM_THREADS)
   
 'progression of net-parameters'

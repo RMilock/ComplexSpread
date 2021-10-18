@@ -1,12 +1,28 @@
 Da fare nel programma:
-- ptot = (1- Rc*lmd^-1 / D-1) * 1/(1-eps) : done @ 20.09 
+- discorso sulla curvatura fatto meglio
+- ptot = (1- Rc*lmd^-1 / D-1) * 1/(1-eps) : done @ 20.09 -- not good
 - N0 non serve perché per BA_model N0 = m+1
+- drop "could be the case"
+- change (1-eps) --> (1 - eps/D) in figures + pi_crit formula + Dc critical
+- Fai Ordp anche per il Caveman model
+- IMMAGINI
+- Commenta WS minor perché lambda_c è minor di PSW
+- dì che se applichi la procedura WS in realtà la probabilità va a 2*p
+- il problema della stella non è in p: perché per p = 0 rimane.
+- rimuovi numberi
 
 PRESENTAZIONE RISULTATI
 NB: stochasticity, tmax, severity, non exp growth,  1 > R0 > RcNet epidemia cresce
 Chosen: 
 OPSW: covid: D = 5, 11, 14;  
+A “Kind of Herd Immunity” is reached? H.I. is reached both due to the R-compartment or to the
+unreachability of the node;
+Source of overestimates of Dc:
+One other source of overestimation is that, some epidemics, are weak enough not to invade all the population \autoref{fig:Method_sir_CM_D13_ORL1}. Thus, producing an average fraction of susceptible $ \nu(t) \nsim 1/2$.
 
+- Intro: focus on the sub-exponential phase alongside to a linear trend of growth
+- D parameter introduced after <k>
+- Scrivi de start_inf = 1; e ptot = (1- Rc*lmd^-1 / D-1) * 1/(1-eps) perché non va bbene
 - Manca: "CM no OrderParameter", "Più Enfasi in DeltaR0 = ...", in WS manca beta = 0.1, d = 4
 - Manca: beta vero lockdown? Date lock down!
 - d basso = vaccino al lavoro; discuti errori grandi, e.g. avgk2 ~ k2 perché la distribuzione dei gradi non è molto piccata, richiama una poissoniana, dunque (x2-y2)^2 è grande e anche la sua deviazione standard.
@@ -26,21 +42,12 @@ SUWEIS:
 - make a mean of Rcnet by creating a file where all Rcnets are saved as the dict of the ordp
 
 
-- Parameters from article: 
-	- 1st plot: $\beta = 0.1, \mu = 0.167 \textnormal{ or } d = 6days, D = 8 \textnormal{ (exp-phase) vs } D = 3 \textnormal{ (linear-phase)}$;
-	- Phase Transition: $\beta = 0.05, 0.1, 0.2, \mu = 0.167 = 6days$ 
-	- Overall: $\beta = 0.05, 0.1, 0.2, 0.4, 0.6, 0.8; \mu = 0.07(14days), 0.1(14days), 0.167(6days), 0.3, 0.6, 0.8$
+
 - In ordp inserisci di non salvare a +-2 dal punto già esistente
-- Inserisci date lock down, AUT/ITA/USA
-- In the article, it has been used a narrow PSW; 
 - R0 = D*S/N * tasso di infezione * I/N / tasso di recupero * I/N = infetti che infettano / infetti che si recuperano = num di infetti secondari; per le reti diverse dal WS pruned tengo fissa l'epidemia e facci variare D, i.e. vario il numero di vicini e vedo come cambia.
-- puoi mettere in appendice le figure che ritieni più belline
-- spiega l'immagine dei plots con direttamente un grafico perché xe massa roba 
-- scrivi per bene la parte su $R_0$ nuovo che si propone come aggiornamento del vecchio;
 - plots capitoli precedenti controlla il copyright;
 - nell'introduzione ci sono ancora i ??
 - dì che hai scelto come daily new cases 0 all'inizio
-- spiega la stella nei plot
 - R-0c or R-0c-net -- sicuro di usare anche per il mf R-c-net? Perché non ne discende ne niente che R0*s(t) = R-c-net. Quindi, io direi di fissarlo a R-c-net a 1 e fine.
 \end{enumerate}
 \begin{itemize}	
@@ -48,9 +55,9 @@ SUWEIS:
 - add a Social Network eloquent image, augment the simple network resolution or do them by yourself;
 - World of War-craft had a serious bug which made epidemiologists devoting to it
 - Cit: Dario:Ad quid? - a quale scopo ?	Rebus sic stantibus - stando così le cose
-- Mene: Est modus in rebus
+- Mene: Est modus in rebus; Alias: Sara
 - Andre: Ca van san direct
-- "A gratis"
+- Aldo: "A gratis" 
 - CHECK K = 0 (AND INSERT A TREE PLOT);
 - Say "No natural essence in lock-down". So, at the same level, we want to study the topologies to best fit the containment of the disease;
 \end{itemize}

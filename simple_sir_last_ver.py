@@ -21,16 +21,15 @@ I "round_half_up" since, as for N = 15, k = N/2 = 8, in many cases
 it drives to a nearer pruning.
 '''
 
-rmv_flag = False
+rmv_flag = True
 
 'rewire all the edges with a probability of p'
-N = int(1e2)
+N = int(1e3)
 
 def even_int(x):
   if int(x) % 2 != 0: return int(x-1)
   return int(x)
-1e2
-for pruning in [True]: 
+for pruning in [False]: 
   if pruning:
     folder = "WS_Pruned"
     rmv_folder(folder, rmv_flag)
@@ -41,7 +40,7 @@ for pruning in [True]:
     #old mu_prog: np.linspace(0.16,1,10)
     #R0_min = 0; R0_max = 4
     print("---I'm pruning!")
-    betas = [8.9e-5]
+    betas = [2.1e-4] #[8.9e-5]
 
     'In WS model, if D = odd, D = D - 1. So, convert it now'
     k_prog = [even_int(N/x) for x in \
@@ -50,7 +49,7 @@ for pruning in [True]:
 
     print("kprog, betaprog, zip",  k_prog, "\n", beta_prog, "\n", list(zip(k_prog,beta_prog))[3:])
 
-    zipped = list(zip(k_prog,beta_prog))[1:] #the [1:] is an arbitrary choice. If want also 1000, remove it
+    zipped = list(zip(k_prog,beta_prog))[5:] #the [1:] is an arbitrary choice. If want also 1000, remove it
 
     total_iterations = 0
     for mu, p in product(mu_prog, p_prog):
