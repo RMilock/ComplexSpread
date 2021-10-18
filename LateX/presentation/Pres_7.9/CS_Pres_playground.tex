@@ -1,0 +1,412 @@
+\documentclass[xcolor={dvipsnames}]{beamer}
+
+\setbeamertemplate{frametitle}[default][center]
+
+\mode<presentation> {
+
+% The Beamer class comes with a number of default slide themes
+% which change the colors and layouts of slides. Below this is a list
+% of all the themes, uncomment each in turn to see what they look like.
+
+%\usetheme{default}
+%\usetheme{AnnArbor}
+%\usetheme{Antibes}
+%\usetheme{Bergen}
+%\usetheme{Berkeley}
+%\usetheme{Berlin}
+%\usetheme{Boadilla}
+%\usetheme{CambridgeUS}
+%\usetheme{Copenhagen}
+%\usetheme{Darmstadt}
+%\usetheme{Dresden}
+%\usetheme{Frankfurt}
+%\usetheme{Goettingen}
+%\usetheme{Hannover}
+%\usetheme{Ilmenau}
+%\usetheme{JuanLesPins}
+%\usetheme{Luebeck}
+\usetheme{Madrid}
+%\usetheme{Malmoe}
+%\usetheme{Marburg}
+%\usetheme{Montpellier}
+%\usetheme{PaloAlto}
+%\usetheme{Pittsburgh}
+%\usetheme{Rochester}
+%\usetheme{Singapore}
+%\usetheme{Szeged}
+%\usetheme{Warsaw}
+
+% As well as themes, the Beamer class has a number of color themes
+% for any slide theme. Uncomment each of these in turn to see how it
+% changes the colors of your current slide theme.
+
+%\usecolortheme{albatross}
+\usecolortheme{beaver}
+%\usecolortheme{beetle}
+%\usecolortheme{crane}
+%\usecolortheme{dolphin}
+%\usecolortheme{dove}
+%\usecolortheme{fly}
+%\usecolortheme{lily}
+%\usecolortheme{orchid}
+%\usecolortheme{rose}
+%\usecolortheme{seagull}
+%\usecolortheme{seahorse}
+%\usecolortheme{whale}
+%\usecolortheme{wolverine}
+
+%\setbeamertemplate{footline} % To remove the footer line in all slides uncomment this line
+%\setbeamertemplate{footline}[page number] % To replace the footer line in all slides with a simple slide count uncomment this line
+
+%\setbeamertemplate{navigation symbols}{} % To remove the navigation symbols from the bottom of all slides uncomment this line
+}
+
+\usepackage{graphicx} % Allows including images
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage{animate}
+\usepackage{listings}
+\usepackage{subcaption}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{tabularx}
+\usepackage{lipsum}
+\usepackage{tikz}
+%\usepackage{subfig}
+%\captionsetup[subfloat]{captionskip=1pt}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%paths:
+\graphicspath{
+%{"./Plots/2_WS_Epids_zip(beta,mu)/p0.0/SIR/R0s/gif/"}
+%{"./Plots/2_WS_Epids_zip(beta,mu)/p0.1/SIR/R0s/gif/"}
+%{"./Plots/Fixed_Plots/"}
+%{"./Plots/3.1_NNR_Conf_Model/AdjMat/"}
+%{"./Plots/3.1_NNR_Conf_Model/SIR/"}
+%{"./Plots/3.1_NNR_Conf_Model/SIR/R0_1-2/R0_flow/"}
+%{"./Plots/3.1_NNR_Conf_Model/SIR/R0_2-3/"}
+%{"./Plots/3.2_Overlapping_Rew_Add_True_13.5_done/p0.0/AdjMat/"}
+%{"./Plots/3.2_Overlapping_Rew_Add_True_13.5_done/p0.0/SIR/"}
+%{"./Plots/3.2_Overlapping_Rew_Add_True_13.5_done/p0.1/AdjMat/"}
+%{"./Plots/3.2_Overlapping_Rew_Add_True_13.5_done/p0.1/SIR/"}
+%{"./Plots/3.2_Overlapping_Rew_Add_True_13.5_done/p0.0/SIR/R0_0-2/"}
+%{"./Plots/3.2_Overlapping_Rew_Add_True_13.5_done/p0.0/SIR/R0_2-3/"}
+%{"./Plots/3.2_Overlapping_Rew_Add_True_13.5_done/p0.0/SIR/R0_3-5/"}
+{"./Plots/"}
+}
+
+\newcommand\Wider[2][3em]{%
+\makebox[\linewidth][c]{%
+  \begin{minipage}{\dimexpr\textwidth+#1\relax}
+  \raggedright#2
+  \end{minipage}%
+  }%
+}
+
+%\addtobeamertemplate{headline}{}{%
+%\begin{tikzpicture}[remember picture,overlay]
+%\node at([shift={(.25\paperwidth,-.42)}]current page.north) {\includegraphics[width=1cm]{unipd_logo}};
+%\end{tikzpicture}}
+
+%----------------------------------------------------------------------------------------
+%	TITLE PAGE
+%----------------------------------------------------------------------------------------
+
+\title[Network Covid-19]{Modeling COVID-19 Spreading In A Network} % The short title appears at the bottom of every slide, the full title is only on the title page
+
+\author{Riccardo Milocco} % Your name
+\institute[DFA - UniPD] % Your institution as it will appear on the bottom of every slide, may be shorthand to save space
+{
+{\normalsize Prof./Dr. Marco Baiesi} \\
+\vspace{1cm}
+{\normalsize Università Degli Studi di Padova} \\ % Your institution for the title page
+\medskip
+{\normalsize Dipartimento di Fisica e Astronomia G. Galilei} % Your email address
+}
+\logo{
+	\begin{tikzpicture}[overlay,remember picture]
+		\node[left = 0cm] at (current page.330){
+			\includegraphics[width=1cm, trim = {0 0 10cm 0}, clip]{unipd_logo}
+		};
+		\end{tikzpicture}
+}
+\date{25.10.2021} % Date, can be changed to a custom date
+
+\begin{document}
+
+%\addtobeamertemplate{headline}{}{%
+%\begin{tikzpicture}[remember picture,overlay]
+%\node at([shift={(.25\paperwidth,-.42)}]current page.north) {\includegraphics[height=3cm,width=2cm]{unipd_logo.png}};
+%\end{tikzpicture}}
+
+\begin{frame}
+\titlepage % Print the title page as the first slide
+\end{frame}
+
+\begin{frame}
+\frametitle{Overview} % Table of contents slide, comment this block out to remove it
+\tableofcontents % Throughout your presentation, if you choose to use \section{} and \subsection{} commands, these will automatically be printed on this slide as an overview of your presentation
+\end{frame}
+
+%----------------------------------------------------------------------------------------
+%	PRESENTATION SLIDES
+%----------------------------------------------------------------------------------------
+\section{Social Networks \& Results}
+\begin{frame}{Social Networks \& Results}
+	\vspace{-1mm}
+	\Wider[2em]
+	{
+	\begin{figure}[t]
+		\begin{subfigure}[t]{0.48\linewidth}
+			\centering
+			\includegraphics[trim = {3cm, 3cm, 3cm, 3cm}, clip, width = .65\linewidth]{NewPlots/NetworksExhibition/Regular Lattice}
+			%\caption{Order Parameter dependence as in the upper plot, but $ p = 0.3$. The fuse model approximation yields a proper estimate of $ D_c \sim 8.3$. The introduction of distant node ease the exponential growth. Hence, $ D_c$ is lower than the one obtained in the $ p = 0$ case.}
+		\end{subfigure}
+		\hfill
+		\centering
+		\begin{subfigure}[t]{0.48\linewidth}
+			\centering
+			\includegraphics[height = .48\textheight]{NewPlots/NetworksExhibition/Overlapping_PSW_new.png}
+			%\caption{Order Parameter for Regular OPSW with different recovery rates at $p = 0.3$.
+			%The critical degree of a fuse-model is corrected with the rewiring probability $ p$. Thus, the estimates is more similar to the real change of regime.}
+		\end{subfigure}
+		%\caption{Order Parameter ($ AVG(SD(Cases)) $) for Long-Range OPSW of different pathogens and recovery rates. We plotted both the order parameter and $D$ with errorbars.}
+	\end{figure}
+	\vspace{-.8cm}
+	\begin{figure}[t]
+		\begin{subfigure}[t]{0.48\linewidth}
+			\centering
+			\includegraphics[trim = {1cm 1cm 1cm 3cm}, clip, height = .48\textheight]{NewPlots/NetworksExhibition/Caveman_Model}
+		\end{subfigure}
+		\hfill
+		\begin{subfigure}[t]{0.48\linewidth}
+			\centering
+			\includegraphics[height = .48\textheight, trim = {0 0 2cm 0}, clip,]{NewPlots/NetworksExhibition/Barabasi_Albert_Model_new.png}
+		\end{subfigure}
+	\end{figure}
+	\vspace{-1cm}
+	}
+\end{frame}
+
+
+\begin{frame}{Watts-Strogatz model}
+	\begin{figure}
+		\begin{subfigure}{.48\linewidth}
+			\includegraphics[width = \linewidth, trim = {3cm 1cm 2cm 1cm}, clip]{NewPlots/WS_Pruned/AdjMat/WS_Pruned_AdjMat_1000_500.0_0.0.png}
+		\end{subfigure}
+		\hspace{1mm}
+		\begin{subfigure}{.48\linewidth}
+			\includegraphics[width = \linewidth, trim = {3cm 1cm 2cm 1cm}, clip]{NewPlots/WS_Pruned/AdjMat/WS_Pruned_AdjMat_1000_500.0_0.3.png} %trim = {0 24.9cm 0 6cm}
+		\end{subfigure}%New_Plots/WS_Pruned/AdjMat/WS_Pruned_AdjMat_1000_30.0_0.1.png}}
+	%\caption{Title for both}
+	\caption{Regular lattice and extension with long-range interactions $ p = 0.3$.\\
+			From top left: Graph Realization, Adjacency Matrix, Degree Distribution. }
+	\end{figure}
+\end{frame}
+
+\begin{frame}{\textit{Fixed $R_0$} SIR + Regular Lattice}
+	\vspace{-2mm}
+	\Wider[3em]{
+	\begin{figure}[h]
+		\centering
+		\animategraphics[label = taylor, width=\linewidth, loop, height = 0.7\textheight, controls]{1}{NewPlots/WS_Pruned/Gifs/WS_Pruned/WS_Pruned_p0_}{1}{3}
+	\end{figure}
+	}
+\end{frame}
+
+\begin{frame}{COVID-19 SIR + Regular Watts-Strogatz model}
+	\vspace{-2mm}
+	\Wider[2em]{
+	\begin{figure}[h]
+		\centering
+		\animategraphics[width=\linewidth, loop, height = 0.7\textheight, controls]{1}{NewPlots/WS_Epids/WS_Epids_}{2}{5}
+	\end{figure}
+	}
+\end{frame}
+
+\begin{frame}{Poissonian Small-World Networks}
+	\begin{figure}
+		\begin{subfigure}{.48\linewidth}
+			\includegraphics[width = \linewidth, trim = {3cm 1cm 2cm 1cm}, clip]{NewPlots/PoissSW/OPSW/NNO_Conf_Model_AdjMat_1000_25.0_0.0.png}
+		\end{subfigure}
+		\hspace{1mm}
+		\begin{subfigure}{.45\linewidth}
+			\includegraphics[width = \linewidth, trim = {3cm 1cm 2cm 1cm}, clip]{NewPlots/PoissSW/OPSW/NN_Conf_Model_AdjMat_1000_21.0_0.0.png} %trim = {0 24.9cm 0 6cm}
+		\end{subfigure}%New_Plots/WS_Pruned/AdjMat/WS_Pruned_AdjMat_1000_30.0_0.1.png}}
+	\caption{``Overlapping" PSW and ``Sparse" PSW.}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{COVID-19 SIR + Overlapping PSW}
+	\vspace{-2mm}
+	\Wider[2em]{
+	\begin{figure}[h]
+		\centering
+		\animategraphics[width=\linewidth, loop, height = 0.7\textheight, controls]{1}{NewPlots/PoissSW/OPSW/Gifs/OPSW_}{1}{6}
+	\end{figure}
+	}
+\end{frame}
+
+\begin{frame}{Order Parameter $ := SD(C)$ }
+	\vspace{-2mm}
+	\Wider[2em]
+	{
+	\begin{figure}[t]
+		\begin{subfigure}[t]{0.48\linewidth}
+			\centering
+			\includegraphics[width=\linewidth, height = .45\textheight]{NewPlots/PoissSW/OrdP/NNO_Conf_Model_ordp_p0.0_beta0.015_d14.0.png} 
+			\label{fig:Ordp_OPSW_COVID19_D14}
+		\end{subfigure}
+		\hfill
+		\begin{subfigure}[t]{0.48\linewidth}
+			\centering
+			\includegraphics[width=\linewidth, height = .45\textheight]{NewPlots/PoissSW/OrdP/NNO_Conf_Model_ordp_p0.0_beta0.015_d4.0.png}
+			\label{fig:Ordp_OPSW_highmu_COVID19}
+		\end{subfigure}
+		\label{fig:Ordp_OPSW_COVID19_panel}
+	\end{figure}
+	\vspace{-1cm}
+	\begin{figure}[t]
+		\begin{subfigure}[t]{0.48\linewidth}
+			\includegraphics[width=\linewidth, height = .45\textheight]{NewPlots/PoissSW/OrdP/NNO_Conf_Model_ordp_p0.3_beta0.015_d14.0.png}
+			%\caption{Order Parameter dependence as in the upper plot, but $ p = 0.3$. The fuse model approximation yields a proper estimate of $ D_c \sim 8.3$. The introduction of distant node ease the exponential growth. Hence, $ D_c$ is lower than the one obtained in the $ p = 0$ case.}
+			\label{fig:Ordp_OPSW_Dc8.3_p0.3}
+		\end{subfigure}
+		\hfill
+		\begin{subfigure}[t]{0.48\linewidth}
+			\includegraphics[width=\linewidth, height = .45\textheight]{NewPlots/PoissSW/OrdP/NNO_Conf_Model_ordp_p0.3_beta0.015_d4.0.png}
+			%\caption{Order Parameter for Regular OPSW with different recovery rates at $p = 0.3$.
+			%The critical degree of a fuse-model is corrected with the rewiring probability $ p$. Thus, the estimates is more similar to the real change of regime.}
+			\label{fig:Ordp_OPSW_highmu_p0.3}
+		\end{subfigure}
+		%\caption{Order Parameter ($ AVG(SD(Cases)) $) for Long-Range OPSW of different pathogens and recovery rates. We plotted both the order parameter and $D$ with errorbars.}
+		\label{fig:Ordp_OPSW_COVID19_p0.3_panel}
+	\end{figure}
+	}
+\end{frame}
+
+\begin{frame}{Caveman Model}
+	\vspace{-3mm}
+	\begin{figure}
+		\centering
+		\animategraphics[trim = {1cm 1cm 1cm 1cm}, height = .8\textheight, controls]{1}{NewPlots/CavemanModel/AdjMat/CM_AdjMat_}{1}{2}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{COVID-19 SIR + Caveman Model}
+	\vspace{-2mm}
+	\begin{figure}[h]
+		\centering
+		\animategraphics[width=\linewidth, loop, height = 0.7\textheight, controls]{1}{NewPlots/CavemanModel/Gifs/CM_}{1}{4}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{(Regular) Barabási-Albert Model}
+	\vspace{-3mm}
+	\begin{figure}
+		\centering
+		\includegraphics[trim = {1cm 1cm 1cm 0cm}, clip, height = .9\textheight]{NewPlots/BA_Model/AdjMat/BA_Model_AdjMat_1000_28.0_0.0_14_14.png}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{COVID-19 SIR + Barabási-Albert Model}
+	\vspace{-2mm}
+	\Wider[2em]{
+	\begin{figure}[h]
+		\centering
+		\animategraphics[width=\linewidth, loop, height = 0.7\textheight, controls]{1}{NewPlots/BA_Model/Gifs/BA_}{2}{3}
+	\end{figure}
+	}
+\end{frame}
+
+\begin{frame}{Order Parameter $:= SD(C)$ }
+	\Wider[1em]{
+	\begin{figure}
+		\begin{subfigure}[t]{.48\linewidth}
+			\includegraphics[width = \linewidth]{NewPlots/BA_Model/Ordp/BA_Ordp_1}
+		\end{subfigure}
+		\hspace{1mm}
+		\begin{subfigure}[t]{.48\linewidth}
+			\includegraphics[width = \linewidth]{NewPlots/BA_Model/Ordp/BA_Ordp_2.png} %trim = {0 24.9cm 0 6cm}
+		\end{subfigure}%New_Plots/WS_Pruned/AdjMat/WS_Pruned_AdjMat_1000_30.0_0.1.png}}
+	%\caption{Ord}
+	\end{figure}
+	}
+\end{frame}
+
+\logo{}
+\definecolor{darkgreen}{RGB}{0,100,0}
+\newcommand{\tabitem}{~~\llap{\textbullet}~~}
+\begin{frame}
+	\Wider[4em]
+	{		
+	\begin{center}
+		\begin{tabular}{||c|c|c|c||}
+			\hline
+			\multicolumn{3}{|c|}{Final Outbreak Size} & \multicolumn{1}{c|}{Degree Distribution} \\  
+			\hline
+			\multicolumn{1}{|c|}{Networks} & \multicolumn{1}{c|}{$ D = 6 $}
+			& \multicolumn{1}{c|}{$ D = 8 $} &  \\
+			\hline
+			\begin{minipage}[c][.22\textheight]{.21\textwidth}
+				\centering
+				\includegraphics[trim = {1cm 7cm 1cm 4cm}, clip, height = .21\textheight]{NewPlots/NetworksExhibition/Caveman_Model}
+			\end{minipage}
+			& -- & $\textcolor{darkgreen}{(4.3\pm 1.4 )\%}$ 
+			& 
+			\begin{tabular}{@{}l@{}}\tabitem Low Heterogeneity \\ \tabitem Clustered Net\end{tabular}
+			\\
+			\hline
+			\begin{minipage}[c][.22\textheight]{.21\textwidth}
+				\centering
+				\includegraphics[trim = {3cm, 7cm, 3cm, 3.1cm}, clip, height = .21\textheight]{NewPlots/NetworksExhibition/Regular Lattice} 
+			\end{minipage}
+			& -- & $(6 \pm 2.3 )\%$ & Peaked \\
+			\hline
+			\begin{minipage}[c][.22\textheight]{.21\textwidth}
+				\centering
+				\includegraphics[trim = {3cm, 7cm, 3cm, 3.1cm}, clip, height = .21\textheight]{NewPlots/NetworksExhibition/Overlapping_PSW_new.png} 
+			\end{minipage}
+			& -- & $(7.4 \pm 2.5 )\%$ & \begin{tabular}{@{}c@{}}Mid Heterogeneity \\ (No Hubs)\end{tabular} \\
+			\hline
+			\begin{minipage}[c][.22\textheight]{.21\textwidth}
+				\centering
+				\includegraphics[trim = {3cm, 7cm, 3cm, 3.4cm}, clip, height = .21\textheight]{NewPlots/NetworksExhibition/Barabasi_Albert_Model_new.png} 
+			\end{minipage}
+			& $\textcolor{Red}{(36 \pm 8.9 )\%}$  & -- & \begin{tabular}{@{}c@{}}Highly Heterogeneity \\ (Hubs)\end{tabular}  \\
+			\hline
+		\end{tabular}
+	\end{center}
+	}
+\end{frame}
+
+
+\logo{
+	\begin{tikzpicture}[overlay,remember picture]
+		\node[left = 0cm] at (current page.330){
+			\includegraphics[width=1cm, trim = {0 0 10cm 0}, clip]{unipd_logo}
+		};
+		\end{tikzpicture}
+}
+\section{Summary and Conclusions}
+\begin{frame}{Summary and Conclusions}
+\centering
+\begin{enumerate}
+	\item Used a Watts-Strogatz model to test the \textit{epidemic severity} VS $ R_0$; 
+	\item The \underline{peak} of the infected is well estimated \underline{only} for mean-field approximation (yellow star); 
+	%\item Introduced a Overlapping PSW $ \Rightarrow$ high final outbreak size;
+	%\item \textit{local} Caveman Model with the lowest final outbreak size;
+	%\item Barabási-Albert model with the highest final outbreak size due to \textbf{hubs};
+	\item \underline{Order} the Social Network models for controlling COVID-19: \textit{local} Caveman,Watts-Strogatz, Poissonian-SW, Barabási-Albert; \\
+	\item For Overlapping PSW, $ D_c$ is well estimated by the \textit{Fuse model} \underline{only} for $\beta = 0.015$ and $ d = 14$;
+	\item For Barabási-Albert model, estimates of $ D_c$ comes from \textit{homogeneous mean-field};
+\end{enumerate}
+\end{frame}
+
+\begin{frame}
+	\frametitle{}
+	\centering
+	{\Huge Thank You For Your Attention}
+\end{frame}
+
+\end{document}
+
