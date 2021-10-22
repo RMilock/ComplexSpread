@@ -197,7 +197,7 @@ Inside the "ecosystems" of models, there are the simple models which allow to an
 	\label{fig:perfect_model}
 \end{figure}	
 
-As suggested by the \autoref{fig:perfect_model}\footnote{\textit{"Est modus in rebus"}} (\cite{Kiss::MathOfEpiOnNet}), models provide maximum insight where the right balance of realism (circle filled with dots, e.g. the Deep Learning for Graph to predict $R_t$ \cite{Davahli::USA_predicting_COVID19}) and simplicity (circle with vertical lines e.g. on epidemics the deterministic SIR model) is met\footnote{The equilibrium point may depend on the specific posed question} (central circle with oblique lines).
+As suggested by the \label{cit:GMeneghini} \autoref{fig:perfect_model}\footnote{\textit{"Est modus in rebus"} (\cite{Kiss::MathOfEpiOnNet})}, models provide maximum insight where the right balance of realism (circle filled with dots, e.g. the Deep Learning for Graph to predict $R_t$ \cite{Davahli::USA_predicting_COVID19}) and simplicity (circle with vertical lines e.g. on epidemics the deterministic SIR model) is met\footnote{The equilibrium point may depend on the specific posed question} (central circle with oblique lines).
 
 In this middle region, one could find several works that use network analysis as the underlying structure for a phenomenon(\cite{Thurner::NetBasedExpl} \cite{VespignaniSatorras2001Epidemic} \cite{pizzuti::2020_ItalyCOVIDnetwork}); while other, more involved, that incorporate human mobility data in several hybrid models \cite{ZEROUAL::DL_COVID19, Stubinger::Incidence_Diff_Countries} in order to predict its diffusion. For the sake of simplicity, the present thesis is going to deepen the paper of \cite{Thurner::NetBasedExpl}. In particular, Thurner et al. \cite{Thurner::NetBasedExpl}, by focusing on the COVID-19 spreading in Austria and in the USA, are able to find a scenario, i.e. a combination of the SIR spreading parameters\footnote{the infection rate $\beta$, recover rate $\mu$, the long-range attachment probability $p$}, such that the outbreak is (quasi-)linear for a value of the average number of contact $D$. This behavior of the SIR model is qualitatively comparable with the curves reported by the JHUniversity reported below. 
 Hence, inspired by \cite{Thurner::NetBasedExpl}, the aim of this project is to analyze how the SIR model behaves by changing its epidemic parameters but also the topology of the underlying social network.
@@ -733,10 +733,10 @@ Even with different origins, most real networks display two important features w
 In particular, growth is an active process driven by the sequential increasing of the size of the network $N$ as per the addition of new nodes. Rather, a random network assume $N$ to be fixed. \newline
 Furthermore, new nodes prefer to link to the more connected ones, a process called "preferential attachment". On the other hand, random networks wire randomly with other nodes.
 
-Ça va sans dire, the model (\autoref{sec:BA_model}) has to be dynamical and encode a "preferential" probability which changes every time ("event time") there is a modification of the topology. 
+Ça va sans dire \label{cit:AMarzo}, the model (\autoref{sec:BA_model}) has to be dynamical and encode a "preferential" probability which changes every time ("event time") there is a modification of the topology. 
 
 {\large \textbf{Final Remarks on Scale-Free}} \\
-In general, the hosted phenomenon (-a) is complex and affects the graph topology and, in turn, the degree distribution. Rebus sic stantibus, it is sufficient to establish a fair starting point, either EBDs or PLDs class, over which develop gradually ad-hoc features, rather then the meticulous fitting of the degree distribution.
+In general, the hosted phenomenon (-a) is complex and affects the graph topology and, in turn, the degree distribution. Rebus sic stantibus \label{cit:DarioMassa}, it is sufficient to establish a fair starting point, either EBDs or PLDs class, over which develop gradually ad-hoc features, rather then the meticulous fitting of the degree distribution.
 
 As a final remark, many interesting features of scale-free networks, from their robustness to anomalous spreading phenomena, are linked to the $\gamma \in (2,3)$; thus, due to the small average distance which strengthen the considered phenomenon.
 For a more detailed dissertation, see \autoref{sec:SFD_details}.
@@ -761,7 +761,7 @@ To take advantage of growth and preferential attachment, we used the Barabási-A
 	\end{equation}
 \end{itemize}
 
-Therefore, preferential attachment has a stochastic nature not a deterministic one. Moreover, it increases the appeal of the (already) high-degree nodes, alias "rich-gets-richer" phenomenon. As a result, while most of the nodes ends up having few links, a bunch of nodes become highly connected (big hubs). This implies a degree distribution which does not decay exponentially, i.e. a power law with $\gamma \leq 3$ \cite{barabasi::2016networkbook}. 
+Therefore, preferential attachment has a stochastic nature not a deterministic one. Moreover, it increases the appeal of the (already) high-degree nodes, alias \label{cit:SaraSagone1} "rich-gets-richer" phenomenon. As a result, while most of the nodes ends up having few links, a bunch of nodes become highly connected (big hubs). This implies a degree distribution which does not decay exponentially, i.e. a power law with $\gamma \leq 3$ \cite{barabasi::2016networkbook}. 
 
 Empirical studies on networks, such as actor and scientific collaboration networks, have found that the exponent at the numerator of $\Pi(k_i) \sim k_i^\alpha$ could differ from $1$.
 Indeed, there are $3$ paradigmatic kinds of Preferential Attachments (PAs) by varying the exponent $\alpha$: sublinear PAs ($0<\alpha<1$), (linear\footnote{Commonly, the here-called "linear" PAs is just called "preferential attachment" without further specification.}) PAs ($\alpha = 1$), superlinear PAs ($\alpha>1$). Briefly, the sublinear PAs drives to an "stretched exponential distribution" (see \autoref{sec:SFProperties}); the linear to the standard scale-free network; while in the superlinear almost all nodes connects to few super-hubs (winner-takes-all phenomenon).
@@ -1107,7 +1107,7 @@ According to \autoref{eq:lambdac_Rc_netSIR}, a disease spreads at early times if
 \end{equation}
 where the \textit{critical reproduction number} $R_{c-net}$ is defined in the \autoref{eq:lambdac_Rc_netSIR}. Thus, the exponential growth of the number of cases is recovered for $ D > D_c$. Moreover, whether the network is not so heterogeneous, $R_{c-net} \sim 1$, which becomes exact ($=1$) for a Poissonian distribution (see \autoref{eq:Rcnet=1}). In general, as for the reported networks (\autoref{ch:Results}), \autoref{eq:earlytimes_Dc} yields $D_c \sim \frac{ R_{c-net} \mu}{\beta}$ for $ t \approx 0$. The Barabási-Albert model is the only exception where $D_c$ is smaller, due to the high heterogeneity of its underlying degree distribution. 
 
-A rough estimate of the daily new cases is $C(t) \propto R_0^{t/d}$ where $d$ is the average time an individual remains infected, namely $ d:= 1/ \mu$. Generally, since the transmission rate $ \beta \textnormal{ and the recovery rate }  \mu$ are fixed, the exponential growth occurs for $D > D_c$. For $D \sim D_c$, the number of total infected $ \pi(t)$  will behave critically, i.e. $\pi(t) \propto t^{\alpha}$, where $\alpha \in (1,2)$ for a simply connected (no multiedges or loops) short-range network embedded in dimension $2$. More in detail, $\alpha \sim 2$ for a network resembling a regular lattice in $2$ dimensions, since $C(t) \propto t^2$ is proportional to the covered area of the infection front; while $\alpha \sim 1$ for a tree or a collection of 1-dimensional chains, as the front spreads linearly as a flame along a fuse, i.e. $C(t) \propto t$. For this reason, we would refer to the \textit{"fuse-model"}  as a 1D-grid with $D$ neighbors per node. Thus, the Overlapping Poissonian small-world network (alias OPSW) of \autoref{fig:netmod_O-PSW} is an extension of this model since it allows for a Poissonian distribution of the number of contacts per person \cite{Thurner::NetBasedExpl}. 
+A rough estimate of the daily new cases is $C(t) \propto R_0^{t/d}$ where $d$ is the average time an individual remains infected, namely $ d:= 1/ \mu$. Generally, since the transmission rate $ \beta \textnormal{ and the recovery rate }  \mu$ are fixed, the exponential growth occurs for $D > D_c$. For $D \sim D_c$, the number of total infected $ \pi(t)$  will behave critically, i.e. $\pi(t) \propto t^{\alpha}$, where $\alpha \in (1,2)$ for a simply connected (no multiedges or loops) short-range network embedded in dimension $2$. More in detail, $\alpha \sim 2$ for a network resembling a regular lattice in $2$ dimensions, since $C(t) \propto t^2$ is proportional to the covered area of the infection front; while $\alpha \sim 1$ for a tree or a collection of 1-dimensional chains, as the front spreads linearly as a flame along a fuse, i.e. $C(t) \propto t$. For this reason, we would refer to the \textit{"fuse-model"}  as a 1D-grid with $D$ neighbors per node. Thus, the Overlapping Poissonian small-world network (alias \label{cit:SaraSagone2} OPSW) of \autoref{fig:netmod_O-PSW} is an extension of this model since it allows for a Poissonian distribution of the number of contacts per person \cite{Thurner::NetBasedExpl}. 
 In between these regimes, the specific $\alpha$ is influenced and shaped by non-pharmaceutical interventions (NPIs).
 
 Schematically, for a fixed pathogen with $\lambda = \beta d$ and the rewiring probability $p$ , $R_0 \propto D$ and $D_c$ characterizes the nature of the epidemics as \cite{Thurner::NetBasedExpl}
@@ -2164,7 +2164,7 @@ Hence, for $t >> 1$,
 	k_i(t) = m \left(\frac{t}{t_i}\right)^\beta
 	\label{eq:BA_modki(t)}
 \end{equation}
-where $\beta$, alias "dynamical exponent", has the value $\beta = 1/2$ \cite{barabasi::2016networkbook} and $t_i$ is the entering time for the node $i$.
+where $\beta$, alias \label{cit:SaraSagone3} "dynamical exponent", has the value $\beta = 1/2$ \cite{barabasi::2016networkbook} and $t_i$ is the entering time for the node $i$.
 
 The remarks, coming from the \autoref{eq:BA_modki(t)}, are multiple:
 \begin{itemize}
@@ -2304,6 +2304,64 @@ The following table displays the conversion among the recovery rate $\mu$ and th
 		\hline
 	\end{tabular}
 \end{center}
+
+\newgeometry{left = 2cm, bottom = 2cm, right = 2cm, top=2cm}
+\chapter{Ringraziamenti}
+\vspace{-1.5cm}
+\begin{figure}[h]
+  \begin{subfigure}[t]{3cm}
+    \includegraphics[scale = 0.02]{qr_code_generator}
+    %\caption{QR Code Generator Website}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{3cm}
+    \includegraphics[scale = 0.02]{google_drive}
+    %\caption{Google Drive}
+  \end{subfigure}
+  \caption{Portami via con te!}
+\end{figure}
+
+\vspace{1cm}
+
+\textit{Il primo pensiero va a voi come gruppo, come squadra che mi è stata vicino anche quando volevo stare da solo. Ognuno a suo modo nonostante le difficoltà, cosicchè se non ci siamo persi, il legame deve sì essere più solido di quello che percepiamo.} 
+
+Involutivi costrutti sintattici a parte, parto.\\
+Ringrazio i miei genitori per aver dato grande importanza alle mie attitudini e a quelle di Anthea, volendoci dimostrare che nella vita la positività è giusto poco più in là della delusione.
+\\Ringrazio la mia \textit{famiglia}: il babbo \textit{Eros} per tutti i sinceri aiuti che non sono sempre stato in grado di accogliere, la mamma \textit{GRabri} per lo spirito di condivisione e coraggio che avrei voluto avere in diverse situazioni, la mia Crossfitter preferita \textit{AntHea} per non aver detto alla mamma che l'avevo fatta cadere io dalle scale e procurato dei punti sotto il mento; per aver lavato le stoviglie quando io volevo solo suonare; per gli abbracci di Natale; i letti spostati; i pomeriggi di luglio a vedere "The Hills"; aver distrutto le costruzioni di LEGO così ho potuto ricreare più volte quello che mi sembrava già concluso; e che dimostra ogni giorno una capacità di scelte oculate che mi ispirerà nel futuro. Ringrazio di nuovo mio papà per una recente frase che mi ha dato sicurezza nei diversi bivi di quest'anno: \textit{La vita va vissuta, ma anche saputa raccontare}.\\
+\textit{Marco R.} è con stima che lo ricordo per avermi fatto realizzare che l'età non conta quando si vuole essere (giovani) adulti.
+
+Ringrazio \textit{Sara} con cui condivido il sentimento più astratto, ma che per me è il più concreto di tutti. Di avermi preso la mano e portato a raggiungere \textit{quella piccola poesia anche per me}.
+Di avermi fatto vedere il buono della condivisione e della leggerezza anche quando per me lo studio era tutto. Ci sarà altro tempo per insegnarci dell'altro.
+
+Rendo grazie alla \textit{Zia Rita} per incoronarmi "el più bel de Maran": compito impegnativo, ma anche decoroso. A parte gli scherzi, ringrazio \textit{te, Giulia e Laura}, per averci aiutato a sentirci parte di una famiglia anche a distanza. Colgo l'occasione per estendere il merito anche ad \textit{Ale e Rico} che fino a questo punto credevano non sarebbero stati citati invece anche la loro importanza è rilevante. Non ultimi i cuginetti \textit{Giada, Sveva, Ambra, Marialuce, Nicolò, Fiona e Cosimo} (in ordine di apparizione) per avermi insegnato che ho già un ruolo nelle loro vite e tanto vale non sprecarlo.
+
+Rilevante è la parte di famiglia di Maran con \textit{Nonna Ina, Zio Ivano, Zia Nuccia, Elisa e Marco} per una crescente vicinanza condivisa. Mi avete insegnato lo spirito dei Milocco che mai sarà dimenticato: risate, cantate, ma anche spirito di sacrificio e perseveranza.
+
+Ringrazio l'altra \textit{famigghia} che mi ha accolto con simpatia e inclusione al momento più opportuno.
+\textit{Marco S.} per il coraggioso ritorno dalla carriera militare per dedicarsi alla famiglia e \textit{Luciana} per la ricercata unione famigliare. \\ \textit{Marta} per sfatare il preconcetto che un'artista deve essere libero, perché è nei vincoli che si ritrova il \textit{genio}. \textit{Giovanni} per non aver paura di piantare e stabilizzare le sue radici in ogni posto in cui si trovi.
+
+Ringrazio ora l' UniPD...ahah...no tocca a voi amisci.
+
+\textit{[Treccani] L'amicizia è un rapporto fatto di fiducia, simpatia, affetto e reciproca scelta, che si riscontra in ogni tempo e in ogni luogo, ma che nessuna teoria può spiegare del tutto.}
+
+Ricordo con valore \textit{Alessandro} per la logica con cui anche le costruzioni più astruse diventano plausibili e la passione per la vita edonista tra birrette e buon cibo. \\
+Sono grato ad \textit{Andrea} per avermi ascoltato sempre nei momenti del bisogno e aver condiviso quell' instabilità nella ricerca di se stessi che sprona ad andare avanti ed andare meglio. Sento che non siamo ancora arrivati, ma la conoscienza è ampia per saper intuire dove andare.\\
+Rimembro \textit{Aldo} per essere stata l'interfaccia tra \textit{noi poeti "elementari"} e il mondo là fuori. Un riferimento \textit{severo, ma vero}. Ringrazio Giulia per la luce che diffonde sempre. Ora doppiamente...\\
+Rendo grazie a \textit{Marco B.} per le focose discussioni di Fisica che, in molti frangenti, hanno creato la giusta motivazione per approfondire un argomento. \\
+Ringrazio \textit{Luca}  per non aver mai mollato ed essere arrivato fino in fondo insieme a noi.\\
+Avvaloro \textit{Dario e Giuseppe} che, emersi da poco, mi hanno dimostrato quanto un partecipato confronto possa genenrare delle soluzioni esatte. D'altra parte, che l'indipendenza nelle scelte è parte fondamentale della vita.
+
+Avvaloro il ruolo dei miei coinquilini \textit{Filippo} e \textit{Matteo}: \textit{Filippo} per aver ascoltato i monologhi sulla tesi e \textit{Matteo} che ancor oggi non mi ha denunciato.\\
+Ringrazio \textit{Giancarlo} per una spalla che a Milano, e oltre, con cui ho sempre scambiato delle importanti riflessioni.
+
+Volevo dare spazio a tutti e spero di esserci riuscito, non lasciando nessuna parola a me$\star \star$..Ops.
+
+\textbf{Latinismi Sparsi}
+\\Siccome volevo ci fosse "nu poco 'e vvoi", ho chiesto di darmi delle frasi latine da inserire "'n copp' a' tesi". Dunque, ringrazio gli 
+``alias'' di Sara Sagone (\autopageref{cit:SaraSagone1})
+, ``Est modus in rebus'' di Guseppe Meneghini (\autopageref{cit:GMeneghini})
+, ``Rebus sic stantibus'' di Dario Massa (\autopageref{cit:DarioMassa})
+, e il ``Ça va sans dire'' di Andrea Marzo (\autopageref{cit:AMarzo}).
 
 
 \bibliographystyle{plain}
