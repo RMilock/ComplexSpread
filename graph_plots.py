@@ -62,7 +62,7 @@ from definitions import NestedDict
     plt.savefig("".join((ordp_path,"%s_ordp_p%s_beta%s_d%s.png" % (folder, rhu(p,3),rhu(beta,3),rhu(mu**(-1))))))
   plt.close()'''
 
-def save_only_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = False, partition = None, pos = None, numb_onring_links = 0, avg_pl = -1, std_avg_pl = -1, clique_size = "", node_color = "red", width = 1.5, node_size = 50, suptitle = "Network"):
+def save_only_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd = False, partition = None, pos = None, numb_onring_links = 0, avg_pl = -1, std_avg_pl = -1, clique_size = "", node_color = "red", width = 1.5, node_size = 50, suptitle = ""):
   import os.path
   from definitions import my_dir, func_file_name, N_D_std_D, rhu, plot_params
   from functools import reduce
@@ -89,10 +89,11 @@ def save_only_net(G, folder, p = 0, m = 0, N0 = 0, done_iterations = 1, log_dd =
   width = width
   if folder== "Caveman_Model":
     nx.draw(G, pos, node_color=list(partition.values()), node_size = 300, width = width, with_labels = False)
-  else: nx.draw_circular(G, ax=ax, with_labels=False, font_size=20, node_size=node_size, width=width, node_color = node_color)
+  else: nx.draw_circular(G, ax=ax, with_labels=False, font_size=20, node_size=node_size, width = width, node_color = node_color)
   ax.set_title(suptitle, fontsize = 70)
   my_dir = "/home/hal21/MEGAsync/Tour_Physics2.0/Thesis/NetSciThesis/Project/ComplexSpread/LateX/images/Networks/my_nets/"
-  plt.savefig(my_dir+folder)
+  my_dir = "/home/hal21/MEGAsync/Tour_Physics2.0/Thesis/NetSciThesis/Project/ComplexSpread/LateX/presentation/Pres_7.9/Plots/NewPlots/Miscellanea/"
+  plt.savefig(my_dir+folder, transparent = True)
   plt.close()
 
 
@@ -126,17 +127,25 @@ m, N0 = 0,0
 #G = nx.connected_watts_strogatz_graph(N,D,p)
 #save_only_net(G, folder = f"Regular Lattice", node_color = "darkorange", width = 2, node_size = 500)
 
-#G = nx.erdos_renyi_graph(D, p*10, seed=None,  directed=False)
-#save_only_net(G, folder = "Erdoes_Renyi_Graph", node_color = "darkblue", width = 2, node_size = 300)
+#G = nx.erdos_renyi_graph(22, 0.1, seed=None,  directed=False)
+#save_only_net(G, folder = "Erdoes_Renyi_Graph", node_color = "darkblue", width = 3, node_size = 300)
 
-G = NNOverl_pois_net(N, D, p = 0)
-save_only_net(G, folder = "Overlapping_PSW", node_color = "maroon", width = 1, suptitle = "Overlapping PSWN", node_size = 300)
+#G = NNOverl_pois_net(N, D, p = 0)
+#save_only_net(G, folder = "Overlapping_PSW", node_color = "maroon", width = 1, suptitle = "Overlapping PSWN", node_size = 300)
 
 #G = NN_pois_net(N, ext_D = D, p = 0, folder = "Sparse_PSW")
 #save_net(G, folder = "NN_Conf_Model")
 
-G = nx.barabasi_albert_graph(1000, 2)
-save_only_net(G, folder = "Barabasi_Albert_Model", node_color = "darkblue", width = 0.3, suptitle = "Barabási-Albert Model")
+#G = nx.barabasi_albert_graph(1000, 2)
+#save_only_net(G, folder = "Barabasi_Albert_Model", node_color = "darkblue", width = 0.3, suptitle = "Barabási-Albert Model")
 
+G = nx.watts_strogatz_graph(n = 10, k = 4, p = 0)
+folder = "Fuse_Model1"
+G.remove_nodes_from((9,8))
+nx.draw_circular(G, with_labels = False, node_color = "red", node_size = 200, width = 2)
+my_dir = "/home/hal21/MEGAsync/Tour_Physics2.0/Thesis/NetSciThesis/Project/ComplexSpread/LateX/presentation/Pres_7.9/Plots/NewPlots/Miscellanea/"
+plt.savefig(my_dir+folder, transparent = True)
+plt.close()
+#save_only_net(G, folder = "Fuse_Model", node_color = "darkblue", width = 0.3, suptitle = "Fuse Model")
 
 

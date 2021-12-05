@@ -1,0 +1,187 @@
+\documentclass[11pt, a4paper, twoside]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{subfiles}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{commath}
+\usepackage{graphicx, subcaption} % Allows including images
+\usepackage{natbib}
+\usepackage[left=1cm, right=1cm, top=2cm, bottom=2cm]{geometry}
+\usepackage{csquotes} %handle `` and ""
+\MakeOuterQuote{"}  %handle opening/closing quotation
+\addtolength{\skip\footins}{2pc plus 5pt} %add space between the footnote and the text
+\usepackage{listings}
+\usepackage{color}
+\usepackage{hyperref}
+\graphicspath{{./Images/}}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\title{\vspace{-2cm} \textbf{Modelling COVID-19 spreading in a network (Summary)}} %set the title vertical position
+\author{\vspace{2cm} \textbf{Candidate: Riccardo Milocco -- Supervisor: Marco Baiesi}}
+\date{\vspace{-3em}\today}
+
+\begin{document}
+%\include{cap_Introduction}
+
+\maketitle
+\section{Abstract}
+The usual simplified description of epidemic dynamics predicts an exponential growth. This is due to the mean field character of the
+dynamical equations of the SIR model. However, a recent paper (Thurner S, Klimek P and Hanel R 2020 Proc. Nat. Acad. Sci. 117, 22684) \cite{Thurner::NetBasedExpl} showed
+that in a network with fixed connectivity, the nodes become infected at a rate that increases linearly rather than exponentially.
+Experimental data for COVID-19 seem to validate this approach. In this thesis we plan to study this model by tuning its parameters.
+In particular, we monitor the effect induced by a significant presence of hubs in the network.
+References used: \cite{Ferguson::CapturingHumanBehaviour}, \cite{VespignaniSatorras2001Epidemic}, \cite{Thurner::NetBasedExpl}
+
+\section{Summary}
+At $8 \, \textnormal{May} \, 2020$, none of the affected Covid-19 states have reached "herd immunity" \footnote{The total infected cases at the first peak were $0.3\%$ of the total population, remarkably low with respect to the SARS reported level that are $0.5\%-0.8\%$ of the entire population.}, but still they have reached the "epidemic peak" due to the containment restrictions on social contacts.
+The most striking observation is that the epidemic curves, especially when Non-Pharmaceutical Interventions (NPIs) are introduced, exhibit a linear growth for an extended time interval in contrast with the "S-shaped" logistic curve as predicted by the standard compartmental models. The extended of the linear regime depends on the onset of the measures; while for early stages, as it was the case for many countries \cite{Thurner::NetBasedExpl} ($8 \, \textnormal{May} \, 2020$), an exponential growth dominates the spreading of the disease (\autoref{fig:realstates_linearity}).\\
+Indeed, infection may occur for two reasons:
+\begin{enumerate}
+    \item interaction between an infected and a susceptible person;
+    \item contact is "intense" (e.g. long, close,...) enough to lead to a disease transmission.
+\end{enumerate}
+So, the rationale behind the social distancing is that it takes to a reduction of both of these factors.
+On the other hand, the standard SIR model assumes that, defining $N, D$ as the total number of individuals in the population and the average number of contacts respectively, there is the same probability that an individual encounters an infected person ("well-mixed population") and all the nodes have the same number of neighbours ($N-1$ or $D$). Therefore, as claimed in \cite{VespignaniSatorras2001Epidemic}, there is the need of studying how the underlying network affects the spreading of a disease, but still no focus was put on the spreading below the epidemic threshold \cite{Thurner::NetBasedExpl}. 
+
+
+In this thesis, \textit{the main goal} is to grasp the relevant features of a social network when NPIs measure are at work and compare them with respect to the mean-field approach which annihilate the network in favor of the analytical treatment of the SIR model. The final aims would both to find a topology where the disease spread the slowest and a tecnique to characterize the "sub-exponential (linear) regime". Thus, for this purpose, it has been analyzing both the standard model of the graph-theory ("Erdoes-Rényi", "Watts-Strogatz", "Caveman-Model", "Scale-Free") but also more richer structures, i.e. an ad hoc generated Poissonian Small-World Network. Indeed, the lockdown measures force the network of contacts to be sparser, highly differing for a "typical" social netowork where hubs are present. Except for a "Barabasi-Albert" model, the graoh models don't show the high-degree nodes, as they would allow for a faster spread, diminishing the network distance. 
+\newpage
+An outline of the \textit{past and future steps} is the following.
+
+At first, it has been pruned a fully connected graph of $N$ nodes while changing concurrently $D$ and $\beta$, i.e. the average of nearest neighbors and the transmissibility, to preserve the "epidemic (initial) strength" $R_0 = \frac{\beta \cdot D}{\mu}$ (\autoref{fig::pruning_p0.0}).
+In order to appreciate the difference with respect to the "well-mixed" population model, the so-obtained total cases (green) has been compared with the ones recovered in a "mean-field" fashion (in orange)\footnote{Moreover, it has been reported the daily infected of the network (blue) and the the mean-field ones (magenta)}. More precisely, the "mean-field" approximation is a "D-neighbors-mean-field" where every node has $D$ nearest neighbors picked at random on the whole set of nodes. In this way, everyone has the same probability to get in touch with an infected.
+
+Secondarly, it has been introduced the "rewiring probability" $p$ which enables the distant nodes to connect faster, thus, obtaining a Watts-Strogatz (WS) graph with non-zero $p$. In this case, it is possible to recover the "(pseudo) linearity" of the SIR infection, as it is shown in \autoref{fig::pruning_p0.1}, using two similar methods of choosing the spreading parameters $\beta \textnormal{ and } \mu$:
+\begin{itemize}
+	\item pick a series of $\beta$ and $\mu$ at random;
+	\item fixing $\mu \in [0,1]$ and $p=0.1$. Then, as in the previous point, while halving D, the $\beta$ is doubled.
+\end{itemize}
+For conciseness, in \autoref{fig::pruning_p0.1}, it is reported only the epidemics obtained by the second "pruning procedure".
+\newline
+Furthermore, a Poissonian "small-world" network has been developed enabling to taking care of degree heterogeneity (i.e. different social contacts), family-clusters and their overlaps, small-world feature, given the fact that "leisure" activities may connect nodes that are diametrically opposite. In particular, by changing the number of the average degree $D$ it is possible to from light ("exponential spreading" for $D\simeq5$) to severe ("linear spreading" for  $D\simeq2.5$) lock-down.
+The Poissonian "small-world" network could be realized by imposing, at first, a Poissonian degree sequence on all nodes ("Configuration Model"); then, re-link the nodes to their closest neighboring nodes, i.e. a nearest neighbors rewiring (NNR) procedure is applied. Thus, obtaining a network with poissonian degree distribution and the small-world property.
+The (pseudo) linearity obtain with this graph is reported in the \autoref{fig::NNR_Conf_Model}.
+
+Furthermore, the work focused on analyzing the network spreading on a fully-connected cavemen graph, where the families cores could be taken into consideration; and also enabling the possibility of a "long-range" connection via the rewiring probability $p = 0.1$ (cfr. \autoref{fig::Caveman_Model}). Finally for what concerns the different network models, it has been studied the case of "(pseudo) linear" epidemics on a Barabasi-Albert (B-A) Model, i.e. with the presence of hubs (cfr. \autoref{fig::Barabasi_AlbertSIR}).
+
+Moreover, the critical average degree $D_c$ \footnote{$D_c$ as reported in \cite{Thurner::NetBasedExpl} describes a "first-order-phase transition" between exponential and linear growth of an epidemic} , is going to be recovered for the quoted network topologies. 
+In particular, by defining $R(t):=(D-n(t))\beta / \mu$ where $n(t)$ is number of "neighboring" nodes that is not possible to infect, i.e. already infected and recovered.
+An application of the $R(t) \stackrel{!}{=} 1$ condition for the Poissonian Small-World network drives to \cite{Thurner::NetBasedExpl}
+\begin{equation}
+	R(t) \stackrel{!}{=} R_{0net} := \frac{D^{2}}{\langle k^2 \rangle - D} \sim 1 \implies D_c = 1 + \frac{2}{(1+p)\lambda}.
+\end{equation}
+In the case of figure \autoref{fig:PhaseTransition} $D_c \sim 4.85$ and it could be observed the First-Order phase transition of the standard deviation ($SD$) of the new daily infected as a function of the average degree. In particular, for a linear spreading $SD = 0$ since the number of daily cases is constant; while for an exponential growth $SD$ is considerably far from $0$.
+The further work would be to extend the $D_c$ formula for the quoted networks. A similar transition could be observed considering how the final number of recovered behaves in function of the $\lambda:= \beta/\mu$ parameter, which could be understood as a "contest" factor since it is the justapposition of trasmissibility and recovery rates (cfr. \autoref{fig:ER_Epid_Threshold}).
+
+Moreover, the definition of $R(t):=(D-n(t))\lambda$ does not depends on $p$. Thus, with equal $R_0$ there could be a local spread or a global one: as for the spreading of the fire, if an agent could "jump" from a side to the other it would start many epidemic clusters, which grows faster than a pathogen being constrained to move locally. So, further refinements on $R(t)$ has to be introduced for this distinctive trait.
+
+A final up-to-date point, would be to use a Graph Neural Network architecture, based on the previously described scenarios and networks, in order the make epidemics forecasting. For this purpose, a relevant reference, is \cite{Davahli::USA_predicting_Covid19}.
+
+
+\newpage
+\section{Relevant Figures}
+\begin{figure}[ht]
+	\centering
+	\includegraphics[width = .8\textwidth]{COVID-RealStates.png}
+	\caption{Total Cases per unit of final size outbreak. US shows an explicit linearity; while Austria, choosing for early NPIs, have a immediate bending of the total cases.}
+	\label{fig:realstates_linearity}
+\end{figure}
+\begin{figure}[t]
+	\begin{subfigure}{0.45\textwidth}
+		\includegraphics[width=\textwidth, height=9cm]{WS_Pruned_AdjMat_N1000_D14.0_p0.0.png}
+		\centering
+		\caption{Network information for the regular "D-halving" graph}
+		\label{fig::adjmat_pruning_p0.0}
+	\end{subfigure}
+	\begin{subfigure}{0.45\textwidth}
+		\includegraphics[width=\textwidth, height=8cm]{WS_Pruned_SIR_p0_9}
+		\caption{(pseudo) linearity of the total number of infected for the "halving-D" method with $p = 0$}
+		\label{fig::pruning_p0.0}
+	\end{subfigure}
+	\end{figure}
+	
+	\begin{figure}[ht]
+		\begin{subfigure}{0.45\textwidth}
+			\includegraphics[width=\textwidth, height=9cm]{WS_Pruned_AdjMat_N1000_D6.0_p0.1.png}
+			\centering
+			\caption{Network information for the WS model with $p = 0.1$}
+			\label{fig::adjmat_pruning_p0.1}
+		\end{subfigure}
+		\hfill
+		\begin{subfigure}{0.45\textwidth}
+			\includegraphics[width=\textwidth, height=8cm]{WS_Pruned_SIR_p0.1_4_2.png}
+			\caption{(pseudo) linearity of the total number of infected for the WS model with $p = 0.1$}
+			\label{fig::pruning_p0.1}
+		\end{subfigure}
+	\end{figure}
+	
+	\newpage
+	\begin{figure}[ht]
+		\begin{subfigure}{0.45\textwidth}
+			\includegraphics[width=\textwidth, height=9cm]{NNR_Conf_Model_AdjMat_N1000_D6_p0.0.png}
+			\centering
+			\caption{Network information for the "Poissonian" small-world network with $p = 0$}
+			\label{fig::adjmat_NNR_Conf_Model}
+		\end{subfigure}
+		\hfill
+		\begin{subfigure}{0.45\textwidth}
+			\includegraphics[width=\textwidth, height=8cm]{NNR_R0_1-2_p0.0_27.png}
+			\caption{(pseudo) linearity for the nearest neighbors rewiring network with $p = 0$}
+			\label{fig::NNR_Conf_Model}
+		\end{subfigure}
+	\end{figure}
+	\begin{figure}[b]
+		\begin{subfigure}{0.45\textwidth}
+			\includegraphics[width=\textwidth, height=9cm]{Caveman_Model_AdjMat_N1000_D5.0_p0.1.png}
+			\centering
+			\caption{Network information for the Caveman network model with $p = 0.1$}
+			\label{fig::adjmat_Caveman_Model}
+		\end{subfigure}
+		\hfill
+		\begin{subfigure}{0.45\textwidth}
+			\includegraphics[width=\textwidth, height=8cm]{CavemanMod_R0_1-3_p0.1_18.png}
+			\caption{"(pseudo) linearity" for the Caveman network model with $p = 0.1$}
+			\label{fig::Caveman_Model}
+		\end{subfigure}
+	\end{figure}
+	\begin{figure}[t]
+		\begin{subfigure}{0.45\textwidth}
+			\includegraphics[width=\textwidth, height=9cm]{B-A_Model_AdjMat_N1000_D4.0_p0.0_m2_N0_2.png}
+			\centering
+			\caption{Network information for the B-A graph with $p = 0$}
+			\label{fig::adjmat_B-A_Model}
+		\end{subfigure}
+		\hfill
+		\begin{subfigure}{0.45\textwidth}
+			\includegraphics[width=\textwidth, height=8cm]{B-A_Mod_R0_0-1_p0_6.png}
+			\caption{"(pseudo) linearity" for the B-A graph with $p = 0$}
+			\label{fig::Barabasi_AlbertSIR}
+		\end{subfigure}
+	\end{figure}
+
+
+\begin{figure}[ht]
+	\begin{subfigure}{0.5\textwidth}
+		\includegraphics[width=\textwidth]{NN_Conf_Model_ordp_p0.3_beta0.1_mu0.25.png}
+		\centering
+		\caption{First Order Phase Transition $D_c \sim 4.85$}
+		\label{fig:PhaseTransition}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}{0.5\textwidth}
+		\includegraphics[width=\textwidth]{ER_Epid_Threshold.jpg}
+		\centering
+		\caption{First Order Phase Transition $\lambda \sim 0.1 \implies R_0 = \lambda * D \sim 1$ where $D = 10$.}
+		\label{fig:ER_Epid_Threshold}
+	\end{subfigure}
+\end{figure}
+
+
+\clearpage
+\bibliographystyle{plain}
+\bibliography{bib/bibliogr.bib}
+
+\end{document}

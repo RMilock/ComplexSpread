@@ -95,7 +95,7 @@ urlcolor=blue
 \vspace{5mm}
 \begin{figure}[hbtp]
 \centering
-\includegraphics[scale=.13]{/home/hal21/MEGAsync/Tour_Physics2.0/Thesis/NetSciThesis/Project/ComplexSpread/LateX/images/unipd_logo.png}
+\includegraphics[scale=.13]{unipd_logo.png}
 \end{figure}
 \vspace{5mm}
 \begin{center}
@@ -267,7 +267,7 @@ With the given definitions, it is now clear that roughly everything could be div
 The simplest example, is the \textit{simple graph}, which is an unweighted, undirected graph containing no graph loops, i.e. $(i,i)$ edges, or multiple edges such as multiples-$(i,j)$. It could be represented as the \autoref{fig:basicSN} forcing all the edges to be weightless and undirected.
 \begin{figure}[ht]
 	\centering
-	\includegraphics[width = .5\linewidth]{Networks/my_nets/loop_graph.jpg}
+	\includegraphics[width = .5\linewidth]{Networks/loop_graph.jpg}
 	\caption{We labeled the nodes as $1,2,3,4$; while we used the same color for vertexes with the equal number of contacts. Node $ 2$ has a loop (black cupola on top).}
 	\label{fig:simple}
 \end{figure}
@@ -336,7 +336,7 @@ where it is encoded the direct edges since $A$ is not symmetric. Whether there w
         \label{fig:degree_clustcoefficient_pathlength}
     \end{subfigure}
 \end{figure}
-As quoted before, a (real) network could be very tangled. Thus, the degree distribution, i.e. the normalized number of vertexes with a certain degree, allows to check whether all the nodes have, or not, the same number of contacts even at a plain eye inspection. 
+As quoted before, a (real) network couldd be very tangled. Thus, the degree distribution, i.e. the normalized number of vertexes with a certain degree, allows to check whether all the nodes have, or not, the same number of contacts even at a plain eye inspection. 
 
 Formally, the degree of a vertex, in a (undirected) graph, is the number of edges connected to it. We denote the degree of node $i$ by $k_i$ and, by mean of $A$, $$k_i := \sum_{i=1}^{N} A_{ij},$$ where $N$ is the number of total nodes.
 For directed graphs, as in \autoref{fig:basicSN}, a distinction between the entering and exiting edges to a node has to be defined. In particular, by a generalization of the previous $k_i$, 
@@ -396,7 +396,7 @@ A review of these is reported in the following sections; alongside with the newl
 \subsection{Lattice Graph}
 \begin{figure}[ht]
     \begin{subfigure}{\textwidth}
-        \includegraphics[scale = 0.1]{../images/Networks/my_nets/Complete_Graph.png}
+        \includegraphics[scale = 0.1]{../images/Networks/Complete_Graph.png}
         \centering
         \caption{In (a) - fully-connected graph; In (b) - $D = 4$ regular graph \cite{Zelazo:2011_RSensNet_images}}
         \label{fig:RegGraph}
@@ -411,7 +411,7 @@ In \autoref{sec:WS_Model}, we will introduce the "Watts-Strogatz" model which ca
 \subsection{Connected Caveman Graph}
 \begin{figure}[ht]
     \begin{subfigure}{\textwidth}
-        \includegraphics[scale = 0.2]{../images/Networks/my_nets/Caveman_Model.png}
+        \includegraphics[scale = 0.2]{../images/Networks/Caveman_Model.png}
         \centering
         \caption{Connected Caveman Model with one link among consecutive communities.}
         \label{fig:CavemanMod}
@@ -436,7 +436,7 @@ In fact, there could be constraints, such as \textit{cost-benefit problem}, whic
 
 \begin{figure}[ht]
     \begin{subfigure}{\textwidth}
-        \includegraphics[width = 0.5\linewidth]{../images/Networks/my_nets/Erdoes_Renyi_Graph.png}
+        \includegraphics[trim = {3cm, 3cm, 3cm, 6cm}, clip, width = 0.5\linewidth]{../images/Networks/Erdoes_Renyi_Graph.png}
         \centering
         \caption{Erdös-Rényi Model for $N = 22, p = 0.1$}
         \label{fig:ERmodel}
@@ -604,14 +604,14 @@ In the following sections, we will use only the Configuration Model drawning the
 \label{sec:PSW_network}
 \begin{figure}[ht]
     \begin{subfigure}{.45\linewidth}
-        \includegraphics[width = \linewidth]{Networks/my_nets/NNO_Conf_Model_AdjMat_1000_25.0_0.0.png}
+        \includegraphics[width = \linewidth]{Networks/NNO_Conf_Model_AdjMat_1000_25.0_0.0.png}
         \centering
         \caption{Overlapping PSW degree distribution. }
         \label{fig:netmod_O-PSW}
     \end{subfigure}
 	\hfill
 	\begin{subfigure}{.45\linewidth}
-        \includegraphics[width = \linewidth]{Networks/my_nets/NN_Conf_Model_AdjMat_1000_21.0_0.0.png}
+        \includegraphics[width = \linewidth]{Networks/NN_Conf_Model_AdjMat_1000_21.0_0.0.png}
         \centering
         \caption{Sparse PSW degree distribution}
         \label{fig:netmod_S-PSW}
@@ -744,7 +744,7 @@ For a more detailed dissertation, see \autoref{sec:SFD_details}.
 \newpage
 \subsection{Barabási-Albert Model}
 \begin{figure}[ht]
-	\includegraphics[width = .5\linewidth]{Networks/my_nets/Barabasi_Albert_Model.png}
+	\includegraphics[width = .5\linewidth]{Networks/Barabasi_Albert_Model.png}
 	\centering
 	\caption{Formation of a scale-free network. We can clearly see that the righest part of the network has a darker color than the left side. Indeed, we set the first nodes to be on the right rewired the newer ones according to the preferential attacchment, i.e. older nodes are likely to be the hubs of the graph.}
 	\label{fig:LCD_growth}
@@ -1628,14 +1628,14 @@ In the following figures, we will recover that the fraction of total cases $\pi(
 \label{sec:res_PSW}
 \begin{figure}[ht]
     \begin{subfigure}{.45\linewidth}
-        \includegraphics[width = \linewidth]{Networks/my_nets/NNO_Conf_Model_AdjMat_1000_25.0_0.0.png}
+        \includegraphics[width = \linewidth]{Networks/NNO_Conf_Model_AdjMat_1000_25.0_0.0.png}
         \centering
         \caption{Overlapping PSW degree distribution. }
         \label{fig:net_O-PSW}
     \end{subfigure}
 	\hfill
 	\begin{subfigure}{.45\linewidth}
-        \includegraphics[width = \linewidth]{Networks/my_nets/NN_Conf_Model_AdjMat_1000_21.0_0.0.png}
+        \includegraphics[width = \linewidth]{Networks/NN_Conf_Model_AdjMat_1000_21.0_0.0.png}
         \centering
         \caption{Sparse PSW degree distribution}
         \label{fig:net_S-PSW}
@@ -2333,7 +2333,7 @@ Ringrazio i miei genitori per aver dato grande importanza alle mie attitudini e 
 Ringrazio \textit{Sara} con cui condivido il sentimento più astratto, ma che per me è il più concreto di tutti. Di avermi preso la mano e portato a raggiungere \textit{quella piccola poesia anche per me}.
 Di avermi fatto vedere il buono della condivisione e della leggerezza anche quando per me lo studio era tutto. Ci sarà altro tempo per insegnarci dell'altro.
 
-Rendo grazie alla \textit{Zia Rita} per incoronarmi "el più bel de Maran": compito impegnativo, ma anche decoroso. A parte gli scherzi, ringrazio \textit{te, Giulia e Laura}, per averci aiutato a sentirci parte di una famiglia anche a distanza. Colgo l'occasione per estendere il merito anche ad \textit{Ale e Rico} che fino a questo punto credevano non sarebbero stati citati invece anche la loro importanza è rilevante. Non ultimi i cuginetti \textit{Giada, Sveva, Ambra, Marialuce, Nicolò, Fiona e Cosimo} (in ordine di apparizione) per avermi insegnato che ho già un ruolo nelle loro vite e tanto vale non sprecarlo.
+Rendo grazie alla \textit{Zia Rita} per incoronarmi "el più bel de Maran": compito impegnativo, ma anche decoroso. A parte gli scherzi, ringrazio \textit{te, Giulia e Laura}, per averci aiutato a sentirci parte di una famiglia anche a distanza. Colgo l'occasione per estendere il merito anche ad \textit{Ale e Rico} che fino a questo punto credevano non sarebbero stati citati invece anche la loro importanza è rilevante. Non ultimi i cuginetti \textit{Giada, Sveva, Ambra, Niccolò, Marialuce, Fiona e Cosmo} (in ordine di apparizione) per avermi insegnato che ho già un ruolo nelle loro vite e tanto vale non sprecarlo.
 
 Rilevante è la parte di famiglia di Maran con \textit{Nonna Ina, Zio Ivano, Zia Nuccia, Elisa e Marco} per una crescente vicinanza condivisa. Mi avete insegnato lo spirito dei Milocco che mai sarà dimenticato: risate, cantate, ma anche spirito di sacrificio e perseveranza.
 
@@ -2359,7 +2359,7 @@ Volevo dare spazio a tutti e spero di esserci riuscito, non lasciando nessuna pa
 \textbf{Latinismi Sparsi}
 \\Siccome volevo ci fosse "nu poco 'e vvoi", ho chiesto di darmi delle frasi latine da inserire "'n copp' a' tesi". Dunque, ringrazio gli 
 ``alias'' di Sara Sagone (\autopageref{cit:SaraSagone1})
-, ``Est modus in rebus'' di Guseppe Meneghini (\autopageref{cit:GMeneghini})
+, ``Est modus in rebus'' di Giuseppe Meneghini (\autopageref{cit:GMeneghini})
 , ``Rebus sic stantibus'' di Dario Massa (\autopageref{cit:DarioMassa})
 , e il ``Ça va sans dire'' di Andrea Marzo (\autopageref{cit:AMarzo}).
 

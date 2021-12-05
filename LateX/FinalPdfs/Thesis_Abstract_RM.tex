@@ -1,0 +1,40 @@
+\documentclass[11pt, a4paper, twoside]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{commath}
+\usepackage{hyperref}
+\usepackage{graphicx, subfig} % Allows including images
+\usepackage{natbib}
+\usepackage[left=1cm, right=1cm, top=2cm, bottom=2cm]{geometry}
+\usepackage{csquotes} %handle `` and ""
+\MakeOuterQuote{"}  %handle opening/closing quotation
+\addtolength{\skip\footins}{2pc plus 5pt} %add space between the footnote and the text
+\usepackage{listings}
+\usepackage{color}
+\graphicspath{{../Images/}}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\title{\vspace{-2cm} \textbf{Modelling COVID-19 spreading in a network (Summary)}} %set the title vertical position
+\author{\vspace{2cm} \textbf{Candidate: Riccardo Milocco -- Supervisor: Marco Baiesi}}
+\date{\vspace{-3em}\today}
+
+\begin{document}
+%\include{cap_Introduction}
+
+\maketitle
+\section{Abstract}
+The usual simplified description of epidemic dynamics predicts an exponential growth. This is due to the mean field character of the
+dynamical equations of the SIR model. However, a recent paper (Thurner S, Klimek P and Hanel R 2020 Proc. Nat. Acad. Sci. 117, 22684) \cite{Thurner22684} showed
+that in a network with fixed connectivity, the nodes become infected at a rate that increases linearly rather than exponentially.
+Experimental data for COVID-19 seem to validate this approach. In this thesis we plan to study this model by tuning its parameters.
+In particular, we monitor the effect induced by a significant presence of hubs in the network.
+References used: \cite{Ferguson-CapturingHumanBehaviour}, \cite{SVespignani-EpSpreadSFNets}, \cite{Thurner22684}
+
+\bibliographystyle{plain}
+\bibliography{../bib/my_bibliography.bib}
+
+\end{document}

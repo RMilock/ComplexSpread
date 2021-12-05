@@ -1,0 +1,8 @@
+snippet `(("[^"]+")|(\b\w+))\.print` "expand to print()" A
+print(``rv = m[2] ? m[2] : m[3]``)
+endsnippet
+
+snippet `nx.connected_watts` "connected watts-strogatz graph on nx from hsnips" A
+N, D, p = 30, 0.1
+G = nx.connected_watts_strogatz_graph(N,D,p)
+endsnippet
